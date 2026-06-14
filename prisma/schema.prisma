@@ -1,15 +1,16 @@
-// Prisma schema — QUADRO gestionale impianti elettrici
+// QUADRO — Schema Prisma
 // Documentazione: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
+
+// ─── Auth (specchia Supabase) ────────────────────────────────────────────────
 
 enum UserRole {
   impresa
@@ -17,8 +18,6 @@ enum UserRole {
   cliente
 }
 
-// Profili utenti — specchia auth.users di Supabase
-// La riga viene creata automaticamente dal trigger handle_new_user (vedi supabase-setup.sql)
 model Profile {
   id        String   @id @db.Uuid
   role      UserRole @default(cliente)
@@ -28,4 +27,176 @@ model Profile {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("profiles")
+}
+
+// ─── Anagrafiche ─────────────────────────────────────────────────────────────
+
+model Cliente {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome               String
+  partitaIva         String?      @map("partita_iva")
+  codiceFiscale      String?      @map("codice_fiscale")
+  indirizzo          String?
+  citta              String?
+  cap                String?
+  provincia          String?
+  email              String?
+  telefono           String?
+  pec                String?
+  codiceDestinatario String?      @map("codice_destinatario")
+  note               String?
+  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+  preventivi         Preventivo[]
+  commesse           Commessa[]
+
+  @@map("clienti")
+}
+
+model Fornitore {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome          String
+  partitaIva    String?  @map("partita_iva")
+  codiceFiscale String?  @map("codice_fiscale")
+  indirizzo     String?
+  citta         String?
+  cap           String?
+  provincia     String?
+  email         String?
+  telefono      String?
+  pec           String?
+  note          String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("fornitori")
+}
+
+model Operaio {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome        String
+  ruolo       String?
+  costoOrario Int      @default(0) @map("costo_orario") // centesimi/ora
+  zona        String?
+  skills      Json     @default("[]") // Array<{nome:string, nota?:string}>
+  note        String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("operai")
+}
+
+enum StatoMezzo {
+  disponibile
+  in_uso
+  in_manutenzione
+  fuori_servizio
+}
+
+model Mezzo {
+  id                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome                  String
+  targa                 String?
+  stato                 StatoMezzo @default(disponibile)
+  scadenzaBollo         DateTime?  @map("scadenza_bollo") @db.Date
+  scadenzaRevisione     DateTime?  @map("scadenza_revisione") @db.Date
+  scadenzaAssicurazione DateTime?  @map("scadenza_assicurazione") @db.Date
+  note                  String?
+  createdAt             DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("mezzi")
+}
+
+enum StatoAttrezzatura {
+  disponibile
+  in_uso
+  in_manutenzione
+  fuori_servizio
+}
+
+model Attrezzatura {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome         String
+  stato        StatoAttrezzatura @default(disponibile)
+  assegnatario String?
+  note         String?
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("attrezzature")
+}
+
+model Materiale {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codice      String?
+  descrizione String
+  prezzo      Int      @default(0) // centesimi
+  unita       String?  @default("pz")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("materiali")
+}
+
+// ─── Preventivi & Commesse ────────────────────────────────────────────────────
+
+enum StatoPreventivo {
+  bozza
+  inviato
+  accettato
+  rifiutato
+}
+
+model Preventivo {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clienteId String?         @map("cliente_id") @db.Uuid
+  cliente   Cliente?        @relation(fields: [clienteId], references: [id])
+  data      DateTime        @default(now()) @db.Timestamptz
+  stato     StatoPreventivo @default(bozza)
+  note      String?
+  righe     PreventivoRiga[]
+  commessa  Commessa?
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("preventivi")
+}
+
+model PreventivoRiga {
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  preventivoId   String     @map("preventivo_id") @db.Uuid
+  preventivo     Preventivo @relation(fields: [preventivoId], references: [id], onDelete: Cascade)
+  descrizione    String
+  quantita       Float      @default(1)
+  prezzoUnitario Int        @default(0) @map("prezzo_unitario") // centesimi
+  ordine         Int        @default(0)
+
+  @@map("preventivo_righe")
+}
+
+enum StatoCommessa {
+  aperta
+  chiusa
+}
+
+model Commessa {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome              String
+  clienteId         String?       @map("cliente_id") @db.Uuid
+  cliente           Cliente?      @relation(fields: [clienteId], references: [id])
+  indirizzoCantiere String?       @map("indirizzo_cantiere")
+  stato             StatoCommessa @default(aperta)
+  preventivato      Int           @default(0) // centesimi
+  costiMateriali    Int           @default(0) @map("costi_materiali") // centesimi
+  costiManodopera   Int           @default(0) @map("costi_manodopera") // centesimi
+  costiMezzi        Int           @default(0) @map("costi_mezzi") // centesimi
+  fatturato         Int           @default(0) // centesimi
+  preventivoId      String?       @unique @map("preventivo_id") @db.Uuid
+  preventivo        Preventivo?   @relation(fields: [preventivoId], references: [id])
+  note              String?
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("commesse")
 }

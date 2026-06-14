@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { ImpresaNav } from '@/components/ImpresaNav'
 
 export default async function ImpresaLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -20,26 +21,26 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
 
   return (
     <div className="min-h-full">
-      <nav className="bg-blue-700 text-white shadow-md">
+      <header className="bg-blue-700 text-white shadow-md">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between">
+          <div className="flex h-12 items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500">
-                <span className="text-sm font-bold">Q</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500">
+                <span className="text-xs font-bold">Q</span>
               </div>
               <span className="text-base font-bold tracking-tight">QUADRO</span>
-              <span className="hidden rounded-full bg-blue-500/60 px-2.5 py-0.5 text-xs font-semibold sm:inline-block">
+              <span className="hidden rounded-full bg-blue-500/60 px-2 py-0.5 text-xs font-semibold sm:inline-block">
                 Impresa
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="hidden text-sm text-blue-200 sm:block">
+              <span className="hidden text-xs text-blue-200 sm:block">
                 {user.user_metadata?.full_name ?? user.email}
               </span>
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-blue-100 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-white"
+                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-blue-100 hover:bg-blue-600"
                 >
                   Esci
                 </button>
@@ -47,7 +48,8 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
             </div>
           </div>
         </div>
-      </nav>
+        <ImpresaNav />
+      </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
     </div>
   )
