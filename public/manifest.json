@@ -1,0 +1,16 @@
+{
+  "name": "QUADRO — Gestionale Impianti",
+  "short_name": "QUADRO",
+  "description": "Gestionale per imprese di installazione impianti elettrici",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

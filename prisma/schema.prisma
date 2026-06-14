@@ -1,0 +1,31 @@
+// Prisma schema — QUADRO gestionale impianti elettrici
+// Documentazione: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  impresa
+  operaio
+  cliente
+}
+
+// Profili utenti — specchia auth.users di Supabase
+// La riga viene creata automaticamente dal trigger handle_new_user (vedi supabase-setup.sql)
+model Profile {
+  id        String   @id @db.Uuid
+  role      UserRole @default(cliente)
+  fullName  String?  @map("full_name")
+  email     String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("profiles")
+}
