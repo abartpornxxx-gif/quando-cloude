@@ -80,6 +80,6 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Fase 0 completata — in attesa di conferma utente prima di iniziare Fase 1**.
+- Fase corrente: **Fase 0 completata e validata. Fase 1 in corso.**
 
 - Aggiorna questa riga a fine di ogni fase.
