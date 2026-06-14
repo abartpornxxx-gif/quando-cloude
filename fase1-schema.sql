@@ -168,29 +168,51 @@ CREATE TRIGGER set_commesse_updated_at BEFORE UPDATE ON public.commesse
 
 -- ─── Row Level Security (tutte le tabelle: solo impresa) ─────
 
-DO $$ DECLARE
-  t TEXT;
-BEGIN
-  FOREACH t IN ARRAY ARRAY['clienti','fornitori','operai','mezzi','attrezzature','materiali','preventivi','preventivo_righe','commesse']
-  LOOP
-    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
-    EXECUTE format($$
-      CREATE POLICY "Solo impresa può accedere" ON public.%I
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.profiles p
-          WHERE p.id = auth.uid() AND p.role = 'impresa'
-        )
-      )
-      WITH CHECK (
-        EXISTS (
-          SELECT 1 FROM public.profiles p
-          WHERE p.id = auth.uid() AND p.role = 'impresa'
-        )
-      )
-    $$, t, t);
-  END LOOP;
-END $$;
+ALTER TABLE public.clienti          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.fornitori        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.operai           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.mezzi            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.attrezzature     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.materiali        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.preventivi       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.preventivo_righe ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.commesse         ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Solo impresa" ON public.clienti
+  USING      (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'));
+
+CREATE POLICY "Solo impresa" ON public.fornitori
+  USING      (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'));
+
+CREATE POLICY "Solo impresa" ON public.operai
+  USING      (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'));
+
+CREATE POLICY "Solo impresa" ON public.mezzi
+  USING      (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'));
+
+CREATE POLICY "Solo impresa" ON public.attrezzature
+  USING      (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'));
+
+CREATE POLICY "Solo impresa" ON public.materiali
+  USING      (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'));
+
+CREATE POLICY "Solo impresa" ON public.preventivi
+  USING      (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'));
+
+CREATE POLICY "Solo impresa" ON public.preventivo_righe
+  USING      (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'));
+
+CREATE POLICY "Solo impresa" ON public.commesse
+  USING      (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'impresa'));
 
 -- ============================================================
 -- Fine script Fase 1
