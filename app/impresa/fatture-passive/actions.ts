@@ -1,0 +1,67 @@
+'use server'
+
+import { prisma } from '@/lib/prisma'
+import { requireImpresa } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+
+export async function creaFatturaPassiva(input: {
+  fornitoreId?: string
+  commessaId?: string
+  ordineId?: string
+  numero?: string
+  data: string
+  dataScadenza?: string
+  importo: number
+  note?: string
+}): Promise<string> {
+  await requireImpresa()
+
+  const fattura = await prisma.fatturaPassiva.create({
+    data: {
+      fornitoreId: input.fornitoreId || null,
+      commessaId: input.commessaId || null,
+      ordineId: input.ordineId || null,
+      numero: input.numero?.trim() || null,
+      data: new Date(input.data),
+      dataScadenza: input.dataScadenza ? new Date(input.dataScadenza) : null,
+      importo: input.importo,
+      note: input.note || null,
+    },
+  })
+
+  revalidatePath('/impresa/fatture-passive')
+  return fattura.id
+}
+
+export async function registraPagamento(
+  fatturaId: string,
+  dataPagamento: string,
+  importoPagato: number
+): Promise<void> {
+  await requireImpresa()
+
+  await prisma.fatturaPassiva.update({
+    where: { id: fatturaId },
+    data: {
+      stato: 'pagata',
+      dataPagamento: new Date(dataPagamento),
+      importoPagato,
+    },
+  })
+
+  revalidatePath('/impresa/fatture-passive')
+  revalidatePath(`/impresa/fatture-passive/${fatturaId}`)
+}
+
+export async function eliminaFatturaPassiva(fatturaId: string): Promise<void> {
+  await requireImpresa()
+
+  const fattura = await prisma.fatturaPassiva.findUnique({ where: { id: fatturaId } })
+  if (!fattura) throw new Error('Fattura non trovata')
+  if (fattura.stato === 'pagata') throw new Error('Non puoi eliminare una fattura già pagata')
+
+  await prisma.fatturaPassiva.delete({ where: { id: fatturaId } })
+  revalidatePath('/impresa/fatture-passive')
+  redirect('/impresa/fatture-passive')
+}
