@@ -80,6 +80,14 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Redesign ORDINI 1-6 completato — in attesa di validazione. Fase 4 (magazzino/ordini standard) non ancora iniziata.**
+- Fase corrente: **Affinamento giornata operaio completato (ORDINI 0-4 del secondo ciclo) — in attesa di validazione. Fase 4 (magazzino/ordini standard) non ancora iniziata.**
+
+### Decisioni architetturali recenti
+- **Countdown**: visibile SOLO all'impresa (in `/impresa/giornate`). L'operaio vede solo stato generico e pulsante bloccato/attivo.
+- **Blocco temporale**: il server enforza il tempo minimo (non solo il client). Operaio non può chiudere sessione in anticipo.
+- **Rapportino**: obbligatorio. Se mancante: banner rosso persistente nel layout operaio + avviso impresa.
+- **Push notification**: struttura pronta in `lib/push.ts` + `public/sw.js`. Attivare con `npm install web-push` + VAPID keys in `.env.local`.
+- **Email**: struttura pronta in `lib/email.ts`. Attivare con `npm install resend` + `RESEND_API_KEY` in `.env.local`.
+- **Enum DB**: `user_role` (lowercase) esiste per `profiles.role` (legacy); `"UserRole"` (PascalCase) è stato creato per `chat_messaggi.ruolo` (richiesto da Prisma).
 
 - Aggiorna questa riga a fine di ogni fase.

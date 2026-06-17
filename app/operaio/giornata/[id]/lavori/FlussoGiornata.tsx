@@ -1,7 +1,7 @@
 'use client'
 
 // TODO LEGALE — Art. 4 L. 300/1970 + GDPR:
-// Il sistema di countdown registra i timestamp di inizio/fine sessione lavorativa (mattina e pomeriggio).
+// Il sistema registra i timestamp di inizio/fine sessione lavorativa (mattina e pomeriggio).
 // Questo costituisce monitoraggio dell'attività a distanza ai sensi dell'art. 4 L. 300/1970.
 // OBBLIGATORIO prima del go-live in produzione:
 //   1. Informativa ai lavoratori (art. 13 GDPR)
@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { avanzaFase, uploadFotoAvanzamento } from './actions'
+import { avanzaFase, annullaGiornata, uploadFotoAvanzamento } from './actions'
 
 type Fase = 'inizio' | 'mattina' | 'pausa' | 'pomeriggio' | 'fine' | 'completata'
 
@@ -32,29 +32,9 @@ interface Props {
   foto: { id: string; url: string }[]
 }
 
-function useCountdown(targetMs: number | null): number {
-  const [rimanenti, setRimanenti] = useState<number>(0)
-  useEffect(() => {
-    if (targetMs === null) return
-    const aggiorna = () => setRimanenti(Math.max(0, targetMs - Date.now()))
-    aggiorna()
-    const t = setInterval(aggiorna, 1000)
-    return () => clearInterval(t)
-  }, [targetMs])
-  return rimanenti
-}
-
-function formatCountdown(ms: number): string {
-  const totalSec = Math.ceil(ms / 1000)
-  const h = Math.floor(totalSec / 3600)
-  const m = Math.floor((totalSec % 3600) / 60)
-  const s = totalSec % 60
-  return `${h > 0 ? `${h}:` : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
-
-function calcolaFine(inizio: string | null, durataMinuti: number): number | null {
+function calcolaFineMs(inizio: string | null, durataMinuti: number): number | null {
   if (!inizio) return null
-  return new Date(inizio).getTime() + durataMinuti * 60 * 1000
+  return new Date(inizio).getTime() + durataMinuti * 60_000
 }
 
 export default function FlussoGiornata({
@@ -66,28 +46,45 @@ export default function FlussoGiornata({
   const [pending, startTransition] = useTransition()
   const [errore, setErrore] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [pronta, setPronta] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const fineMattinaMs = calcolaFine(inizioMattina, config.durataMattinaMinuti)
-  const finePausaMs = calcolaFine(fineMattina, config.durataPausaMinuti)
-  const finePomeriggioMs = calcolaFine(inizioPomeriggio, config.durataPomeriggioMinuti)
+  const fineMattinaMs    = calcolaFineMs(inizioMattina,    config.durataMattinaMinuti)
+  const finePausaMs      = calcolaFineMs(fineMattina,      config.durataPausaMinuti)
+  const finePomeriggioMs = calcolaFineMs(inizioPomeriggio, config.durataPomeriggioMinuti)
 
-  const countdownMattina = useCountdown(fase === 'mattina' ? fineMattinaMs : null)
-  const countdownPausa = useCountdown(fase === 'pausa' ? finePausaMs : null)
-  const countdownPomeriggio = useCountdown(fase === 'pomeriggio' ? finePomeriggioMs : null)
-
-  // Avanza automaticamente se il countdown è scaduto
+  // Ogni 15 s verifica se il tempo di fase è scaduto — sblocca il pulsante senza mostrare countdown
   useEffect(() => {
-    if (fase === 'mattina' && countdownMattina === 0 && fineMattinaMs && Date.now() >= fineMattinaMs) {
-      // Mostra solo il pulsante, non avanzare automaticamente (l'operaio decide)
+    function check() {
+      const now = Date.now()
+      if (fase === 'inizio')     { setPronta(true); return }
+      if (fase === 'mattina')    { setPronta(fineMattinaMs !== null && now >= fineMattinaMs); return }
+      if (fase === 'pausa')      { setPronta(finePausaMs !== null && now >= finePausaMs); return }
+      if (fase === 'pomeriggio') { setPronta(finePomeriggioMs !== null && now >= finePomeriggioMs); return }
+      setPronta(true)
     }
-  }, [fase, countdownMattina, fineMattinaMs])
+    check()
+    const t = setInterval(check, 15_000)
+    return () => clearInterval(t)
+  }, [fase, fineMattinaMs, finePausaMs, finePomeriggioMs])
 
   function avanza() {
+    setErrore('')
     startTransition(async () => {
       try {
         await avanzaFase(giornataId, fase)
         router.refresh()
+      } catch (err: unknown) {
+        setErrore(err instanceof Error ? err.message : 'Errore')
+      }
+    })
+  }
+
+  function handleAnnulla() {
+    if (!window.confirm('Sei sicuro di voler annullare la giornata? Perderai tutti i dati inseriti oggi.')) return
+    startTransition(async () => {
+      try {
+        await annullaGiornata(giornataId)
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')
       }
@@ -112,25 +109,45 @@ export default function FlussoGiornata({
   }
 
   const labelFase: Record<Fase, string> = {
-    inizio: 'Pronto a iniziare',
-    mattina: '🌅 Sessione mattutina',
-    pausa: '☕ Pausa pranzo',
-    pomeriggio: '🌆 Sessione pomeridiana',
-    fine: '✅ Lavori completati',
+    inizio:     'Pronto a iniziare',
+    mattina:    '🌅 Sessione mattutina in corso',
+    pausa:      '☕ Pausa pranzo',
+    pomeriggio: '🌆 Sessione pomeridiana in corso',
+    fine:       '✅ Lavori completati — compila il rapportino',
     completata: '✅ Giornata chiusa',
+  }
+
+  const labelPulsante: Partial<Record<Fase, string>> = {
+    inizio:     '▶ Inizia sessione mattutina',
+    mattina:    '⏸ Vai in pausa pranzo',
+    pausa:      '▶ Riprendi lavoro pomeridiano',
+    pomeriggio: '🏁 Termina giornata',
+  }
+
+  const colorePulsante: Partial<Record<Fase, string>> = {
+    inizio:     'bg-green-600 hover:bg-green-700',
+    mattina:    'bg-amber-500 hover:bg-amber-600',
+    pausa:      'bg-blue-600 hover:bg-blue-700',
+    pomeriggio: 'bg-orange-500 hover:bg-orange-600',
   }
 
   return (
     <div className="p-4 max-w-xl mx-auto space-y-4">
 
-      {/* Stato commessa */}
+      {/* ORDINE 3 — Link dashboard: navigare via non interrompe la giornata */}
+      <div className="flex items-center justify-between text-sm">
+        <a href="/operaio/dashboard" className="text-blue-600 hover:underline font-medium">‹ Torna alla dashboard</a>
+        <span className="text-xs text-gray-400">La giornata continua in background</span>
+      </div>
+
+      {/* Commessa */}
       <div className="bg-white rounded-xl border p-4">
-        <p className="text-xs text-gray-500 uppercase tracking-wide">Cantiere</p>
+        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Cantiere</p>
         <p className="font-bold text-lg">{commessa.nome}</p>
         {commessa.indirizzoCantiere && <p className="text-sm text-gray-500">📍 {commessa.indirizzoCantiere}</p>}
       </div>
 
-      {/* Indicazioni impresa (sempre visibili) */}
+      {/* Indicazioni impresa (sola lettura) */}
       {pianificazione?.lavoroDaFare && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
           <p className="text-xs font-semibold text-blue-600 mb-1">Lavoro assegnato:</p>
@@ -138,87 +155,64 @@ export default function FlussoGiornata({
         </div>
       )}
 
-      {/* Fase corrente */}
-      <div className="bg-white rounded-xl border p-4 text-center">
+      {/* ORDINE 1 — Stato fase: NESSUN countdown visibile all'operaio */}
+      <div className="bg-white rounded-xl border p-5 text-center space-y-3">
         <p className="text-2xl font-bold">{labelFase[fase]}</p>
 
-        {/* Countdown mattina */}
-        {fase === 'mattina' && (
-          <div className="mt-3">
-            {countdownMattina > 0 ? (
-              <>
-                <p className="text-5xl font-mono font-bold text-blue-600">{formatCountdown(countdownMattina)}</p>
-                <p className="text-sm text-gray-500 mt-1">Tempo rimanente sessione mattutina</p>
-              </>
-            ) : (
-              <p className="text-green-600 font-semibold mt-2">Sessione completata — puoi fare pausa</p>
-            )}
+        {/* Sessione non ancora completata → messaggio generico senza timer */}
+        {!pronta && (fase === 'mattina' || fase === 'pausa' || fase === 'pomeriggio') && (
+          <div className="bg-gray-50 rounded-lg p-3">
+            <div className="flex items-center justify-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+              <span className="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse delay-150" />
+              <span className="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse delay-300" />
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Sessione in corso…</p>
+            <p className="text-xs text-gray-400 mt-1">Il pulsante si attiverà al termine</p>
           </div>
         )}
 
-        {/* Countdown pausa */}
-        {fase === 'pausa' && (
-          <div className="mt-3">
-            {countdownPausa > 0 ? (
-              <>
-                <p className="text-5xl font-mono font-bold text-amber-500">{formatCountdown(countdownPausa)}</p>
-                <p className="text-sm text-gray-500 mt-1">Durata pausa</p>
-              </>
-            ) : (
-              <p className="text-green-600 font-semibold mt-2">Pausa terminata — puoi riprendere</p>
-            )}
-          </div>
-        )}
-
-        {/* Countdown pomeriggio */}
-        {fase === 'pomeriggio' && (
-          <div className="mt-3">
-            {countdownPomeriggio > 0 ? (
-              <>
-                <p className="text-5xl font-mono font-bold text-orange-500">{formatCountdown(countdownPomeriggio)}</p>
-                <p className="text-sm text-gray-500 mt-1">Tempo rimanente sessione pomeridiana</p>
-              </>
-            ) : (
-              <p className="text-green-600 font-semibold mt-2">Sessione completata — puoi chiudere</p>
-            )}
-          </div>
+        {/* Sessione completata → feedback positivo */}
+        {pronta && (fase === 'mattina' || fase === 'pausa' || fase === 'pomeriggio') && (
+          <p className="text-green-600 font-semibold text-sm">✓ Puoi procedere</p>
         )}
       </div>
 
-      {errore && <p className="text-red-600 text-sm text-center">{errore}</p>}
+      {errore && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+          <p className="text-red-700 text-sm text-center">{errore}</p>
+        </div>
+      )}
 
-      {/* Pulsante avanzamento fase */}
+      {/* ORDINE 2 — Pulsante bloccato finché il tempo non è scaduto */}
       {fase !== 'fine' && fase !== 'completata' && (
         <button
           onClick={avanza}
-          disabled={pending}
+          disabled={pending || !pronta}
           className={[
-            'w-full font-bold py-4 rounded-xl text-white text-lg disabled:opacity-50',
-            fase === 'inizio' ? 'bg-green-600' :
-            fase === 'mattina' ? 'bg-amber-500' :
-            fase === 'pausa' ? 'bg-blue-600' :
-            'bg-orange-500',
+            'w-full font-bold py-4 rounded-xl text-white text-lg transition-all',
+            pronta && !pending ? colorePulsante[fase] : 'bg-gray-300 cursor-not-allowed',
           ].join(' ')}
         >
-          {pending ? '…' :
-            fase === 'inizio' ? '▶ Inizia sessione mattutina' :
-            fase === 'mattina' ? '⏸ Vai in pausa' :
-            fase === 'pausa' ? '▶ Riprendi lavoro' :
-            '🏁 Termina giornata'}
+          {pending
+            ? '…'
+            : pronta
+            ? (labelPulsante[fase] ?? 'Avanza')
+            : 'Sessione in corso — attendi…'}
         </button>
       )}
 
-      {/* Rapportino sbloccato solo dopo "fine" */}
+      {/* Rapportino: sbloccato SOLO dopo fase 'fine' */}
       {(fase === 'fine' || fase === 'completata') && (
         <a
           href={`/operaio/giornata/${giornataId}/rapportino`}
-          className="block w-full bg-green-600 text-white font-bold py-4 rounded-xl text-lg text-center"
+          className="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl text-lg text-center"
         >
-          📋 Compila rapportino
+          📋 Compila rapportino (obbligatorio)
         </a>
       )}
 
-      {/* Foto avanzamento (sempre disponibile durante la giornata) */}
+      {/* Foto avanzamento */}
       {fase !== 'inizio' && fase !== 'completata' && (
         <div className="bg-white rounded-xl border p-4">
           <p className="text-sm font-semibold mb-2">📸 Foto avanzamento</p>
@@ -242,13 +236,24 @@ export default function FlussoGiornata({
         </div>
       )}
 
-      {/* Link chat */}
+      {/* Chat */}
       <a
         href={`/operaio/giornata/${giornataId}/chat`}
         className="block w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl text-center text-sm"
       >
         💬 Chat con magazziniere / impresa
       </a>
+
+      {/* ORDINE 3 — Annulla giornata (solo se non terminata) */}
+      {fase !== 'fine' && fase !== 'completata' && (
+        <button
+          onClick={handleAnnulla}
+          disabled={pending}
+          className="w-full text-red-500 text-sm py-2 hover:underline disabled:opacity-40"
+        >
+          Annulla giornata e ricomincia da capo
+        </button>
+      )}
     </div>
   )
 }

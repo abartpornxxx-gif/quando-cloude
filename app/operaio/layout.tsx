@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { OfflineBanner } from '@/components/OfflineBanner'
 
 export default async function OperaioLayout({ children }: { children: React.ReactNode }) {
@@ -7,6 +8,20 @@ export default async function OperaioLayout({ children }: { children: React.Reac
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user || user.user_metadata?.role !== 'operaio') redirect('/login')
+
+  // ORDINE 4 — Controlla rapportino pendente per il banner persistente
+  let rapportinoPendente: { id: string; commessaNome: string } | null = null
+  if (user.email) {
+    const operaio = await prisma.operaio.findFirst({ where: { email: user.email }, select: { id: true } })
+    if (operaio) {
+      const g = await prisma.giornata.findFirst({
+        where: { operaioId: operaio.id, fase: 'fine', stato: 'bozza', rapportino: null },
+        select: { id: true, commessa: { select: { nome: true } } },
+        orderBy: { data: 'desc' },
+      })
+      if (g) rapportinoPendente = { id: g.id, commessaNome: g.commessa.nome }
+    }
+  }
 
   async function signOut() {
     'use server'
@@ -26,9 +41,12 @@ export default async function OperaioLayout({ children }: { children: React.Reac
               <span className="hidden rounded-full bg-emerald-500/60 px-2 py-0.5 text-xs font-semibold sm:inline">Cantiere</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="hidden text-sm text-emerald-200 sm:block truncate max-w-[150px]">
-                {user.user_metadata?.full_name ?? user.email}
-              </span>
+              {rapportinoPendente && (
+                <a href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`}
+                  className="flex items-center gap-1 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white animate-pulse">
+                  ⚠️ Rapportino
+                </a>
+              )}
               <form action={signOut}>
                 <button type="submit"
                   className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-100 hover:bg-emerald-600">
@@ -39,6 +57,18 @@ export default async function OperaioLayout({ children }: { children: React.Reac
           </div>
         </div>
       </nav>
+
+      {/* ORDINE 4 — Banner rapportino mancante (sempre visibile su tutte le pagine operaio) */}
+      {rapportinoPendente && (
+        <div className="bg-red-600 text-white px-4 py-2 text-center text-sm">
+          <span className="font-semibold">⚠️ Hai un rapportino da compilare!</span>
+          {' '}
+          <a href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`}
+            className="underline font-bold">
+            Vai ora →
+          </a>
+        </div>
+      )}
 
       <OfflineBanner />
 

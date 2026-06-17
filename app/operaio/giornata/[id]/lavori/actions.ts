@@ -3,7 +3,10 @@
 import { prisma } from '@/lib/prisma'
 import { requireOperaio } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { inviaPushRapportino } from '@/lib/push'
+import { inviaEmailRapportino } from '@/lib/email'
 
 export async function avanzaFase(
   giornataId: string,
@@ -11,16 +14,37 @@ export async function avanzaFase(
 ): Promise<void> {
   const { operaio } = await requireOperaio()
 
-  const giornata = await prisma.giornata.findUnique({ where: { id: giornataId } })
+  const [giornata, config] = await Promise.all([
+    prisma.giornata.findUnique({ where: { id: giornataId } }),
+    prisma.configurazioneOrari.findFirst(),
+  ])
   if (!giornata || giornata.operaioId !== operaio.id) throw new Error('Non autorizzato')
 
-  const adesso = new Date()
+  const cfg = config ?? { durataMattinaMinuti: 240, durataPausaMinuti: 60, durataPomeriggioMinuti: 240 }
+  const adesso = Date.now()
+
+  // ORDINE 2 — Blocco temporale: la transizione è permessa solo se il tempo è davvero trascorso
+  if (faseCorrente === 'mattina') {
+    if (!giornata.inizioMattina) throw new Error('Sessione non avviata correttamente')
+    const fine = new Date(giornata.inizioMattina).getTime() + cfg.durataMattinaMinuti * 60_000
+    if (adesso < fine) throw new Error('Sessione mattutina non ancora completata')
+  }
+  if (faseCorrente === 'pausa') {
+    if (!giornata.fineMattina) throw new Error('Fine mattina non registrata')
+    const fine = new Date(giornata.fineMattina).getTime() + cfg.durataPausaMinuti * 60_000
+    if (adesso < fine) throw new Error('Pausa non ancora completata')
+  }
+  if (faseCorrente === 'pomeriggio') {
+    if (!giornata.inizioPomeriggio) throw new Error('Sessione pomeriggio non avviata')
+    const fine = new Date(giornata.inizioPomeriggio).getTime() + cfg.durataPomeriggioMinuti * 60_000
+    if (adesso < fine) throw new Error('Sessione pomeridiana non ancora completata')
+  }
 
   const transizioni: Record<string, { fase: string; campo?: string }> = {
-    inizio: { fase: 'mattina', campo: 'inizioMattina' },
-    mattina: { fase: 'pausa', campo: 'fineMattina' },
-    pausa: { fase: 'pomeriggio', campo: 'inizioPomeriggio' },
-    pomeriggio: { fase: 'fine', campo: 'finePomeriggio' },
+    inizio:     { fase: 'mattina',    campo: 'inizioMattina'    },
+    mattina:    { fase: 'pausa',      campo: 'fineMattina'      },
+    pausa:      { fase: 'pomeriggio', campo: 'inizioPomeriggio' },
+    pomeriggio: { fase: 'fine',       campo: 'finePomeriggio'   },
   }
 
   const transizione = transizioni[faseCorrente]
@@ -30,11 +54,57 @@ export async function avanzaFase(
     where: { id: giornataId },
     data: {
       fase: transizione.fase as any,
-      ...(transizione.campo ? { [transizione.campo]: adesso } : {}),
+      ...(transizione.campo ? { [transizione.campo]: new Date() } : {}),
     },
   })
 
   revalidatePath(`/operaio/giornata/${giornataId}/lavori`)
+
+  // Quando la giornata raggiunge 'fine', invia notifiche all'operaio (push + email)
+  if (transizione.fase === 'fine') {
+    // Fire-and-forget: non blocca la risposta se le notifiche falliscono
+    Promise.all([
+      inviaPushRapportino(operaio.id, giornataId).catch(() => {}),
+      operaio.email
+        ? inviaEmailRapportino(operaio.email, operaio.nome, giornata.commessaId, giornataId).catch(() => {})
+        : Promise.resolve(),
+    ])
+  }
+}
+
+export async function annullaGiornata(giornataId: string): Promise<void> {
+  const { operaio } = await requireOperaio()
+
+  const giornata = await prisma.giornata.findUnique({
+    where: { id: giornataId },
+    include: { attrezzatureUsi: { where: { riconsegnata: false } } },
+  })
+  if (!giornata || giornata.operaioId !== operaio.id) throw new Error('Non autorizzato')
+  if (giornata.stato === 'inviata') throw new Error('Non puoi annullare una giornata già inviata')
+
+  await prisma.$transaction(async tx => {
+    // Rilascia attrezzature
+    if (giornata.attrezzatureUsi.length > 0) {
+      await tx.attrezzaturaUso.updateMany({
+        where: { giornataId, riconsegnata: false },
+        data: { riconsegnata: true },
+      })
+      for (const u of giornata.attrezzatureUsi) {
+        const altriUsi = await tx.attrezzaturaUso.count({
+          where: { attrezzaturaId: u.attrezzaturaId, riconsegnata: false },
+        })
+        if (altriUsi === 0) {
+          await tx.attrezzatura.update({
+            where: { id: u.attrezzaturaId },
+            data: { stato: 'disponibile', assegnatario: null },
+          })
+        }
+      }
+    }
+    await tx.giornata.delete({ where: { id: giornataId } })
+  })
+
+  redirect('/operaio/dashboard')
 }
 
 export async function uploadFotoAvanzamento(

@@ -6,41 +6,95 @@ import { formatData } from '@/lib/format'
 export default async function OperaioDashboardPage() {
   const { operaio } = await requireOperaio()
 
-  const assegnazioni = await prisma.commessaOperaio.findMany({
-    where: { operaioId: operaio.id },
-    include: {
-      commessa: {
-        include: {
-          cliente: { select: { nome: true } },
-          giornate: {
-            where: { operaioId: operaio.id },
-            orderBy: { data: 'desc' },
-            take: 1,
-            select: { data: true },
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const [assegnazioni, giornataAttiva, giornataRapportinoPendente] = await Promise.all([
+    prisma.commessaOperaio.findMany({
+      where: { operaioId: operaio.id },
+      include: {
+        commessa: {
+          include: {
+            cliente: { select: { nome: true } },
+            giornate: {
+              where: { operaioId: operaio.id },
+              orderBy: { data: 'desc' },
+              take: 1,
+              select: { data: true },
+            },
           },
         },
       },
-    },
-    orderBy: { createdAt: 'desc' },
-  })
+      orderBy: { createdAt: 'desc' },
+    }),
+    // ORDINE 3 — giornata in corso oggi (non ancora chiusa)
+    prisma.giornata.findFirst({
+      where: { operaioId: operaio.id, data: today, stato: 'bozza' },
+      select: { id: true, fase: true, commessa: { select: { nome: true } } },
+    }),
+    // ORDINE 4 — giornata a fine giornata senza rapportino (può essere di ieri)
+    prisma.giornata.findFirst({
+      where: {
+        operaioId: operaio.id,
+        fase: 'fine',
+        stato: 'bozza',
+        rapportino: null,
+      },
+      select: { id: true, data: true, commessa: { select: { nome: true } } },
+      orderBy: { data: 'desc' },
+    }),
+  ])
 
   const commesseAperte = assegnazioni.filter(a => a.commessa.stato === 'aperta')
   const commesseChiuse = assegnazioni.filter(a => a.commessa.stato === 'chiusa')
 
   return (
-    <div>
-      <div className="mb-6">
+    <div className="space-y-4">
+      {/* ORDINE 4 — Avviso rapportino mancante (in-app notification) */}
+      {giornataRapportinoPendente && (
+        <div className="rounded-xl bg-red-600 text-white p-4 shadow-lg">
+          <p className="font-bold text-base">⚠️ Rapportino da compilare!</p>
+          <p className="text-sm mt-1 text-red-100">
+            {giornataRapportinoPendente.commessa.nome} —{' '}
+            {new Date(giornataRapportinoPendente.data).toLocaleDateString('it-IT')}
+          </p>
+          <a
+            href={`/operaio/giornata/${giornataRapportinoPendente.id}/rapportino`}
+            className="mt-3 block w-full bg-white text-red-600 font-bold py-2 rounded-lg text-center text-sm"
+          >
+            Compila ora →
+          </a>
+        </div>
+      )}
+
+      <div>
         <h1 className="text-xl font-bold text-gray-900">Ciao, {operaio.nome.split(' ')[0]}!</h1>
         <p className="mt-1 text-sm text-gray-500">
           {commesseAperte.length} cantier{commesseAperte.length === 1 ? 'e aperto' : 'i aperti'}
         </p>
       </div>
 
-      <Link href="/operaio/giornata/nuova"
-        className="mb-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-4 text-white font-semibold shadow-lg hover:bg-emerald-700 active:scale-95 transition-transform">
-        <span className="text-2xl">➕</span>
-        <span>Inizia giornata lavorativa</span>
-      </Link>
+      {/* ORDINE 3 — Giornata in corso: mostra "Riprendi" invece di "Inizia" */}
+      {giornataAttiva ? (
+        <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4">
+          <p className="text-sm font-semibold text-emerald-700">Giornata in corso</p>
+          <p className="text-sm text-gray-700 mt-1">{giornataAttiva.commessa.nome}</p>
+          <a
+            href={`/operaio/giornata/${giornataAttiva.id}/lavori`}
+            className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-white font-semibold hover:bg-emerald-700"
+          >
+            <span>▶ Riprendi giornata</span>
+          </a>
+        </div>
+      ) : (
+        !giornataRapportinoPendente && (
+          <Link href="/operaio/giornata/nuova"
+            className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-4 text-white font-semibold shadow-lg hover:bg-emerald-700 active:scale-95 transition-transform">
+            <span className="text-2xl">➕</span>
+            <span>Inizia giornata lavorativa</span>
+          </Link>
+        )
+      )}
 
       {commesseAperte.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
