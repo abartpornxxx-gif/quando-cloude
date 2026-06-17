@@ -6,6 +6,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   impresa: '/impresa/dashboard',
   operaio: '/operaio/dashboard',
   cliente: '/cliente/dashboard',
+  magazziniere: '/magazziniere/dashboard',
 }
 
 export async function proxy(request: NextRequest) {
@@ -63,7 +64,8 @@ export async function proxy(request: NextRequest) {
     const inWrongArea =
       (pathname.startsWith('/impresa/') && role !== 'impresa') ||
       (pathname.startsWith('/operaio/') && role !== 'operaio') ||
-      (pathname.startsWith('/cliente/') && role !== 'cliente')
+      (pathname.startsWith('/cliente/') && role !== 'cliente') ||
+      (pathname.startsWith('/magazziniere/') && role !== 'magazziniere')
 
     if (inWrongArea) {
       return NextResponse.redirect(new URL(ROLE_HOME[role], request.url))

@@ -61,6 +61,8 @@ export default async function PianificazionePage({
     data: (p.data as Date).toISOString().slice(0, 10),
     operaio: p.operaio,
     sostituito: p.sostituito,
+    lavoroDaFare: p.lavoroDaFare ?? null,
+    noteMateriale: p.noteMateriale ?? null,
   }))
 
   return (

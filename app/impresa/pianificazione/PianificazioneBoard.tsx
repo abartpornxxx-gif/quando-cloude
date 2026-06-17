@@ -14,6 +14,7 @@ import {
 import type { DragEndEvent } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { creaPianificazione, eliminaPianificazione, sostituisciOperaio } from './actions'
+import { salvaPianificazioneDettagli } from '../configurazione/actions'
 
 type OperaioMini = { id: string; nome: string }
 type CommessaMini = { id: string; nome: string; indirizzoCantiere: string | null }
@@ -24,6 +25,8 @@ type PianMini = {
   data: string
   operaio: OperaioMini
   sostituito: boolean
+  lavoroDaFare: string | null
+  noteMateriale: string | null
 }
 
 const COLORS = [
@@ -55,6 +58,63 @@ function DraggableOperaio({ operaio }: { operaio: OperaioMini }) {
   )
 }
 
+function DettagliModal({ plan, onClose }: { plan: PianMini; onClose: () => void }) {
+  const [lavoro, setLavoro] = useState(plan.lavoroDaFare ?? '')
+  const [note, setNote] = useState(plan.noteMateriale ?? '')
+  const [saving, setSaving] = useState(false)
+  const [ok, setOk] = useState(false)
+
+  async function salva() {
+    setSaving(true)
+    try {
+      await salvaPianificazioneDettagli(plan.id, lavoro, note)
+      setOk(true)
+      setTimeout(onClose, 800)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <p className="font-semibold text-sm">{plan.operaio.nome}</p>
+          <button onClick={onClose} className="text-gray-400 text-lg">×</button>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold mb-1 text-gray-600">Lavoro da fare</label>
+          <textarea
+            value={lavoro}
+            onChange={e => setLavoro(e.target.value)}
+            placeholder="Descrivi cosa deve fare l'operaio..."
+            className="w-full border rounded-lg px-3 py-2 text-sm"
+            rows={3}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold mb-1 text-gray-600">Note materiale</label>
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="Materiale da portare, preparare..."
+            className="w-full border rounded-lg px-3 py-2 text-sm"
+            rows={2}
+          />
+        </div>
+        {ok && <p className="text-green-600 text-xs">✅ Salvato</p>}
+        <button
+          onClick={salva}
+          disabled={saving}
+          className="w-full bg-blue-600 text-white font-bold py-2 rounded-xl text-sm disabled:opacity-50"
+        >
+          {saving ? 'Salvataggio…' : 'Salva'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function DropCell({
   cellId, pians, operai, onRemove, onSostituisci, saving,
 }: {
@@ -67,6 +127,9 @@ function DropCell({
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: cellId })
   const [sostituendoId, setSostituendoId] = useState<string | null>(null)
+  const [dettagliId, setDettagliId] = useState<string | null>(null)
+
+  const planDettagli = pians.find(p => p.id === dettagliId)
 
   return (
     <td
@@ -76,6 +139,9 @@ function DropCell({
         isOver ? 'bg-blue-50 ring-1 ring-inset ring-blue-400' : 'bg-white hover:bg-gray-50'
       }`}
     >
+      {planDettagli && (
+        <DettagliModal plan={planDettagli} onClose={() => setDettagliId(null)} />
+      )}
       {pians.map(p => (
         <div key={p.id} className="mb-1">
           <div
@@ -83,17 +149,26 @@ function DropCell({
               p.sostituito ? 'opacity-40' : ''
             }`}
           >
-            <span className="flex-1 truncate" style={{ maxWidth: 55 }} title={p.operaio.nome}>
+            <span className="flex-1 truncate" style={{ maxWidth: 45 }} title={p.operaio.nome}>
               {p.sostituito ? '✗ ' : ''}{p.operaio.nome.split(' ')[0]}
             </span>
             {!p.sostituito && (
-              <button
-                onClick={() => setSostituendoId(sostituendoId === p.id ? null : p.id)}
-                className="shrink-0 text-white/80 hover:text-white text-[10px] px-0.5"
-                title="Sostituisci"
-              >
-                ↔
-              </button>
+              <>
+                <button
+                  onClick={() => setDettagliId(p.id)}
+                  className="shrink-0 text-white/80 hover:text-white text-[9px] px-0.5"
+                  title="Dettagli giornata"
+                >
+                  ✏
+                </button>
+                <button
+                  onClick={() => setSostituendoId(sostituendoId === p.id ? null : p.id)}
+                  className="shrink-0 text-white/80 hover:text-white text-[10px] px-0.5"
+                  title="Sostituisci"
+                >
+                  ↔
+                </button>
+              </>
             )}
             <button
               onClick={() => { setSostituendoId(null); onRemove(p.id) }}
@@ -104,6 +179,11 @@ function DropCell({
               ×
             </button>
           </div>
+          {p.lavoroDaFare && !p.sostituito && (
+            <p className="text-[9px] text-gray-500 truncate mt-0.5 px-0.5" title={p.lavoroDaFare}>
+              📋 {p.lavoroDaFare}
+            </p>
+          )}
           {sostituendoId === p.id && (
             <div className="relative z-10 mt-1 rounded border border-gray-200 bg-white p-1 shadow-md">
               <p className="mb-1 text-[10px] text-gray-400">Sostituisci con:</p>
@@ -161,7 +241,7 @@ export function PianificazioneBoard({
 
     const tempId = `temp-${Date.now()}`
     setSaving(true)
-    setPians(prev => [...prev, { id: tempId, commessaId, operaioId, data: date, operaio, sostituito: false }])
+    setPians(prev => [...prev, { id: tempId, commessaId, operaioId, data: date, operaio, sostituito: false, lavoroDaFare: null, noteMateriale: null }])
 
     try {
       const result = await creaPianificazione({ commessaId, operaioId, data: date })

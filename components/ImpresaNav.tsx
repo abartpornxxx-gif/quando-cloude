@@ -17,6 +17,8 @@ const NAV = [
   { label: 'Calendario', href: '/impresa/calendario' },
   { label: 'Pianificazione', href: '/impresa/pianificazione' },
   { label: 'Assenze', href: '/impresa/assenze' },
+  { label: 'Giornate', href: '/impresa/giornate' },
+  { label: 'Configurazione', href: '/impresa/configurazione' },
 ]
 
 export function ImpresaNav() {

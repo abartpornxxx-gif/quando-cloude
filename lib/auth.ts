@@ -22,3 +22,17 @@ export async function requireOperaio() {
 
   return { user, operaio }
 }
+
+export async function requireMagazziniere() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || user.user_metadata?.role !== 'magazziniere') redirect('/login')
+  if (!user.email) redirect('/login')
+
+  const magazziniere = await prisma.magazziniere.findFirst({
+    where: { email: user.email },
+  })
+  if (!magazziniere) redirect('/login')
+
+  return { user, magazziniere }
+}

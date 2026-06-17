@@ -6,6 +6,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   impresa: '/impresa/dashboard',
   operaio: '/operaio/dashboard',
   cliente: '/cliente/dashboard',
+  magazziniere: '/magazziniere/dashboard',
 }
 
 export async function GET(request: Request) {
