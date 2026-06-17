@@ -25,6 +25,8 @@ const NAV = [
   { label: 'Assenze', href: '/impresa/assenze' },
   { label: 'Giornate', href: '/impresa/giornate' },
   { label: 'Configurazione', href: '/impresa/configurazione' },
+  { label: 'Catalogo', href: '/impresa/catalogo' },
+  { label: 'Richieste', href: '/impresa/richieste-offerte' },
 ]
 
 export function ImpresaNav() {

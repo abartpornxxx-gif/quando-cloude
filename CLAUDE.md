@@ -80,7 +80,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Fase 6 completata — Portale Cliente (lavori, pagamenti, documenti). In attesa di validazione.**
+- Fase corrente: **Fase 7 completata — Catalogo offerte aggiuntive. In attesa di validazione.**
 
 ### Decisioni architetturali recenti
 - **Countdown**: visibile SOLO all'impresa (in `/impresa/giornate`). L'operaio vede solo stato generico e pulsante bloccato/attivo.
@@ -93,5 +93,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 - **Fase 5 — modelli**: `FatturaAttiva` + `FatturaAttivaRiga` (fatture emesse), `FatturaPassiva` (fatture ricevute), `DichiarazioneConformita` (DiCo DM 37/2008). Enums: `StatoFatturaAttiva`, `StatoFatturaPassiva`. Importi in centesimi. `aliquotaIva` come Int (22=22%). Incasso/pagamento registrati manualmente (solo bonifico). Fattura incassata propaga su `commessa.fatturato`. Export XML SdI genera FatturaPA v1.2 (NO invio diretto — file da passare a intermediario accreditato). DiCo: PDF via browser print (`/impresa/dico/[id]/stampa`, CSS `@media print` nasconde nav). Variabili impresa in `.env.local`: `IMPRESA_RAGIONE_SOCIALE`, `IMPRESA_PARTITA_IVA`, `IMPRESA_INDIRIZZO`, `IMPRESA_CAP`, `IMPRESA_CITTA`, `IMPRESA_PROVINCIA`.
 
 - **Fase 6 — Portale Cliente**: `requireCliente()` in `lib/auth.ts` linka user via `clienti.email`. RLS SELECT-only su 9 tabelle (clienti, commesse, giornate, giornata_foto, rapportini, fatture_attive, fattura_attiva_righe, dichiarazioni_conformita, preventivi) con policy `auth.jwt() ->> 'email' = email` o sub-select via JOIN. Route: `/cliente/lavori` (lista commesse + barra avanzamento), `/cliente/lavori/[id]` (diario + foto), `/cliente/pagamenti` (fatture + IBAN bonifico), `/cliente/documenti` (lista DiCo + fatture), `/cliente/documenti/fattura/[id]` e `/cliente/documenti/dico/[id]` (view print-friendly protect per ruolo cliente). `IMPRESA_IBAN` in `.env.local` per mostrare coordinate bonifico. Sicurezza: `commessa.clienteId !== cliente.id → notFound()` e `dico.commessa.clienteId !== cliente.id → notFound()` su ogni pagina.
+
+- **Fase 7 — Catalogo offerte aggiuntive**: modelli `OffertaCatalogo` + `RichiestaOfferta`. Enum: `StatoRichiestaOfferta` (nuova/vista/in_preventivo/chiusa). Storage bucket `foto-catalogo` (pubblico, max 5 MB). Impresa: CRUD offerte su `/impresa/catalogo` con upload foto via browser client Supabase, toggle attiva/nascosta, ordine visualizzazione. Vetrina cliente su `/cliente/servizi` (solo offerte attive): card con foto + descrizione + "A partire da". Pulsante "Mi interessa" apre modal con nota libera e selezione commessa opzionale → crea `RichiestaOfferta`. Gestione impresa su `/impresa/richieste-offerte` (lista con badge "nuove") e `/impresa/richieste-offerte/[id]` (dettaglio + "Crea preventivo" crea preventivo con nota pre-compilata e redirect a `/impresa/preventivi/[id]`). Dashboard impresa: 5° KPI "Richieste offerte" con contatore nuove. RLS: impresa gestisce tutto, cliente vede solo offerte attive e proprie richieste.
 
 - Aggiorna questa riga a fine di ogni fase.

@@ -23,6 +23,7 @@ export default async function ClienteLayout({ children }: { children: React.Reac
     { label: '🏗 I miei lavori', href: '/cliente/lavori' },
     { label: '💳 Pagamenti', href: '/cliente/pagamenti' },
     { label: '📄 Documenti', href: '/cliente/documenti' },
+    { label: '✨ Servizi', href: '/cliente/servizi' },
   ]
 
   return (

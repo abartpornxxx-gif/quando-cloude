@@ -6,7 +6,7 @@ import { formatEuro } from '@/lib/format'
 export default async function ImpresaDashboardPage() {
   await requireImpresa()
 
-  const [commesseAperte, rapportiniMancanti, scadenzeVicine, ordiniAperti] = await Promise.all([
+  const [commesseAperte, rapportiniMancanti, scadenzeVicine, ordiniAperti, richiesteNuove] = await Promise.all([
     prisma.commessa.count({ where: { stato: 'aperta' } }),
     prisma.giornata.count({ where: { fase: 'fine', stato: 'bozza', rapportino: null } }),
     prisma.fatturaAttiva.count({
@@ -16,6 +16,7 @@ export default async function ImpresaDashboardPage() {
       },
     }),
     prisma.ordineFornitore.count({ where: { stato: { in: ['richiesto', 'ordinato'] } } }),
+    prisma.richiestaOfferta.count({ where: { stato: 'nuova' } }),
   ])
 
   const commesseRecenti = await prisma.commessa.findMany({
@@ -63,6 +64,13 @@ export default async function ImpresaDashboardPage() {
       ],
     },
     {
+      titolo: 'Catalogo & Offerte',
+      links: [
+        { label: 'Catalogo', href: '/impresa/catalogo', desc: 'Offerte ai clienti' },
+        { label: 'Richieste', href: '/impresa/richieste-offerte', desc: richiesteNuove > 0 ? `📬 ${richiesteNuove} nuove` : 'Interessi clienti' },
+      ],
+    },
+    {
       titolo: 'Strumenti',
       links: [
         { label: 'Checklist', href: '/impresa/checklist', desc: 'Modelli' },
@@ -80,7 +88,7 @@ export default async function ImpresaDashboardPage() {
       </div>
 
       {/* KPI rapidi */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Link href="/impresa/commesse" className="rounded-xl bg-blue-50 border border-blue-100 p-4 hover:bg-blue-100 transition-colors">
           <p className="text-xs text-blue-600 font-medium">Cantieri aperti</p>
           <p className="text-2xl font-bold text-blue-900">{commesseAperte}</p>
@@ -98,6 +106,12 @@ export default async function ImpresaDashboardPage() {
         <Link href="/impresa/ordini" className="rounded-xl bg-gray-50 border border-gray-100 p-4 hover:bg-gray-100 transition-colors">
           <p className="text-xs text-gray-500 font-medium">Ordini aperti</p>
           <p className="text-2xl font-bold text-gray-700">{ordiniAperti}</p>
+        </Link>
+        <Link href="/impresa/richieste-offerte" className={`rounded-xl border p-4 transition-colors ${richiesteNuove > 0 ? 'bg-violet-50 border-violet-200 hover:bg-violet-100' : 'bg-gray-50 border-gray-100 hover:bg-gray-100'}`}>
+          <p className={`text-xs font-medium ${richiesteNuove > 0 ? 'text-violet-600' : 'text-gray-500'}`}>Richieste offerte</p>
+          <p className={`text-2xl font-bold ${richiesteNuove > 0 ? 'text-violet-700' : 'text-gray-700'}`}>
+            {richiesteNuove > 0 ? `📬 ${richiesteNuove}` : '–'}
+          </p>
         </Link>
       </div>
 
