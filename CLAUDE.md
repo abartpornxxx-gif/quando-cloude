@@ -80,14 +80,15 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Affinamento giornata operaio completato (ORDINI 0-4 del secondo ciclo) — in attesa di validazione. Fase 4 (magazzino/ordini standard) non ancora iniziata.**
+- Fase corrente: **Fase 4 completata — Ordini materiale, magazzino, report preventivato vs consumato. In attesa di validazione.**
 
 ### Decisioni architetturali recenti
 - **Countdown**: visibile SOLO all'impresa (in `/impresa/giornate`). L'operaio vede solo stato generico e pulsante bloccato/attivo.
 - **Blocco temporale**: il server enforza il tempo minimo (non solo il client). Operaio non può chiudere sessione in anticipo.
-- **Rapportino**: obbligatorio. Se mancante: banner rosso persistente nel layout operaio + avviso impresa.
+- **Rapportino**: obbligatorio. Se mancante: banner rosso persistente nel layout operaio + avviso impresa. Include sezione reso materiale.
 - **Push notification**: struttura pronta in `lib/push.ts` + `public/sw.js`. Attivare con `npm install web-push` + VAPID keys in `.env.local`.
 - **Email**: struttura pronta in `lib/email.ts`. Attivare con `npm install resend` + `RESEND_API_KEY` in `.env.local`.
-- **Enum DB**: `user_role` (lowercase) esiste per `profiles.role` (legacy); `"UserRole"` (PascalCase) è stato creato per `chat_messaggi.ruolo` (richiesto da Prisma).
+- **Enum DB**: `user_role` (lowercase) esiste per `profiles.role` (legacy); `"UserRole"` (PascalCase) è stato creato per `chat_messaggi.ruolo` (richiesto da Prisma); `"StatoOrdine"` e `"TipoMovimento"` aggiunti per Fase 4.
+- **Fase 4 — modelli**: `OrdineFornitore` (ordini a fornitori), `OrdineRiga` (righe ordine), `MovimentoMagazzino` (carico/scarico/reso). Giacenza calcolata on-the-fly dai movimenti (no campo denormalizzato). Quando ordine→consegnato: carico automatico + incremento `costiMateriali` commessa. Magazziniere che evade richiesta: scarico automatico se materiale collegato al listino. Rapportino: sezione reso crea movimenti tipo=reso.
 
 - Aggiorna questa riga a fine di ogni fase.
