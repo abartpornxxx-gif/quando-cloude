@@ -74,7 +74,7 @@ model Fornitore {
 model Operaio {
   id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nome        String
-  email       String?
+  email       String?  @unique
   ruolo       String?
   costoOrario Int               @default(0) @map("costo_orario")
   zona        String?
