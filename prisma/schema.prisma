@@ -54,10 +54,10 @@ model Cliente {
 }
 
 model Fornitore {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nome          String
-  partitaIva    String?  @map("partita_iva")
-  codiceFiscale String?  @map("codice_fiscale")
+  partitaIva    String?           @map("partita_iva")
+  codiceFiscale String?           @map("codice_fiscale")
   indirizzo     String?
   citta         String?
   cap           String?
@@ -66,8 +66,9 @@ model Fornitore {
   telefono      String?
   pec           String?
   note          String?
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+  ordini        OrdineFornitore[]
 
   @@map("fornitori")
 }
@@ -158,6 +159,9 @@ model Materiale {
   createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz
   giornate    GiornataMateriale[]
+  ordiniRighe OrdineRiga[]
+  movimenti   MovimentoMagazzino[]
+  richieste   RichiestaMateriale[]
 
   @@map("materiali")
 }
@@ -226,6 +230,8 @@ model Commessa {
   attrezzatureUsi    AttrezzaturaUso[]
   richiesteMateriale RichiestaMateriale[]
   chatMessaggi       ChatMessaggio[]
+  ordini             OrdineFornitore[]
+  movimenti          MovimentoMagazzino[]
 
   @@map("commesse")
 }
@@ -433,21 +439,24 @@ enum StatoRichiesta {
 }
 
 model RichiestaMateriale {
-  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  giornataId  String         @map("giornata_id") @db.Uuid
-  giornata    Giornata       @relation(fields: [giornataId], references: [id], onDelete: Cascade)
-  commessaId  String         @map("commessa_id") @db.Uuid
-  commessa    Commessa       @relation(fields: [commessaId], references: [id])
-  operaioId   String         @map("operaio_id") @db.Uuid
-  operaio     Operaio        @relation(fields: [operaioId], references: [id])
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  giornataId  String              @map("giornata_id") @db.Uuid
+  giornata    Giornata            @relation(fields: [giornataId], references: [id], onDelete: Cascade)
+  commessaId  String              @map("commessa_id") @db.Uuid
+  commessa    Commessa            @relation(fields: [commessaId], references: [id])
+  operaioId   String              @map("operaio_id") @db.Uuid
+  operaio     Operaio             @relation(fields: [operaioId], references: [id])
+  materialeId String?             @map("materiale_id") @db.Uuid
+  materiale   Materiale?          @relation(fields: [materialeId], references: [id])
   descrizione String
-  urgente     Boolean        @default(false)
-  stato       StatoRichiesta @default(richiesta)
-  fotoUrl     String?        @map("foto_url")
-  fotoPath    String?        @map("foto_path")
+  urgente     Boolean             @default(false)
+  stato       StatoRichiesta      @default(richiesta)
+  fotoUrl     String?             @map("foto_url")
+  fotoPath    String?             @map("foto_path")
   note        String?
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  movimento   MovimentoMagazzino?
 
   @@map("richieste_materiale")
 }
@@ -481,6 +490,70 @@ model Rapportino {
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("rapportini")
+}
+
+// ─── Fase 4: Ordini materiale e magazzino ────────────────────────────────────
+
+enum StatoOrdine {
+  richiesto
+  ordinato
+  consegnato
+  usato
+}
+
+enum TipoMovimento {
+  carico
+  scarico
+  reso
+}
+
+model OrdineFornitore {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fornitoreId String?    @map("fornitore_id") @db.Uuid
+  fornitore   Fornitore? @relation(fields: [fornitoreId], references: [id])
+  commessaId  String?    @map("commessa_id") @db.Uuid
+  commessa    Commessa?  @relation(fields: [commessaId], references: [id])
+  stato       StatoOrdine @default(richiesto)
+  note        String?
+  righe       OrdineRiga[]
+  movimenti   MovimentoMagazzino[]
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("ordini_fornitori")
+}
+
+model OrdineRiga {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ordineId       String          @map("ordine_id") @db.Uuid
+  ordine         OrdineFornitore @relation(fields: [ordineId], references: [id], onDelete: Cascade)
+  materialeId    String?         @map("materiale_id") @db.Uuid
+  materiale      Materiale?      @relation(fields: [materialeId], references: [id])
+  descrizione    String
+  quantita       Float           @default(1)
+  prezzoUnitario Int             @default(0) @map("prezzo_unitario")
+
+  @@map("ordini_righe")
+}
+
+model MovimentoMagazzino {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  materialeId String?          @map("materiale_id") @db.Uuid
+  materiale   Materiale?       @relation(fields: [materialeId], references: [id])
+  tipo        TipoMovimento
+  quantita    Float
+  descrizione String?
+  commessaId  String?          @map("commessa_id") @db.Uuid
+  commessa    Commessa?        @relation(fields: [commessaId], references: [id])
+  ordineId    String?          @map("ordine_id") @db.Uuid
+  ordine      OrdineFornitore? @relation(fields: [ordineId], references: [id])
+  richiestaId String?          @unique @map("richiesta_id") @db.Uuid
+  richiesta   RichiestaMateriale? @relation(fields: [richiestaId], references: [id])
+  note        String?
+  data        DateTime         @default(now()) @db.Timestamptz
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("movimenti_magazzino")
 }
 
 // Configurazione orari di lavoro (un solo record — singleton)

@@ -53,6 +53,15 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
         )}
       </div>
 
+      <div className="flex gap-2">
+        <Link
+          href={`/impresa/commesse/${c.id}/materiali`}
+          className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm"
+        >
+          📦 Materiali & Report
+        </Link>
+      </div>
+
       <CommessaForm action={salvaCommessa} clienti={clienti} defaultValues={defaultValues} />
 
       {/* Sezione operai assegnati */}

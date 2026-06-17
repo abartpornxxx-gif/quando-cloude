@@ -10,6 +10,8 @@ const NAV = [
   { label: 'Commesse', href: '/impresa/commesse' },
   { label: 'Operai', href: '/impresa/operai' },
   { label: 'Materiali', href: '/impresa/materiali' },
+  { label: 'Ordini', href: '/impresa/ordini' },
+  { label: 'Magazzino', href: '/impresa/magazzino' },
   { label: 'Mezzi', href: '/impresa/mezzi' },
   { label: 'Attrezzature', href: '/impresa/attrezzature' },
   { label: 'Fornitori', href: '/impresa/fornitori' },

@@ -14,19 +14,29 @@ type Richiesta = {
   createdAt: Date | string
   operaio: { nome: string }
   commessa: { nome: string; indirizzoCantiere: string | null }
+  materiale: { id: string; descrizione: string } | null
 }
 
-export default function RichiestaDettaglio({ richiesta }: { richiesta: Richiesta }) {
+type Materiale = { id: string; codice: string | null; descrizione: string }
+
+export default function RichiestaDettaglio({
+  richiesta,
+  materiali,
+}: {
+  richiesta: Richiesta
+  materiali: Materiale[]
+}) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [uploading, setUploading] = useState(false)
   const [errore, setErrore] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const [materialeId, setMaterialeId] = useState(richiesta.materiale?.id ?? '')
 
   function aggiornaStato(stato: 'in_preparazione' | 'consegnata') {
     startTransition(async () => {
       try {
-        await aggiornaStatoRichiesta(richiesta.id, stato)
+        await aggiornaStatoRichiesta(richiesta.id, stato, materialeId || undefined)
         router.refresh()
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')
@@ -41,6 +51,10 @@ export default function RichiestaDettaglio({ richiesta }: { richiesta: Richiesta
     try {
       const fd = new FormData()
       fd.append('foto', file)
+      // Se c'è un materiale selezionato, aggiorna prima la richiesta con materialeId
+      if (materialeId && !richiesta.materiale) {
+        await aggiornaStatoRichiesta(richiesta.id, 'in_preparazione', materialeId)
+      }
       await uploadFotoConsegna(richiesta.id, fd)
       router.refresh()
     } catch (err: unknown) {
@@ -75,6 +89,39 @@ export default function RichiestaDettaglio({ richiesta }: { richiesta: Richiesta
         </p>
         {richiesta.note && <p className="text-sm text-gray-600">Note: {richiesta.note}</p>}
       </div>
+
+      {/* Collegamento al listino materiali (tracciamento magazzino) */}
+      {richiesta.stato !== 'consegnata' && (
+        <div className="bg-white rounded-xl border p-4 space-y-2">
+          <p className="text-sm font-semibold">Collega al listino materiali</p>
+          <p className="text-xs text-gray-500">
+            Seleziona il materiale dal listino per aggiornare automaticamente la giacenza del magazzino.
+          </p>
+          <select
+            value={materialeId}
+            onChange={e => setMaterialeId(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          >
+            <option value="">— Nessun collegamento (materiale non in listino) —</option>
+            {materiali.map(m => (
+              <option key={m.id} value={m.id}>
+                {m.codice ? `[${m.codice}] ` : ''}{m.descrizione}
+              </option>
+            ))}
+          </select>
+          {materialeId && (
+            <p className="text-xs text-green-600">
+              La consegna creerà uno scarico in magazzino per questo materiale.
+            </p>
+          )}
+        </div>
+      )}
+
+      {richiesta.materiale && richiesta.stato === 'consegnata' && (
+        <div className="bg-gray-50 rounded-xl border p-3 text-sm">
+          <p className="text-gray-600">Materiale collegato: <strong>{richiesta.materiale.descrizione}</strong></p>
+        </div>
+      )}
 
       {richiesta.fotoUrl && (
         <div className="bg-white rounded-xl border p-4">
@@ -121,6 +168,9 @@ export default function RichiestaDettaglio({ richiesta }: { richiesta: Richiesta
       {richiesta.stato === 'consegnata' && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
           <p className="text-green-700 font-semibold">✅ Materiale consegnato</p>
+          {richiesta.materiale && (
+            <p className="text-green-600 text-sm mt-1">Giacenza aggiornata automaticamente</p>
+          )}
         </div>
       )}
     </div>

@@ -15,6 +15,7 @@ export async function inviaRapportino(
     oreOrdinarie: number
     oreStraordinarie: number
     attrezzatureIds: string[]
+    materialiReso?: Array<{ materialeId: string; descrizione: string; quantita: number }>
   }
 ): Promise<void> {
   const { operaio } = await requireOperaio()
@@ -82,6 +83,19 @@ export async function inviaRapportino(
       where: { id: giornata.commessaId },
       data: { costiManodopera: { increment: costoTotale } },
     })
+
+    // Reso materiale: crea movimenti di tipo 'reso' in magazzino
+    if (input.materialiReso && input.materialiReso.length > 0) {
+      await tx.movimentoMagazzino.createMany({
+        data: input.materialiReso.map(r => ({
+          materialeId: r.materialeId,
+          tipo: 'reso' as const,
+          quantita: r.quantita,
+          descrizione: `Reso da rapportino: ${r.descrizione}`,
+          commessaId: giornata.commessaId,
+        })),
+      })
+    }
 
     // Chiudi giornata
     await tx.giornata.update({

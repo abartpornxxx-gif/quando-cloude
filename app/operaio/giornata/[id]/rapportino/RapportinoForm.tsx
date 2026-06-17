@@ -4,13 +4,21 @@ import { useState, useTransition } from 'react'
 import { inviaRapportino } from './actions'
 
 type Attrezzatura = { id: string; nome: string }
+type Materiale = { id: string; descrizione: string; unita: string | null }
+
+interface RigaReso {
+  materialeId: string
+  descrizione: string
+  quantita: string
+}
 
 interface Props {
   giornataId: string
   attrezzatureUsate: Attrezzatura[]
+  materiali: Materiale[]
 }
 
-export default function RapportinoForm({ giornataId, attrezzatureUsate }: Props) {
+export default function RapportinoForm({ giornataId, attrezzatureUsate, materiali }: Props) {
   const [lavoroEseguito, setLavoroEseguito] = useState('')
   const [lavoriExtra, setLavoriExtra] = useState('')
   const [noteAttrezzatura, setNoteAttrezzatura] = useState('')
@@ -18,13 +26,35 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate }: Props)
   const [oreOrdinarie, setOreOrdinarie] = useState('8')
   const [oreStraordinarie, setOreStraordinarie] = useState('0')
   const [attrRiconsegnate, setAttrRiconsegnate] = useState<string[]>(
-    attrezzatureUsate.map(a => a.id) // di default tutte riconsegnate
+    attrezzatureUsate.map(a => a.id)
   )
+  const [righeReso, setRigheReso] = useState<RigaReso[]>([])
   const [pending, startTransition] = useTransition()
   const [errore, setErrore] = useState('')
 
   function toggleAttr(id: string) {
-    setAttrRiconsegnate(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id])
+    setAttrRiconsegnate(prev =>
+      prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
+    )
+  }
+
+  function aggiungiReso() {
+    setRigheReso(prev => [...prev, { materialeId: '', descrizione: '', quantita: '1' }])
+  }
+
+  function rimuoviReso(idx: number) {
+    setRigheReso(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  function aggiornaReso(idx: number, campo: keyof RigaReso, valore: string) {
+    setRigheReso(prev => prev.map((r, i) => {
+      if (i !== idx) return r
+      if (campo === 'materialeId') {
+        const mat = materiali.find(m => m.id === valore)
+        return { ...r, materialeId: valore, descrizione: mat?.descrizione ?? r.descrizione }
+      }
+      return { ...r, [campo]: valore }
+    }))
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -34,6 +64,15 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate }: Props)
     const oreSt = parseFloat(oreStraordinarie) || 0
     if (ore <= 0 && oreSt <= 0) { setErrore('Inserisci almeno le ore lavorate'); return }
     setErrore('')
+
+    const resoValidi = righeReso
+      .filter(r => r.materialeId && r.descrizione.trim() && parseFloat(r.quantita) > 0)
+      .map(r => ({
+        materialeId: r.materialeId,
+        descrizione: r.descrizione,
+        quantita: parseFloat(r.quantita),
+      }))
+
     startTransition(async () => {
       try {
         await inviaRapportino(giornataId, {
@@ -44,6 +83,7 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate }: Props)
           oreOrdinarie: ore,
           oreStraordinarie: oreSt,
           attrezzatureIds: attrRiconsegnate,
+          materialiReso: resoValidi.length > 0 ? resoValidi : undefined,
         })
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')
@@ -134,6 +174,67 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate }: Props)
           rows={2}
         />
       </div>
+
+      {/* Sezione reso materiale */}
+      {materiali.length > 0 && (
+        <div className="border border-yellow-200 rounded-xl p-4 bg-yellow-50 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-yellow-800">Materiale non usato da restituire</p>
+              <p className="text-xs text-yellow-600 mt-0.5">Hai preso materiale in più che riporti in magazzino?</p>
+            </div>
+            <button
+              type="button"
+              onClick={aggiungiReso}
+              className="text-xs text-yellow-700 font-medium border border-yellow-300 rounded-lg px-2 py-1 hover:bg-yellow-100"
+            >
+              + Aggiungi
+            </button>
+          </div>
+
+          {righeReso.length > 0 && (
+            <div className="space-y-2">
+              {righeReso.map((r, idx) => (
+                <div key={idx} className="bg-white rounded-lg border border-yellow-200 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-500">Reso {idx + 1}</p>
+                    <button type="button" onClick={() => rimuoviReso(idx)} className="text-xs text-red-500">Rimuovi</button>
+                  </div>
+                  <select
+                    value={r.materialeId}
+                    onChange={e => aggiornaReso(idx, 'materialeId', e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                    required
+                  >
+                    <option value="">— Seleziona materiale —</option>
+                    {materiali.map(m => (
+                      <option key={m.id} value={m.id}>{m.descrizione} ({m.unita ?? 'pz'})</option>
+                    ))}
+                  </select>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min="0.001"
+                      step="0.001"
+                      value={r.quantita}
+                      onChange={e => aggiornaReso(idx, 'quantita', e.target.value)}
+                      placeholder="Qtà"
+                      className="w-24 rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={r.descrizione}
+                      onChange={e => aggiornaReso(idx, 'descrizione', e.target.value)}
+                      placeholder="Descrizione (opzionale)"
+                      className="flex-1 rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-semibold mb-1">Note per domani</label>

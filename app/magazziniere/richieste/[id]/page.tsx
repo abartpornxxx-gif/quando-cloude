@@ -11,13 +11,20 @@ export default async function RichiestaPage({ params }: Props) {
   const { id } = await params
   await requireMagazziniere()
 
-  const richiesta = await prisma.richiestaMateriale.findUnique({
-    where: { id },
-    include: {
-      operaio: { select: { nome: true } },
-      commessa: { select: { nome: true, indirizzoCantiere: true } },
-    },
-  })
+  const [richiesta, materiali] = await Promise.all([
+    prisma.richiestaMateriale.findUnique({
+      where: { id },
+      include: {
+        operaio: { select: { nome: true } },
+        commessa: { select: { nome: true, indirizzoCantiere: true } },
+        materiale: { select: { id: true, descrizione: true } },
+      },
+    }),
+    prisma.materiale.findMany({
+      orderBy: { descrizione: 'asc' },
+      select: { id: true, codice: true, descrizione: true },
+    }),
+  ])
   if (!richiesta) notFound()
 
   return (
@@ -26,7 +33,7 @@ export default async function RichiestaPage({ params }: Props) {
         <a href="/magazziniere/richieste" className="text-blue-600">‹</a>
         <h1 className="text-base font-bold">Dettaglio richiesta</h1>
       </div>
-      <RichiestaDettaglio richiesta={richiesta} />
+      <RichiestaDettaglio richiesta={richiesta} materiali={materiali} />
     </div>
   )
 }

@@ -52,13 +52,22 @@ export default async function RapportinoPage({ params }: Props) {
 
   const attrezzatureUsate = giornata.attrezzatureUsi.map(u => u.attrezzatura)
 
+  const materiali = await prisma.materiale.findMany({
+    orderBy: { descrizione: 'asc' },
+    select: { id: true, descrizione: true, unita: true },
+  })
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b px-4 py-3">
         <h1 className="text-lg font-bold">Rapportino di fine giornata</h1>
         <p className="text-sm text-gray-500">{giornata.commessa.nome}</p>
       </div>
-      <RapportinoForm giornataId={id} attrezzatureUsate={attrezzatureUsate} />
+      <RapportinoForm
+        giornataId={id}
+        attrezzatureUsate={attrezzatureUsate}
+        materiali={materiali}
+      />
     </div>
   )
 }
