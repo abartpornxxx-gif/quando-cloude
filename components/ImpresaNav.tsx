@@ -14,6 +14,9 @@ const NAV = [
   { label: 'Attrezzature', href: '/impresa/attrezzature' },
   { label: 'Fornitori', href: '/impresa/fornitori' },
   { label: 'Checklist', href: '/impresa/checklist' },
+  { label: 'Calendario', href: '/impresa/calendario' },
+  { label: 'Pianificazione', href: '/impresa/pianificazione' },
+  { label: 'Assenze', href: '/impresa/assenze' },
 ]
 
 export function ImpresaNav() {

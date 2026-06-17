@@ -82,8 +82,10 @@ model Operaio {
   note        String?
   createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz
-  commesse    CommessaOperaio[]
-  giornate    Giornata[]
+  commesse       CommessaOperaio[]
+  giornate       Giornata[]
+  pianificazioni Pianificazione[]
+  assenze        Assenza[]
 
   @@map("operai")
 }
@@ -107,6 +109,7 @@ model Mezzo {
   createdAt             DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime   @updatedAt @map("updated_at") @db.Timestamptz
   giornate              Giornata[]
+  pianificazioni        Pianificazione[]
 
   @@map("mezzi")
 }
@@ -203,6 +206,7 @@ model Commessa {
   updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
   operai            CommessaOperaio[]
   giornate          Giornata[]
+  pianificazioni    Pianificazione[]
 
   @@map("commesse")
 }
@@ -310,4 +314,52 @@ model ChecklistRisposta {
 
   @@unique([giornataId, templateId])
   @@map("checklist_risposte")
+}
+
+// ─── Fase 3: Pianificazione e Assenze ────────────────────────────────────────
+
+enum TipoAssenza {
+  ferie
+  permesso
+  malattia
+  altro
+}
+
+enum StatoAssenza {
+  in_attesa
+  approvata
+  rifiutata
+}
+
+model Pianificazione {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  data       DateTime @db.Date
+  commessaId String   @map("commessa_id") @db.Uuid
+  commessa   Commessa @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  operaioId  String   @map("operaio_id") @db.Uuid
+  operaio    Operaio  @relation(fields: [operaioId], references: [id], onDelete: Cascade)
+  mezzoId    String?  @map("mezzo_id") @db.Uuid
+  mezzo      Mezzo?   @relation(fields: [mezzoId], references: [id])
+  note       String?
+  sostituito Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([commessaId, operaioId, data])
+  @@map("pianificazioni")
+}
+
+model Assenza {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  operaioId  String       @map("operaio_id") @db.Uuid
+  operaio    Operaio      @relation(fields: [operaioId], references: [id], onDelete: Cascade)
+  dataInizio DateTime     @map("data_inizio") @db.Date
+  dataFine   DateTime     @map("data_fine") @db.Date
+  tipo       TipoAssenza  @default(ferie)
+  stato      StatoAssenza @default(in_attesa)
+  note       String?
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("assenze")
 }
