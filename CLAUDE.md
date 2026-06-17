@@ -80,7 +80,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Fase 4 completata — Ordini materiale, magazzino, report preventivato vs consumato. In attesa di validazione.**
+- Fase corrente: **Fase 5 completata — Fatture, DiCo, Scadenzario, Export XML SdI. In attesa di validazione.**
 
 ### Decisioni architetturali recenti
 - **Countdown**: visibile SOLO all'impresa (in `/impresa/giornate`). L'operaio vede solo stato generico e pulsante bloccato/attivo.
@@ -90,5 +90,6 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 - **Email**: struttura pronta in `lib/email.ts`. Attivare con `npm install resend` + `RESEND_API_KEY` in `.env.local`.
 - **Enum DB**: `user_role` (lowercase) esiste per `profiles.role` (legacy); `"UserRole"` (PascalCase) è stato creato per `chat_messaggi.ruolo` (richiesto da Prisma); `"StatoOrdine"` e `"TipoMovimento"` aggiunti per Fase 4.
 - **Fase 4 — modelli**: `OrdineFornitore` (ordini a fornitori), `OrdineRiga` (righe ordine), `MovimentoMagazzino` (carico/scarico/reso). Giacenza calcolata on-the-fly dai movimenti (no campo denormalizzato). Quando ordine→consegnato: carico automatico + incremento `costiMateriali` commessa. Magazziniere che evade richiesta: scarico automatico se materiale collegato al listino. Rapportino: sezione reso crea movimenti tipo=reso.
+- **Fase 5 — modelli**: `FatturaAttiva` + `FatturaAttivaRiga` (fatture emesse), `FatturaPassiva` (fatture ricevute), `DichiarazioneConformita` (DiCo DM 37/2008). Enums: `StatoFatturaAttiva`, `StatoFatturaPassiva`. Importi in centesimi. `aliquotaIva` come Int (22=22%). Incasso/pagamento registrati manualmente (solo bonifico). Fattura incassata propaga su `commessa.fatturato`. Export XML SdI genera FatturaPA v1.2 (NO invio diretto — file da passare a intermediario accreditato). DiCo: PDF via browser print (`/impresa/dico/[id]/stampa`, CSS `@media print` nasconde nav). Variabili impresa in `.env.local`: `IMPRESA_RAGIONE_SOCIALE`, `IMPRESA_PARTITA_IVA`, `IMPRESA_INDIRIZZO`, `IMPRESA_CAP`, `IMPRESA_CITTA`, `IMPRESA_PROVINCIA`.
 
 - Aggiorna questa riga a fine di ogni fase.
