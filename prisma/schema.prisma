@@ -15,6 +15,7 @@ enum UserRole {
   impresa
   operaio
   cliente
+  magazziniere
 }
 
 model Profile {
@@ -82,12 +83,25 @@ model Operaio {
   note        String?
   createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz
-  commesse       CommessaOperaio[]
-  giornate       Giornata[]
-  pianificazioni Pianificazione[]
-  assenze        Assenza[]
+  commesse          CommessaOperaio[]
+  giornate          Giornata[]
+  pianificazioni    Pianificazione[]
+  assenze           Assenza[]
+  attrezzatureUsi   AttrezzaturaUso[]
+  richiesteMateriale RichiestaMateriale[]
 
   @@map("operai")
+}
+
+model Magazziniere {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome      String
+  email     String?  @unique
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("magazzinieri")
 }
 
 enum StatoMezzo {
@@ -110,6 +124,7 @@ model Mezzo {
   updatedAt             DateTime   @updatedAt @map("updated_at") @db.Timestamptz
   giornate              Giornata[]
   pianificazioni        Pianificazione[]
+  attrezzatureUsi       AttrezzaturaUso[]
 
   @@map("mezzi")
 }
@@ -129,6 +144,7 @@ model Attrezzatura {
   note         String?
   createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+  usi          AttrezzaturaUso[]
 
   @@map("attrezzature")
 }
@@ -204,14 +220,26 @@ model Commessa {
   note              String?
   createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
-  operai            CommessaOperaio[]
-  giornate          Giornata[]
-  pianificazioni    Pianificazione[]
+  operai             CommessaOperaio[]
+  giornate           Giornata[]
+  pianificazioni     Pianificazione[]
+  attrezzatureUsi    AttrezzaturaUso[]
+  richiesteMateriale RichiestaMateriale[]
+  chatMessaggi       ChatMessaggio[]
 
   @@map("commesse")
 }
 
-// ─── Fase 2: Giornata lavorativa ─────────────────────────────────────────────
+// ─── Fase 2/Redesign: Giornata lavorativa con flusso temporale ───────────────
+
+enum FaseGiornata {
+  inizio
+  mattina
+  pausa
+  pomeriggio
+  fine
+  completata
+}
 
 model CommessaOperaio {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -236,23 +264,34 @@ enum TipoOra {
 }
 
 model Giornata {
-  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  commessaId   String              @map("commessa_id") @db.Uuid
-  commessa     Commessa            @relation(fields: [commessaId], references: [id])
-  operaioId    String              @map("operaio_id") @db.Uuid
-  operaio      Operaio             @relation(fields: [operaioId], references: [id])
-  data         DateTime            @db.Date
-  mezzoId      String?             @map("mezzo_id") @db.Uuid
-  mezzo        Mezzo?              @relation(fields: [mezzoId], references: [id])
-  lavoroSvolto String?             @map("lavoro_svolto")
-  note         String?
-  stato        StatoGiornata       @default(bozza)
-  ore          GiornataOra[]
-  materiali    GiornataMateriale[]
-  foto         GiornataFoto[]
-  risposte     ChecklistRisposta[]
-  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId        String              @map("commessa_id") @db.Uuid
+  commessa          Commessa            @relation(fields: [commessaId], references: [id])
+  operaioId         String              @map("operaio_id") @db.Uuid
+  operaio           Operaio             @relation(fields: [operaioId], references: [id])
+  data              DateTime            @db.Date
+  mezzoId           String?             @map("mezzo_id") @db.Uuid
+  mezzo             Mezzo?              @relation(fields: [mezzoId], references: [id])
+  pianificazioneId  String?             @unique @map("pianificazione_id") @db.Uuid
+  pianificazione    Pianificazione?     @relation(fields: [pianificazioneId], references: [id])
+  lavoroSvolto      String?             @map("lavoro_svolto")
+  note              String?
+  stato             StatoGiornata       @default(bozza)
+  fase              FaseGiornata        @default(inizio)
+  inizioMattina     DateTime?           @map("inizio_mattina") @db.Timestamptz
+  fineMattina       DateTime?           @map("fine_mattina") @db.Timestamptz
+  inizioPomeriggio  DateTime?           @map("inizio_pomeriggio") @db.Timestamptz
+  finePomeriggio    DateTime?           @map("fine_pomeriggio") @db.Timestamptz
+  ore               GiornataOra[]
+  materiali         GiornataMateriale[]
+  foto              GiornataFoto[]
+  risposte          ChecklistRisposta[]
+  attrezzatureUsi   AttrezzaturaUso[]
+  richiesteMateriale RichiestaMateriale[]
+  chatMessaggi      ChatMessaggio[]
+  rapportino        Rapportino?
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("giornate")
 }
@@ -332,18 +371,21 @@ enum StatoAssenza {
 }
 
 model Pianificazione {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  data       DateTime @db.Date
-  commessaId String   @map("commessa_id") @db.Uuid
-  commessa   Commessa @relation(fields: [commessaId], references: [id], onDelete: Cascade)
-  operaioId  String   @map("operaio_id") @db.Uuid
-  operaio    Operaio  @relation(fields: [operaioId], references: [id], onDelete: Cascade)
-  mezzoId    String?  @map("mezzo_id") @db.Uuid
-  mezzo      Mezzo?   @relation(fields: [mezzoId], references: [id])
-  note       String?
-  sostituito Boolean  @default(false)
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  data            DateTime  @db.Date
+  commessaId      String    @map("commessa_id") @db.Uuid
+  commessa        Commessa  @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  operaioId       String    @map("operaio_id") @db.Uuid
+  operaio         Operaio   @relation(fields: [operaioId], references: [id], onDelete: Cascade)
+  mezzoId         String?   @map("mezzo_id") @db.Uuid
+  mezzo           Mezzo?    @relation(fields: [mezzoId], references: [id])
+  lavoroDaFare    String?   @map("lavoro_da_fare")
+  noteMateriale   String?   @map("note_materiale")
+  note            String?
+  sostituito      Boolean   @default(false)
+  giornata        Giornata?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   @@unique([commessaId, operaioId, data])
   @@map("pianificazioni")
@@ -362,4 +404,91 @@ model Assenza {
   updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("assenze")
+}
+
+// ─── Fase 2 Redesign: Attrezzatura, Chat, Materiale, Rapportino ──────────────
+
+model AttrezzaturaUso {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attrezzaturaId String       @map("attrezzatura_id") @db.Uuid
+  attrezzatura   Attrezzatura @relation(fields: [attrezzaturaId], references: [id])
+  operaioId      String       @map("operaio_id") @db.Uuid
+  operaio        Operaio      @relation(fields: [operaioId], references: [id])
+  commessaId     String       @map("commessa_id") @db.Uuid
+  commessa       Commessa     @relation(fields: [commessaId], references: [id])
+  mezzoId        String?      @map("mezzo_id") @db.Uuid
+  mezzo          Mezzo?       @relation(fields: [mezzoId], references: [id])
+  giornataId     String       @map("giornata_id") @db.Uuid
+  giornata       Giornata     @relation(fields: [giornataId], references: [id], onDelete: Cascade)
+  riconsegnata   Boolean      @default(false)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("attrezzatura_usi")
+}
+
+enum StatoRichiesta {
+  richiesta
+  in_preparazione
+  consegnata
+}
+
+model RichiestaMateriale {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  giornataId  String         @map("giornata_id") @db.Uuid
+  giornata    Giornata       @relation(fields: [giornataId], references: [id], onDelete: Cascade)
+  commessaId  String         @map("commessa_id") @db.Uuid
+  commessa    Commessa       @relation(fields: [commessaId], references: [id])
+  operaioId   String         @map("operaio_id") @db.Uuid
+  operaio     Operaio        @relation(fields: [operaioId], references: [id])
+  descrizione String
+  urgente     Boolean        @default(false)
+  stato       StatoRichiesta @default(richiesta)
+  fotoUrl     String?        @map("foto_url")
+  fotoPath    String?        @map("foto_path")
+  note        String?
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("richieste_materiale")
+}
+
+model ChatMessaggio {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId  String   @map("commessa_id") @db.Uuid
+  commessa    Commessa @relation(fields: [commessaId], references: [id])
+  giornataId  String   @map("giornata_id") @db.Uuid
+  giornata    Giornata @relation(fields: [giornataId], references: [id], onDelete: Cascade)
+  autoreNome  String   @map("autore_nome")
+  ruolo       UserRole
+  testo       String?
+  fotoUrl     String?  @map("foto_url")
+  fotoPath    String?  @map("foto_path")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("chat_messaggi")
+}
+
+model Rapportino {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  giornataId           String   @unique @map("giornata_id") @db.Uuid
+  giornata             Giornata @relation(fields: [giornataId], references: [id], onDelete: Cascade)
+  lavoroEseguito       String   @map("lavoro_eseguito")
+  lavoriExtra          String?  @map("lavori_extra")
+  noteAttrezzatura     String?  @map("note_attrezzatura")
+  noteGiornoSuccessivo String?  @map("note_giorno_successivo")
+  oreOrdinarie         Float    @default(0) @map("ore_ordinarie")
+  oreStraordinarie     Float    @default(0) @map("ore_straordinarie")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("rapportini")
+}
+
+// Configurazione orari di lavoro (un solo record — singleton)
+model ConfigurazioneOrari {
+  id                     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  durataMattinaMinuti    Int    @default(240) @map("durata_mattina_minuti")
+  durataPausaMinuti      Int    @default(60) @map("durata_pausa_minuti")
+  durataPomeriggioMinuti Int    @default(240) @map("durata_pomeriggio_minuti")
+
+  @@map("configurazione_orari")
 }
