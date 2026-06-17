@@ -9,7 +9,7 @@ type Skill = { nome: string; nota: string }
 interface Props {
   action: (formData: FormData) => Promise<void>
   defaultValues?: {
-    id?: string; nome?: string; ruolo?: string; costoOrario?: number
+    id?: string; nome?: string; email?: string; ruolo?: string; costoOrario?: number
     zona?: string; skills?: Skill[]; note?: string
   }
 }
@@ -34,6 +34,7 @@ export function OperaioForm({ action, defaultValues }: Props) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Nome completo *" name="nome" required defaultValue={defaultValues?.nome} />
+        <Field label="Email (per accesso app operaio)" name="email" type="email" defaultValue={defaultValues?.email} />
         <Field label="Ruolo (es. Elettricista)" name="ruolo" defaultValue={defaultValues?.ruolo} />
         <Field label="Costo orario (€)" name="costoOrario" type="number" step="0.01" min="0"
           defaultValue={defaultValues?.costoOrario !== undefined ? centsToInput(defaultValues.costoOrario) : '0.00'} />

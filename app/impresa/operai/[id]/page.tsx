@@ -21,8 +21,8 @@ export default async function ModificaOperaioPage({ params }: { params: Promise<
       <OperaioForm
         action={salvaOperaio}
         defaultValues={{
-          id: o.id, nome: o.nome, ruolo: o.ruolo ?? '', costoOrario: o.costoOrario,
-          zona: o.zona ?? '', skills, note: o.note ?? '',
+          id: o.id, nome: o.nome, email: o.email ?? '', ruolo: o.ruolo ?? '',
+          costoOrario: o.costoOrario, zona: o.zona ?? '', skills, note: o.note ?? '',
         }}
       />
     </div>

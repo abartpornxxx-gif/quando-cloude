@@ -1,16 +1,20 @@
 {
   "name": "QUADRO — Gestionale Impianti",
   "short_name": "QUADRO",
-  "description": "Gestionale per imprese di installazione impianti elettrici",
+  "description": "Gestionale per imprese di installazione impianti elettrici (DM 37/2008)",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f9fafb",
-  "theme_color": "#1d4ed8",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
   "icons": [
+    { "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon" }
+  ],
+  "shortcuts": [
     {
-      "src": "/favicon.ico",
-      "sizes": "any",
-      "type": "image/x-icon"
+      "name": "Nuova giornata",
+      "url": "/operaio/giornata/nuova",
+      "description": "Inizia la giornata lavorativa"
     }
   ]
 }

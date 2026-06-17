@@ -1,5 +1,4 @@
 // QUADRO — Schema Prisma
-// Documentazione: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client"
@@ -73,15 +72,18 @@ model Fornitore {
 }
 
 model Operaio {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nome        String
+  email       String?
   ruolo       String?
-  costoOrario Int      @default(0) @map("costo_orario") // centesimi/ora
+  costoOrario Int               @default(0) @map("costo_orario")
   zona        String?
-  skills      Json     @default("[]") // Array<{nome:string, nota?:string}>
+  skills      Json              @default("[]")
   note        String?
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+  commesse    CommessaOperaio[]
+  giornate    Giornata[]
 
   @@map("operai")
 }
@@ -104,6 +106,7 @@ model Mezzo {
   note                  String?
   createdAt             DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+  giornate              Giornata[]
 
   @@map("mezzi")
 }
@@ -128,13 +131,14 @@ model Attrezzatura {
 }
 
 model Materiale {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   codice      String?
   descrizione String
-  prezzo      Int      @default(0) // centesimi
-  unita       String?  @default("pz")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  prezzo      Int                 @default(0)
+  unita       String?             @default("pz")
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  giornate    GiornataMateriale[]
 
   @@map("materiali")
 }
@@ -149,16 +153,16 @@ enum StatoPreventivo {
 }
 
 model Preventivo {
-  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clienteId String?         @map("cliente_id") @db.Uuid
-  cliente   Cliente?        @relation(fields: [clienteId], references: [id])
-  data      DateTime        @default(now()) @db.Timestamptz
-  stato     StatoPreventivo @default(bozza)
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clienteId String?          @map("cliente_id") @db.Uuid
+  cliente   Cliente?         @relation(fields: [clienteId], references: [id])
+  data      DateTime         @default(now()) @db.Timestamptz
+  stato     StatoPreventivo  @default(bozza)
   note      String?
   righe     PreventivoRiga[]
   commessa  Commessa?
-  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime         @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("preventivi")
 }
@@ -169,7 +173,7 @@ model PreventivoRiga {
   preventivo     Preventivo @relation(fields: [preventivoId], references: [id], onDelete: Cascade)
   descrizione    String
   quantita       Float      @default(1)
-  prezzoUnitario Int        @default(0) @map("prezzo_unitario") // centesimi
+  prezzoUnitario Int        @default(0) @map("prezzo_unitario")
   ordine         Int        @default(0)
 
   @@map("preventivo_righe")
@@ -181,22 +185,129 @@ enum StatoCommessa {
 }
 
 model Commessa {
-  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nome              String
-  clienteId         String?       @map("cliente_id") @db.Uuid
-  cliente           Cliente?      @relation(fields: [clienteId], references: [id])
-  indirizzoCantiere String?       @map("indirizzo_cantiere")
-  stato             StatoCommessa @default(aperta)
-  preventivato      Int           @default(0) // centesimi
-  costiMateriali    Int           @default(0) @map("costi_materiali") // centesimi
-  costiManodopera   Int           @default(0) @map("costi_manodopera") // centesimi
-  costiMezzi        Int           @default(0) @map("costi_mezzi") // centesimi
-  fatturato         Int           @default(0) // centesimi
-  preventivoId      String?       @unique @map("preventivo_id") @db.Uuid
-  preventivo        Preventivo?   @relation(fields: [preventivoId], references: [id])
+  clienteId         String?           @map("cliente_id") @db.Uuid
+  cliente           Cliente?          @relation(fields: [clienteId], references: [id])
+  indirizzoCantiere String?           @map("indirizzo_cantiere")
+  stato             StatoCommessa     @default(aperta)
+  preventivato      Int               @default(0)
+  costiMateriali    Int               @default(0) @map("costi_materiali")
+  costiManodopera   Int               @default(0) @map("costi_manodopera")
+  costiMezzi        Int               @default(0) @map("costi_mezzi")
+  fatturato         Int               @default(0)
+  preventivoId      String?           @unique @map("preventivo_id") @db.Uuid
+  preventivo        Preventivo?       @relation(fields: [preventivoId], references: [id])
   note              String?
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+  operai            CommessaOperaio[]
+  giornate          Giornata[]
 
   @@map("commesse")
+}
+
+// ─── Fase 2: Giornata lavorativa ─────────────────────────────────────────────
+
+model CommessaOperaio {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId String   @map("commessa_id") @db.Uuid
+  commessa   Commessa @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  operaioId  String   @map("operaio_id") @db.Uuid
+  operaio    Operaio  @relation(fields: [operaioId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([commessaId, operaioId])
+  @@map("commessa_operai")
+}
+
+enum StatoGiornata {
+  bozza
+  inviata
+}
+
+enum TipoOra {
+  ordinaria
+  straordinaria
+}
+
+model Giornata {
+  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId   String              @map("commessa_id") @db.Uuid
+  commessa     Commessa            @relation(fields: [commessaId], references: [id])
+  operaioId    String              @map("operaio_id") @db.Uuid
+  operaio      Operaio             @relation(fields: [operaioId], references: [id])
+  data         DateTime            @db.Date
+  mezzoId      String?             @map("mezzo_id") @db.Uuid
+  mezzo        Mezzo?              @relation(fields: [mezzoId], references: [id])
+  lavoroSvolto String?             @map("lavoro_svolto")
+  note         String?
+  stato        StatoGiornata       @default(bozza)
+  ore          GiornataOra[]
+  materiali    GiornataMateriale[]
+  foto         GiornataFoto[]
+  risposte     ChecklistRisposta[]
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("giornate")
+}
+
+model GiornataOra {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  giornataId String   @map("giornata_id") @db.Uuid
+  giornata   Giornata @relation(fields: [giornataId], references: [id], onDelete: Cascade)
+  tipo       TipoOra  @default(ordinaria)
+  quantita   Float
+
+  @@map("giornata_ore")
+}
+
+model GiornataMateriale {
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  giornataId     String     @map("giornata_id") @db.Uuid
+  giornata       Giornata   @relation(fields: [giornataId], references: [id], onDelete: Cascade)
+  materialeId    String?    @map("materiale_id") @db.Uuid
+  materiale      Materiale? @relation(fields: [materialeId], references: [id])
+  descrizione    String
+  quantita       Float      @default(1)
+  prezzoUnitario Int        @default(0) @map("prezzo_unitario")
+
+  @@map("giornata_materiali")
+}
+
+model GiornataFoto {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  giornataId String   @map("giornata_id") @db.Uuid
+  giornata   Giornata @relation(fields: [giornataId], references: [id], onDelete: Cascade)
+  url        String
+  path       String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("giornata_foto")
+}
+
+model ChecklistTemplate {
+  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  domanda   String
+  ordine    Int                 @default(0)
+  attiva    Boolean             @default(true)
+  risposte  ChecklistRisposta[]
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("checklist_template")
+}
+
+model ChecklistRisposta {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  giornataId String            @map("giornata_id") @db.Uuid
+  giornata   Giornata          @relation(fields: [giornataId], references: [id], onDelete: Cascade)
+  templateId String            @map("template_id") @db.Uuid
+  template   ChecklistTemplate @relation(fields: [templateId], references: [id])
+  risposta   Boolean
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([giornataId, templateId])
+  @@map("checklist_risposte")
 }

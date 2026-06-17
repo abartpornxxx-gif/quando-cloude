@@ -59,9 +59,7 @@ export default async function CommessePage() {
                       {formatEuro(margine)}
                     </p>
                   </div>
-                  <div onClick={e => e.preventDefault()}>
-                    <DeleteButton action={eliminaCommessa.bind(null, c.id)} label="✕" />
-                  </div>
+                  <DeleteButton action={eliminaCommessa.bind(null, c.id)} label="✕" />
                 </div>
               </Link>
             )

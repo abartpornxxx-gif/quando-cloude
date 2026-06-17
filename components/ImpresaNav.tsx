@@ -13,6 +13,7 @@ const NAV = [
   { label: 'Mezzi', href: '/impresa/mezzi' },
   { label: 'Attrezzature', href: '/impresa/attrezzature' },
   { label: 'Fornitori', href: '/impresa/fornitori' },
+  { label: 'Checklist', href: '/impresa/checklist' },
 ]
 
 export function ImpresaNav() {

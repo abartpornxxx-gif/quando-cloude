@@ -10,7 +10,9 @@ interface Props {
 export function DeleteButton({ action, label = 'Elimina' }: Props) {
   const [pending, startTransition] = useTransition()
 
-  function handleClick() {
+  function handleClick(e: React.MouseEvent) {
+    e.stopPropagation()
+    e.preventDefault()
     if (confirm('Sei sicuro di voler eliminare questo elemento?')) {
       startTransition(action)
     }

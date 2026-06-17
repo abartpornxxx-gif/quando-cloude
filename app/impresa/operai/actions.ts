@@ -16,6 +16,7 @@ export async function salvaOperaio(formData: FormData) {
 
   const data = {
     nome: formData.get('nome') as string,
+    email: (formData.get('email') as string) || null,
     ruolo: (formData.get('ruolo') as string) || null,
     costoOrario: euroToCents(formData.get('costoOrario') as string),
     zona: (formData.get('zona') as string) || null,
