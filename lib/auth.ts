@@ -23,6 +23,20 @@ export async function requireOperaio() {
   return { user, operaio }
 }
 
+export async function requireCliente() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || user.user_metadata?.role !== 'cliente') redirect('/login')
+  if (!user.email) redirect('/cliente/non-configurato')
+
+  const cliente = await prisma.cliente.findFirst({
+    where: { email: user.email },
+  })
+  if (!cliente) redirect('/cliente/non-configurato')
+
+  return { user, cliente }
+}
+
 export async function requireMagazziniere() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
