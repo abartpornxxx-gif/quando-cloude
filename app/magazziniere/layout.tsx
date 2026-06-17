@@ -7,7 +7,7 @@ export default function MagazzinoLayout({ children }: { children: ReactNode }) {
         <span className="font-bold text-lg">📦 Magazzino</span>
         <a href="/magazziniere/dashboard" className="text-sm hover:underline">Dashboard</a>
         <a href="/magazziniere/richieste" className="text-sm hover:underline">Richieste</a>
-        <a href="/impresa/magazzino" className="text-sm hover:underline">Giacenza</a>
+        <a href="/magazziniere/magazzino" className="text-sm hover:underline">Giacenza</a>
       </nav>
       {children}
     </div>

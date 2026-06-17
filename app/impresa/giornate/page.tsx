@@ -102,12 +102,18 @@ export default async function GiornateImpresaPage() {
                         <p className="text-xs text-amber-500 mt-1">⚠ Rapportino mancante</p>
                       )}
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="text-right shrink-0 space-y-1">
                       {ord > 0 && <p className="text-xs text-gray-500">{ord}h ord.</p>}
                       {str > 0 && <p className="text-xs text-orange-500">{str}h str.</p>}
                       {g.foto[0] && (
                         <img src={g.foto[0].url} alt="foto" className="w-10 h-10 object-cover rounded mt-1 ml-auto" />
                       )}
+                      <a
+                        href={`/impresa/giornate/${g.id}/chat`}
+                        className="inline-block text-xs text-blue-600 hover:underline"
+                      >
+                        💬 Chat
+                      </a>
                     </div>
                   </div>
                   {g.rapportino?.noteGiornoSuccessivo && (
