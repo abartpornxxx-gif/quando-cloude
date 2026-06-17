@@ -76,7 +76,7 @@ export default async function OperaioLayout({ children }: { children: React.Reac
 
       {/* Bottom nav mobile */}
       <nav className="fixed bottom-0 inset-x-0 z-30 border-t border-gray-200 bg-white safe-area-pb">
-        <div className="mx-auto grid max-w-2xl grid-cols-4">
+        <div className="mx-auto grid max-w-2xl grid-cols-5">
           <a href="/operaio/dashboard"
             className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
             <span className="text-lg">🏗️</span>
@@ -91,6 +91,11 @@ export default async function OperaioLayout({ children }: { children: React.Reac
             className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
             <span className="text-lg">📅</span>
             <span>Domani</span>
+          </a>
+          <a href="/operaio/calendario"
+            className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
+            <span className="text-lg">🗓️</span>
+            <span>Calendario</span>
           </a>
           <a href="/operaio/profilo"
             className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
