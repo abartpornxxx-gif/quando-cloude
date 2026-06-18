@@ -37,7 +37,7 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
   function toggleAttrezzatura(id: string, bloccata: boolean) {
     if (bloccata) return
     setAttrezzatureSelezionate(prev =>
-      prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id],
     )
   }
 
@@ -60,85 +60,114 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-5 max-w-xl mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-5">
 
-      {/* ORDINE 1: Indicazioni impresa (sola lettura) */}
+      {/* Piano dell'impresa */}
       {pianificazione && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Piano dell&apos;impresa per oggi</p>
-          <p className="font-semibold text-gray-800">{pianificazione.commessa.nome}</p>
-          {pianificazione.commessa.indirizzoCantiere && (
-            <p className="text-sm text-gray-600">📍 {pianificazione.commessa.indirizzoCantiere}</p>
-          )}
-          {pianificazione.mezzo && (
-            <p className="text-sm text-gray-600">🚗 Mezzo: {pianificazione.mezzo.nome} {pianificazione.mezzo.targa ? `(${pianificazione.mezzo.targa})` : ''}</p>
-          )}
+        <div className="rounded-2xl bg-emerald-900 text-white p-5 space-y-3">
+          <p className="text-xs font-bold text-emerald-300 uppercase tracking-widest">
+            Piano dell&apos;impresa per oggi
+          </p>
+          <div>
+            <p className="text-lg font-bold leading-tight">{pianificazione.commessa.nome}</p>
+            {pianificazione.commessa.indirizzoCantiere && (
+              <p className="text-sm text-emerald-200 mt-1">
+                📍 {pianificazione.commessa.indirizzoCantiere}
+              </p>
+            )}
+            {pianificazione.mezzo && (
+              <p className="text-sm text-emerald-200 mt-0.5">
+                🚗 {pianificazione.mezzo.nome}
+                {pianificazione.mezzo.targa ? ` (${pianificazione.mezzo.targa})` : ''}
+              </p>
+            )}
+          </div>
           {pianificazione.lavoroDaFare && (
-            <div className="mt-2">
-              <p className="text-xs font-semibold text-gray-500 mb-1">Lavoro da fare:</p>
-              <p className="text-sm text-gray-800 bg-white rounded p-2 border">{pianificazione.lavoroDaFare}</p>
+            <div className="bg-white/10 rounded-xl p-3">
+              <p className="text-xs font-semibold text-emerald-300 mb-1">Lavoro da fare</p>
+              <p className="text-sm text-white">{pianificazione.lavoroDaFare}</p>
             </div>
           )}
           {pianificazione.noteMateriale && (
-            <div className="mt-2">
-              <p className="text-xs font-semibold text-gray-500 mb-1">Note materiale:</p>
-              <p className="text-sm text-gray-800 bg-white rounded p-2 border">{pianificazione.noteMateriale}</p>
+            <div className="bg-white/10 rounded-xl p-3">
+              <p className="text-xs font-semibold text-emerald-300 mb-1">Note materiale</p>
+              <p className="text-sm text-white">{pianificazione.noteMateriale}</p>
             </div>
           )}
           {pianificazione.note && (
-            <div className="mt-2">
-              <p className="text-xs font-semibold text-gray-500 mb-1">Note aggiuntive:</p>
-              <p className="text-sm text-gray-700">{pianificazione.note}</p>
-            </div>
+            <p className="text-sm text-emerald-200 italic">{pianificazione.note}</p>
           )}
         </div>
       )}
 
       {/* Commessa */}
-      <div>
-        <label className="block text-sm font-semibold mb-1">Commessa *</label>
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
+        <label className="block text-sm font-semibold text-gray-700 mb-3">
+          Cantiere *
+        </label>
         {pianificazione ? (
-          <p className="text-gray-700 font-medium py-2">{pianificazione.commessa.nome} <span className="text-xs text-gray-400">(pre-assegnata)</span></p>
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-gray-900">{pianificazione.commessa.nome}</p>
+            <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2.5 py-1">
+              Pre-assegnato
+            </span>
+          </div>
         ) : (
           <select
             value={commessaId}
             onChange={e => setCommessaId(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             required
           >
-            <option value="">— Seleziona commessa —</option>
+            <option value="">— Seleziona cantiere —</option>
             {commesse.map(c => (
-              <option key={c.id} value={c.id}>{c.nome}</option>
+              <option key={c.id} value={c.id}>
+                {c.nome}
+                {c.indirizzoCantiere ? ` — ${c.indirizzoCantiere}` : ''}
+              </option>
             ))}
           </select>
         )}
       </div>
 
       {/* Mezzo */}
-      <div>
-        <label className="block text-sm font-semibold mb-1">Mezzo (opzionale)</label>
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
+        <label className="block text-sm font-semibold text-gray-700 mb-3">
+          Mezzo <span className="text-gray-400 font-normal">(opzionale)</span>
+        </label>
         {pianificazione?.mezzo ? (
-          <p className="text-gray-700 py-2">{pianificazione.mezzo.nome} <span className="text-xs text-gray-400">(pre-assegnato)</span></p>
+          <div className="flex items-center justify-between">
+            <p className="font-medium text-gray-900">
+              {pianificazione.mezzo.nome}
+              {pianificazione.mezzo.targa ? ` (${pianificazione.mezzo.targa})` : ''}
+            </p>
+            <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2.5 py-1">
+              Pre-assegnato
+            </span>
+          </div>
         ) : (
           <select
             value={mezzoId}
             onChange={e => setMezzoId(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
           >
             <option value="">— Nessun mezzo —</option>
             {mezzi.map(m => (
-              <option key={m.id} value={m.id}>{m.nome} {m.targa ? `(${m.targa})` : ''}</option>
+              <option key={m.id} value={m.id}>
+                {m.nome}
+                {m.targa ? ` (${m.targa})` : ''}
+              </option>
             ))}
           </select>
         )}
       </div>
 
-      {/* ORDINE 2: Lista attrezzatura con blocco condivisione */}
-      <div>
-        <label className="block text-sm font-semibold mb-2">Attrezzatura che porti con te</label>
-        {attrezzature.length === 0 ? (
-          <p className="text-sm text-gray-400">Nessuna attrezzatura disponibile</p>
-        ) : (
+      {/* Attrezzatura */}
+      {attrezzature.length > 0 && (
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
+          <p className="text-sm font-semibold text-gray-700 mb-3">
+            Attrezzatura che porti con te
+          </p>
           <div className="space-y-2">
             {attrezzature.map(a => {
               const bloccata = a.stato === 'in_uso'
@@ -150,20 +179,24 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
                   onClick={() => toggleAttrezzatura(a.id, bloccata)}
                   disabled={bloccata}
                   className={[
-                    'w-full text-left px-4 py-3 rounded-xl border transition-all',
+                    'w-full text-left px-4 py-3.5 rounded-xl border-2 transition-all',
                     bloccata
-                      ? 'bg-gray-100 border-gray-200 opacity-60 cursor-not-allowed'
+                      ? 'bg-gray-50 border-gray-200 opacity-50 cursor-not-allowed'
                       : selezionata
-                      ? 'bg-green-50 border-green-400'
-                      : 'bg-white border-gray-300 hover:border-gray-400',
+                      ? 'bg-emerald-50 border-emerald-400 shadow-sm'
+                      : 'bg-white border-gray-200 hover:border-gray-300',
                   ].join(' ')}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{a.nome}</span>
+                    <span className={`font-medium text-sm ${bloccata ? 'text-gray-400' : 'text-gray-900'}`}>
+                      {a.nome}
+                    </span>
                     {bloccata ? (
-                      <span className="text-xs text-red-500">🔒 {a.assegnatario ? `usato da ${a.assegnatario}` : 'in uso'}</span>
+                      <span className="text-xs text-red-500 font-medium">
+                        🔒 {a.assegnatario ? `Usato da ${a.assegnatario}` : 'In uso'}
+                      </span>
                     ) : selezionata ? (
-                      <span className="text-xs text-green-600">✓ Preso</span>
+                      <span className="text-xs text-emerald-600 font-semibold">✓ Preso</span>
                     ) : (
                       <span className="text-xs text-gray-400">Disponibile</span>
                     )}
@@ -172,15 +205,19 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
               )
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {errore && <p className="text-red-600 text-sm">{errore}</p>}
+      {errore && (
+        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+          <p className="text-red-700 text-sm font-medium">{errore}</p>
+        </div>
+      )}
 
       <button
         type="submit"
         disabled={pending}
-        className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-lg disabled:opacity-50"
+        className="w-full bg-emerald-600 text-white font-bold py-5 rounded-2xl text-lg shadow-lg shadow-emerald-200 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
       >
         {pending ? 'Avvio in corso…' : '▶ Inizia giornata'}
       </button>

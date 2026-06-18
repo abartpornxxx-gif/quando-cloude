@@ -2,11 +2,16 @@ import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Badge } from '@/components/ui/Badge'
 
-const BADGE: Record<string, string> = {
-  da_incassare: 'bg-yellow-100 text-yellow-800',
-  incassata: 'bg-green-100 text-green-800',
-  scaduta: 'bg-red-100 text-red-800',
+type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'purple'
+
+const BADGE_VARIANT: Record<string, BadgeVariant> = {
+  da_incassare: 'warning',
+  incassata: 'success',
+  scaduta: 'danger',
 }
 const LABEL: Record<string, string> = {
   da_incassare: 'Da incassare',
@@ -34,65 +39,104 @@ export default async function FattureAttivePage() {
     .filter(f => f.stato === 'da_incassare' || f.stato === 'scaduta')
     .reduce((acc, f) => acc + totaleImponibile(f.righe), 0)
 
+  const scadute = fatture.filter(f => f.stato === 'scaduta').length
+
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Fatture attive</h1>
-        <Link
-          href="/impresa/fatture/nuova"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-        >
-          + Nuova fattura
-        </Link>
-      </div>
+    <div>
+      <PageHeader
+        title="Fatture attive"
+        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'} emesse${scadute > 0 ? ` · ${scadute} scadute` : ''}`}
+        action={
+          <Link
+            href="/impresa/fatture/nuova"
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+          >
+            + Nuova
+          </Link>
+        }
+      />
 
       {totaleDaIncassare > 0 && (
-        <div className="mb-4 rounded-xl bg-yellow-50 border border-yellow-200 p-4">
-          <p className="text-sm font-semibold text-yellow-800">
-            Totale da incassare: <span className="text-lg">{formatEuro(totaleDaIncassare)}</span>
-          </p>
+        <div className="mb-6 flex items-center justify-between rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4">
+          <div>
+            <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+              Totale da incassare
+            </p>
+            <p className="text-2xl font-bold text-amber-900 mt-0.5">
+              {formatEuro(totaleDaIncassare)}
+            </p>
+          </div>
+          {scadute > 0 && (
+            <Badge variant="danger">
+              {scadute} scadut{scadute === 1 ? 'a' : 'e'}
+            </Badge>
+          )}
         </div>
       )}
 
-      {fatture.length === 0 && (
-        <p className="text-gray-400 text-sm">Nessuna fattura emessa ancora.</p>
-      )}
-
-      <div className="bg-white rounded-xl border divide-y">
-        {fatture.map(f => {
-          const imponibile = totaleImponibile(f.righe)
-          const iva = Math.round(imponibile * f.aliquotaIva / 100)
-          return (
+      {fatture.length === 0 ? (
+        <EmptyState
+          icon="🧾"
+          title="Nessuna fattura"
+          description="Emetti la prima fattura da una commessa o da questa schermata."
+          action={
             <Link
-              key={f.id}
-              href={`/impresa/fatture/${f.id}`}
-              className="flex items-center justify-between p-4 hover:bg-gray-50"
+              href="/impresa/fatture/nuova"
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-sm">
-                    n. {f.numero}/{f.anno}
-                  </p>
-                  <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${BADGE[f.stato]}`}>
-                    {LABEL[f.stato]}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500">
-                  {f.cliente?.nome ?? '—'} · {f.commessa?.nome ? `Commessa: ${f.commessa.nome}` : ''}
-                </p>
-                <p className="text-xs text-gray-400">
-                  Emessa: {formatData(f.data)}
-                  {f.dataScadenza ? ` · Scadenza: ${formatData(f.dataScadenza)}` : ''}
-                </p>
-              </div>
-              <div className="text-right shrink-0 ml-4">
-                <p className="font-semibold text-sm">{formatEuro(imponibile + iva)}</p>
-                <p className="text-xs text-gray-400">IVA {f.aliquotaIva}%: {formatEuro(iva)}</p>
-              </div>
+              + Nuova fattura
             </Link>
-          )
-        })}
-      </div>
+          }
+        />
+      ) : (
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="divide-y divide-gray-100">
+            {fatture.map(f => {
+              const imponibile = totaleImponibile(f.righe)
+              const iva = Math.round(imponibile * f.aliquotaIva / 100)
+              return (
+                <Link
+                  key={f.id}
+                  href={`/impresa/fatture/${f.id}`}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50/70 transition-colors group"
+                >
+                  {/* Numero fattura */}
+                  <div className="shrink-0 text-center w-14">
+                    <p className="text-base font-bold text-gray-900 leading-none">
+                      {f.numero}/{f.anno}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">{formatData(f.data)}</p>
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate">
+                        {f.cliente?.nome ?? '—'}
+                      </span>
+                      <Badge variant={BADGE_VARIANT[f.stato] ?? 'neutral'}>
+                        {LABEL[f.stato] ?? f.stato}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {f.commessa?.nome ?? 'Senza commessa'}
+                      {f.dataScadenza ? ` · Scad. ${formatData(f.dataScadenza)}` : ''}
+                    </p>
+                  </div>
+
+                  {/* Totale */}
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {formatEuro(imponibile + iva)}
+                    </p>
+                    <p className="text-xs text-gray-400">IVA {f.aliquotaIva}%</p>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

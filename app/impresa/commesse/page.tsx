@@ -1,9 +1,28 @@
 import { prisma } from '@/lib/prisma'
 import { formatEuro } from '@/lib/format'
-import { calcolaMargine } from '@/lib/calcoli'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
 import { eliminaCommessa } from './actions'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Badge } from '@/components/ui/Badge'
+
+function BudgetBar({ costi, preventivato }: { costi: number; preventivato: number }) {
+  const pct = preventivato > 0 ? Math.min(Math.round((costi / preventivato) * 100), 100) : 0
+  const barCls = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-blue-500'
+  const txtCls = pct >= 90 ? 'text-red-600' : pct >= 70 ? 'text-amber-600' : 'text-gray-400'
+  return (
+    <div className="mt-3">
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-xs text-gray-400">Costi / Budget</span>
+        <span className={`text-xs font-semibold ${txtCls}`}>{pct}%</span>
+      </div>
+      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className={`h-full ${barCls} rounded-full transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
 
 export default async function CommessePage() {
   const commesse = await prisma.commessa.findMany({
@@ -16,52 +35,91 @@ export default async function CommessePage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Commesse</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            {aperte} aperte · {chiuse} chiuse
-          </p>
-        </div>
-        <Link href="/impresa/commesse/nuova" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-          + Nuova commessa
-        </Link>
-      </div>
+      <PageHeader
+        title="Commesse"
+        subtitle={`${aperte} aperte · ${chiuse} chiuse`}
+        action={
+          <Link
+            href="/impresa/commesse/nuova"
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+          >
+            + Nuova
+          </Link>
+        }
+      />
 
       {commesse.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center">
-          <p className="text-gray-500">Nessuna commessa. Creane una o trasforma un preventivo accettato.</p>
-        </div>
+        <EmptyState
+          icon="🏗️"
+          title="Nessuna commessa"
+          description="Crea la prima commessa o trasforma un preventivo accettato."
+          action={
+            <Link
+              href="/impresa/commesse/nuova"
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+            >
+              + Nuova commessa
+            </Link>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {commesse.map(c => {
-            const margine = calcolaMargine(c)
+            const costi = c.costiMateriali + c.costiManodopera + c.costiMezzi
+            const margine =
+              c.preventivato > 0
+                ? Math.round(((c.preventivato - costi) / c.preventivato) * 100)
+                : null
             return (
-              <Link key={c.id} href={`/impresa/commesse/${c.id}`}
-                className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-900 truncate">{c.nome}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${c.stato === 'aperta' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                      {c.stato === 'aperta' ? 'Aperta' : 'Chiusa'}
-                    </span>
+              <div
+                key={c.id}
+                className="flex items-stretch rounded-2xl border border-gray-200 bg-white shadow-sm hover:border-blue-200 hover:shadow-md transition-all overflow-hidden"
+              >
+                <Link
+                  href={`/impresa/commesse/${c.id}`}
+                  className="flex-1 min-w-0 p-4 sm:p-5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-gray-900">{c.nome}</span>
+                        <Badge
+                          variant={c.stato === 'aperta' ? 'success' : 'neutral'}
+                          dot={c.stato === 'aperta'}
+                        >
+                          {c.stato === 'aperta' ? 'Aperta' : 'Chiusa'}
+                        </Badge>
+                      </div>
+                      <p className="mt-0.5 text-sm text-gray-500">
+                        {c.cliente?.nome ?? 'Senza cliente'}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {formatEuro(c.preventivato)}
+                      </p>
+                      {margine !== null && (
+                        <p
+                          className={`text-xs font-bold mt-0.5 ${
+                            margine > 10
+                              ? 'text-emerald-600'
+                              : margine > 0
+                              ? 'text-amber-600'
+                              : 'text-red-500'
+                          }`}
+                        >
+                          {margine > 0 ? '+' : ''}
+                          {margine}% margine
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <p className="mt-0.5 text-sm text-gray-500">{c.cliente?.nome ?? 'Senza cliente'}</p>
-                </div>
-                <div className="ml-4 flex items-center gap-6 text-right">
-                  <div className="hidden sm:block">
-                    <p className="text-xs text-gray-400">Preventivato</p>
-                    <p className="text-sm font-medium text-gray-700">{formatEuro(c.preventivato)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Margine</p>
-                    <p className={`text-sm font-bold ${margine >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatEuro(margine)}
-                    </p>
-                  </div>
+                  {c.preventivato > 0 && <BudgetBar costi={costi} preventivato={c.preventivato} />}
+                </Link>
+                <div className="flex items-center px-3 border-l border-gray-100">
                   <DeleteButton action={eliminaCommessa.bind(null, c.id)} label="✕" />
                 </div>
-              </Link>
+              </div>
             )
           })}
         </div>

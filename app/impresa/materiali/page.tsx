@@ -3,60 +3,102 @@ import { formatEuro } from '@/lib/format'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
 import { eliminaMateriale } from './actions'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export default async function MaterialiPage() {
   const materiali = await prisma.materiale.findMany({ orderBy: { descrizione: 'asc' } })
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Materiali a listino</h1>
-          <p className="mt-1 text-sm text-gray-500">{materiali.length} articoli</p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/impresa/materiali/importa" className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            Import CSV
-          </Link>
-          <Link href="/impresa/materiali/nuovo" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-            + Nuovo articolo
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Materiali a listino"
+        subtitle={`${materiali.length} ${materiali.length === 1 ? 'articolo' : 'articoli'}`}
+        action={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/impresa/materiali/importa"
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
+            >
+              Import CSV
+            </Link>
+            <Link
+              href="/impresa/materiali/nuovo"
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+            >
+              + Nuovo
+            </Link>
+          </div>
+        }
+      />
 
       {materiali.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center">
-          <p className="text-gray-500">Nessun materiale. Aggiungili uno per uno o importa un CSV.</p>
-        </div>
+        <EmptyState
+          icon="🔩"
+          title="Nessun materiale"
+          description="Aggiungi articoli al listino uno per uno o importali da un file CSV."
+          action={
+            <div className="flex items-center gap-2">
+              <Link
+                href="/impresa/materiali/importa"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              >
+                Import CSV
+              </Link>
+              <Link
+                href="/impresa/materiali/nuovo"
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              >
+                + Nuovo articolo
+              </Link>
+            </div>
+          }
+        />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-100 bg-gray-50 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-              <tr>
-                <th className="px-4 py-3">Codice</th>
-                <th className="px-4 py-3">Descrizione</th>
-                <th className="hidden px-4 py-3 sm:table-cell">Unità</th>
-                <th className="px-4 py-3 text-right">Prezzo</th>
-                <th className="px-4 py-3 text-right">Azioni</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {materiali.map(m => (
-                <tr key={m.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{m.codice ?? '—'}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{m.descrizione}</td>
-                  <td className="hidden px-4 py-3 text-gray-500 sm:table-cell">{m.unita ?? 'pz'}</td>
-                  <td className="px-4 py-3 text-right font-medium text-gray-700">{formatEuro(m.prezzo)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <Link href={`/impresa/materiali/${m.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-800">Modifica</Link>
-                      <DeleteButton action={eliminaMateriale.bind(null, m.id)} />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="divide-y divide-gray-100">
+            {materiali.map(m => (
+              <div
+                key={m.id}
+                className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/70 transition-colors group"
+              >
+                {/* Codice */}
+                {m.codice && (
+                  <span className="shrink-0 font-mono text-xs text-gray-400 w-20 truncate hidden sm:block">
+                    {m.codice}
+                  </span>
+                )}
+                {/* Descrizione */}
+                <Link href={`/impresa/materiali/${m.id}`} className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 group-hover:text-blue-700 transition-colors truncate">
+                    {m.descrizione}
+                  </p>
+                  {m.codice && (
+                    <p className="text-xs text-gray-400 mt-0.5 sm:hidden font-mono">{m.codice}</p>
+                  )}
+                </Link>
+                {/* Unità */}
+                <span className="shrink-0 text-xs text-gray-400 hidden sm:block w-8 text-center">
+                  {m.unita ?? 'pz'}
+                </span>
+                {/* Prezzo */}
+                <div className="shrink-0 text-right w-20">
+                  <p className="text-sm font-semibold text-gray-900">{formatEuro(m.prezzo)}</p>
+                  <p className="text-xs text-gray-400 sm:hidden">{m.unita ?? 'pz'}</p>
+                </div>
+                {/* Azioni */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    href={`/impresa/materiali/${m.id}`}
+                    className="hidden sm:block text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    Modifica
+                  </Link>
+                  <DeleteButton action={eliminaMateriale.bind(null, m.id)} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
