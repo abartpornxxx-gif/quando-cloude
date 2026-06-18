@@ -37,42 +37,34 @@ export default async function ClienteLayout({ children }: { children: React.Reac
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-40 bg-white shadow-sm">
+      <header className="sticky top-0 z-40 bg-violet-700 shadow-lg">
         <div className="mx-auto max-w-3xl px-4">
           <div className="flex h-14 items-center justify-between gap-3">
             {/* Logo */}
             <Link href="/cliente/dashboard" className="flex items-center gap-2.5 shrink-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 text-white text-sm font-bold select-none">Q</div>
-              <span className="font-bold text-gray-900 hidden sm:block">QUADRO</span>
-              <span className="hidden md:inline-flex items-center rounded-full bg-violet-50 border border-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
-                Portale
-              </span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500 text-white text-sm font-bold select-none shadow-sm">Q</div>
+              <div className="flex items-baseline gap-2">
+                <span className="font-bold text-white tracking-tight">QUADRO</span>
+                <span className="hidden sm:block text-xs font-medium text-violet-300">Portale</span>
+              </div>
             </Link>
 
-            {/* Nav links */}
-            <nav className="hidden sm:flex items-center gap-0.5 overflow-x-auto scrollbar-none">
+            {/* Nav desktop */}
+            <nav className="hidden sm:flex items-center gap-0.5">
               {NAV.map(item => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 hover:text-violet-700"
-                >
+                <Link key={item.href} href={item.href}
+                  className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-violet-200 hover:bg-violet-600 hover:text-white">
                   {item.label}
                 </Link>
               ))}
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="hidden lg:block text-sm text-gray-500 truncate max-w-32">
-                {nome.split(' ')[0]}
-              </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="hidden lg:block text-sm text-violet-300 truncate max-w-32">{nome.split(' ')[0]}</span>
               <NotificheBell count={alertCount} href="/cliente/notifiche" colore="violet" />
               <form action={signOut}>
-                <button
-                  type="submit"
-                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                >
+                <button type="submit" className="rounded-lg px-3 py-1.5 text-sm font-medium text-violet-200 hover:bg-violet-600 hover:text-white">
                   Esci
                 </button>
               </form>
@@ -80,16 +72,13 @@ export default async function ClienteLayout({ children }: { children: React.Reac
           </div>
         </div>
 
-        {/* Mobile nav */}
-        <div className="sm:hidden border-t border-gray-100">
+        {/* Nav mobile */}
+        <div className="sm:hidden border-t border-violet-600/50">
           <div className="mx-auto max-w-3xl px-4">
             <div className="flex overflow-x-auto scrollbar-none">
               {NAV.map(item => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="shrink-0 whitespace-nowrap px-3 py-2.5 text-sm font-medium text-gray-500 hover:text-violet-700"
-                >
+                <Link key={item.href} href={item.href}
+                  className="shrink-0 whitespace-nowrap px-3 py-2.5 text-sm font-medium text-violet-200 hover:text-white">
                   {item.label}
                 </Link>
               ))}

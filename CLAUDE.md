@@ -52,6 +52,46 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 - **Date**: salva in ISO, mostra in formato italiano.
 
+## Regole di design, codice e processo (NON negoziabili)
+
+### A — Design system visivo
+
+**Identità visiva per ruolo** (usare SEMPRE questi colori, mai mescolarli):
+- Impresa → `slate-900` (header) + `blue-600` (accent/CTA)
+- Operaio → `emerald-900` (header) + `emerald-600` (CTA)
+- Magazziniere → `amber-800` (header) + `amber-600` (CTA)
+- Cliente → `violet-700` (header) + `violet-600` (CTA)
+
+**Card standard** — invariabile: `rounded-2xl border border-gray-200 bg-white shadow-sm`
+**KPI numeri** — usare sempre `<StatCard>` da `components/ui/StatCard.tsx`
+**Badge di stato** — usare sempre `<Badge>` da `components/ui/Badge.tsx`
+**Spaziatura sezioni** — `space-y-8` tra aree principali, `space-y-3` tra item di lista
+**Titolo pagina** — sempre `text-2xl font-bold text-gray-900`
+**Label sezione** — sempre `text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3`
+**Bottone primario** — `bg-[accent]-600 hover:bg-[accent]-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm`
+**Bottone secondario** — `bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl px-4 py-2.5 text-sm font-medium`
+**Niente CSS inline**, niente classi Tailwind inventate al volo. Se manca un pattern → aggiungere componente in `components/ui/`.
+
+### B — Struttura del codice
+
+- **Server Component di default.** `'use client'` solo se strettamente necessario (form interattivi, polling, stato UI locale).
+- **Server Actions** in `actions.ts` nella stessa cartella della pagina che le usa.
+- **Componenti riutilizzabili** in `components/ui/` se usati da 2+ aree diverse; in `components/` se specifici di un'area.
+- **Niente logica di business nei componenti.** Query Prisma e calcoli vanno in Server Components o `lib/`.
+- **Pattern pagina**: `requireRuolo()` → query dati → render. Sempre in questo ordine, niente deviazioni.
+- **Se un blocco visivo si ripete 2+ volte** in pagine diverse → estrarre componente prima di continuare.
+
+### C — Processo di sviluppo
+
+- **Prima di iniziare**: definire in 2 righe cosa si fa e cosa NON si fa in questa sessione.
+- **Prima di ogni commit**: `npx tsc --noEmit` + `npm run build` — zero errori, sempre.
+- **Un commit per ogni feature funzionante**, non alla fine della sessione.
+- **L'utente valida ogni area** visivamente prima di passare alla successiva.
+- **Niente gold-plating**: non aggiungere funzionalità non richieste, non "migliorare" codice che funziona.
+- **Se una pagina viene toccata**, deve rispettare le regole A e B. Non lasciare pagine "vecchio stile".
+
+---
+
 ## Metodo di lavoro (importante)
 
 - **Si lavora UNA FASE alla volta.** Non iniziare la fase successiva finché l'utente non conferma che quella attuale funziona.

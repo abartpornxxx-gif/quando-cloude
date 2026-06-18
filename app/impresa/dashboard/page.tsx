@@ -31,7 +31,6 @@ export default async function ImpresaDashboardPage() {
   const SEZIONI = [
     {
       titolo: 'Commesse & Cantieri',
-      colore: 'blue',
       links: [
         { label: 'Commesse', href: '/impresa/commesse', desc: `${commesseAperte} aperte` },
         { label: 'Preventivi', href: '/impresa/preventivi', desc: 'Crea e invia' },
@@ -41,7 +40,6 @@ export default async function ImpresaDashboardPage() {
     },
     {
       titolo: 'Anagrafiche',
-      colore: 'gray',
       links: [
         { label: 'Clienti', href: '/impresa/clienti', desc: 'Anagrafica' },
         { label: 'Operai', href: '/impresa/operai', desc: 'Squadre e ore' },
@@ -51,7 +49,6 @@ export default async function ImpresaDashboardPage() {
     },
     {
       titolo: 'Materiali & Logistica',
-      colore: 'gray',
       links: [
         { label: 'Materiali', href: '/impresa/materiali', desc: 'Listino prezzi' },
         { label: 'Ordini', href: '/impresa/ordini', desc: ordiniAperti > 0 ? `${ordiniAperti} in corso` : 'Fornitori' },
@@ -61,7 +58,6 @@ export default async function ImpresaDashboardPage() {
     },
     {
       titolo: 'Fatture & Documenti',
-      colore: 'gray',
       links: [
         { label: 'Fatture attive', href: '/impresa/fatture', desc: 'Da incassare' },
         { label: 'Fatture passive', href: '/impresa/fatture-passive', desc: 'Da pagare' },
@@ -71,7 +67,6 @@ export default async function ImpresaDashboardPage() {
     },
     {
       titolo: 'Catalogo & Offerte',
-      colore: 'gray',
       links: [
         { label: 'Catalogo', href: '/impresa/catalogo', desc: 'Offerte ai clienti' },
         { label: 'Richieste', href: '/impresa/richieste-offerte', desc: richiesteNuove > 0 ? `📬 ${richiesteNuove} nuove` : 'Interessi clienti' },
@@ -81,75 +76,62 @@ export default async function ImpresaDashboardPage() {
     },
   ]
 
+  const oggi = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })
+
   return (
     <div className="space-y-8">
-      {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Panoramica dell'attività</p>
+
+      {/* Hero bar — identità impresa */}
+      <div className="rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700 px-6 py-5 flex items-center justify-between gap-4 shadow-md">
+        <div>
+          <p className="text-slate-400 text-xs font-medium uppercase tracking-wider capitalize">{oggi}</p>
+          <h1 className="text-xl font-bold text-white mt-0.5">Dashboard impresa</h1>
+        </div>
+        <div className="hidden sm:flex items-center gap-2">
+          {rapportiniMancanti > 0 && (
+            <Link href="/impresa/giornate"
+              className="flex items-center gap-1.5 rounded-xl bg-red-500/20 border border-red-500/40 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30">
+              ⚠ {rapportiniMancanti} rapportini
+            </Link>
+          )}
+          {richiesteNuove > 0 && (
+            <Link href="/impresa/richieste-offerte"
+              className="flex items-center gap-1.5 rounded-xl bg-violet-500/20 border border-violet-500/40 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:bg-violet-500/30">
+              📬 {richiesteNuove} nuove richieste
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <StatCard
-          label="Cantieri aperti"
-          value={commesseAperte}
-          sub="Visualizza commesse →"
-          href="/impresa/commesse"
-          variant="info"
-        />
-        <StatCard
-          label="Rapportini"
-          value={rapportiniMancanti > 0 ? rapportiniMancanti : '✓'}
-          sub={rapportiniMancanti > 0 ? 'Mancanti — da gestire' : 'Tutto in regola'}
-          href="/impresa/giornate"
-          variant={rapportiniMancanti > 0 ? 'danger' : 'default'}
-        />
-        <StatCard
-          label="Scadenze 30g"
-          value={scadenzeVicine}
-          sub={scadenzeVicine > 0 ? 'Fatture in scadenza' : 'Nessuna scadenza'}
-          href="/impresa/scadenzario"
-          variant={scadenzeVicine > 0 ? 'warning' : 'default'}
-        />
-        <StatCard
-          label="Ordini aperti"
-          value={ordiniAperti}
-          sub="Fornitori in corso"
-          href="/impresa/ordini"
-          variant="default"
-        />
-        <StatCard
-          label="Richieste offerte"
-          value={richiesteNuove > 0 ? richiesteNuove : '–'}
-          sub={richiesteNuove > 0 ? 'Nuove da clienti' : 'Nessuna nuova'}
-          href="/impresa/richieste-offerte"
-          variant={richiesteNuove > 0 ? 'purple' : 'default'}
-        />
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Panoramica</p>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <StatCard label="Cantieri aperti" value={commesseAperte} sub="Vai alle commesse →" href="/impresa/commesse" variant="info" />
+          <StatCard label="Rapportini" value={rapportiniMancanti > 0 ? rapportiniMancanti : '✓'} sub={rapportiniMancanti > 0 ? 'Mancanti' : 'Tutto in regola'} href="/impresa/giornate" variant={rapportiniMancanti > 0 ? 'danger' : 'default'} />
+          <StatCard label="Scadenze 30g" value={scadenzeVicine} sub={scadenzeVicine > 0 ? 'Fatture in scadenza' : 'Nessuna'} href="/impresa/scadenzario" variant={scadenzeVicine > 0 ? 'warning' : 'default'} />
+          <StatCard label="Ordini aperti" value={ordiniAperti} sub="Fornitori in corso" href="/impresa/ordini" variant="default" />
+          <StatCard label="Richieste offerte" value={richiesteNuove > 0 ? richiesteNuove : '–'} sub={richiesteNuove > 0 ? 'Da clienti' : 'Nessuna nuova'} href="/impresa/richieste-offerte" variant={richiesteNuove > 0 ? 'purple' : 'default'} />
+        </div>
       </div>
 
-      {/* Commesse recenti */}
+      {/* Cantieri recenti */}
       {commesseRecenti.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-700">Cantieri in corso</h2>
-            <Link href="/impresa/commesse" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-              Vedi tutte →
-            </Link>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Cantieri in corso</p>
+            <Link href="/impresa/commesse" className="text-xs font-medium text-blue-600 hover:text-blue-700">Vedi tutte →</Link>
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {commesseRecenti.map(c => (
-              <Link
-                key={c.id}
-                href={`/impresa/commesse/${c.id}`}
-                className="group flex items-center justify-between rounded-2xl bg-white border border-gray-200 px-4 py-3.5 shadow-sm hover:border-blue-200 hover:shadow-md transition-all"
-              >
+              <Link key={c.id} href={`/impresa/commesse/${c.id}`}
+                className="group flex items-center justify-between rounded-2xl bg-white border border-gray-200 px-4 py-3.5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-700">{c.nome}</p>
                   {c.cliente && <p className="text-xs text-gray-400 mt-0.5">{c.cliente.nome}</p>}
                 </div>
-                <div className="flex flex-col items-end shrink-0 ml-3">
-                  <p className="text-xs text-gray-500">{formatEuro(c.preventivato)}</p>
+                <div className="flex flex-col items-end shrink-0 ml-3 gap-1">
+                  <p className="text-xs text-gray-500 font-medium">{formatEuro(c.preventivato)}</p>
                   <Badge variant="success" dot>aperta</Badge>
                 </div>
               </Link>
@@ -162,14 +144,11 @@ export default async function ImpresaDashboardPage() {
       <div className="space-y-5">
         {SEZIONI.map(s => (
           <div key={s.titolo}>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">{s.titolo}</h2>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">{s.titolo}</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {s.links.map(l => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className="group rounded-xl bg-white border border-gray-200 px-4 py-3 hover:border-blue-200 hover:shadow-sm transition-all"
-                >
+                <Link key={l.href} href={l.href}
+                  className="group rounded-xl bg-white border border-gray-200 px-4 py-3 hover:border-blue-300 hover:shadow-sm transition-all">
                   <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">{l.label}</p>
                   <p className="text-xs text-gray-400 mt-0.5 truncate">{l.desc}</p>
                 </Link>
@@ -178,6 +157,7 @@ export default async function ImpresaDashboardPage() {
           </div>
         ))}
       </div>
+
     </div>
   )
 }

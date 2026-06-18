@@ -27,24 +27,25 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
 
   return (
     <div className="min-h-full">
-      <header className="sticky top-0 z-40 bg-white shadow-sm">
+      {/* Header scuro con identità forte */}
+      <header className="sticky top-0 z-40 bg-slate-900 shadow-lg">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-4">
-            {/* Logo */}
-            <div className="flex items-center gap-2.5 shrink-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white text-sm font-bold select-none">
+            {/* Logo + brand */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white text-sm font-bold select-none shadow-sm">
                 Q
               </div>
-              <span className="text-base font-bold text-gray-900 hidden sm:block">QUADRO</span>
-              <span className="hidden md:inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
-                Impresa
-              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-base font-bold text-white tracking-tight">QUADRO</span>
+                <span className="hidden sm:block text-xs font-medium text-slate-400">Impresa</span>
+              </div>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {userName && (
-                <span className="hidden lg:block text-sm text-gray-500 truncate max-w-48">
+                <span className="hidden lg:block text-sm text-slate-400 truncate max-w-40">
                   {userName.split(' ')[0]}
                 </span>
               )}
@@ -52,7 +53,7 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white"
                 >
                   Esci
                 </button>
