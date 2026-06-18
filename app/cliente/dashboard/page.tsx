@@ -2,6 +2,8 @@ import { requireCliente } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
+import { StatCard } from '@/components/ui/StatCard'
+import { Badge } from '@/components/ui/Badge'
 
 export default async function ClienteDashboardPage() {
   const { user, cliente } = await requireCliente()
@@ -36,83 +38,117 @@ export default async function ClienteDashboardPage() {
     return imp + Math.round(imp * iva / 100)
   }
 
+  const totaleDaPagare = fattureDaIncassare.reduce((acc, f) => acc + totale(f.righe, f.aliquotaIva), 0)
+
+  const MENU = [
+    {
+      href: '/cliente/lavori',
+      icon: '🏗️',
+      titolo: 'I miei lavori',
+      desc: commesseAperte.length > 0
+        ? `${commesseAperte.length} cantiere${commesseAperte.length > 1 ? 'i' : ''} in corso`
+        : commesse.length > 0 ? 'Tutti i lavori completati' : 'Nessun cantiere',
+      badge: commesseAperte.length > 0 ? <Badge variant="success" dot>In corso</Badge> : null,
+    },
+    {
+      href: '/cliente/pagamenti',
+      icon: '💳',
+      titolo: 'Pagamenti',
+      desc: fattureDaIncassare.length > 0
+        ? `${fattureDaIncassare.length} fattura${fattureDaIncassare.length > 1 ? 'e' : ''} · ${formatEuro(totaleDaPagare)}`
+        : fatture.length > 0 ? 'Tutto in regola ✓' : 'Nessuna fattura',
+      badge: fattureDaIncassare.length > 0 ? <Badge variant="warning">In attesa</Badge> : null,
+    },
+    {
+      href: '/cliente/documenti',
+      icon: '📄',
+      titolo: 'Documenti',
+      desc: 'Fatture e Dichiarazioni di Conformità',
+      badge: null,
+    },
+    {
+      href: '/cliente/servizi',
+      icon: '✨',
+      titolo: 'Servizi aggiuntivi',
+      desc: 'Scopri le nostre offerte',
+      badge: null,
+    },
+  ]
+
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Ciao, {nome.split(' ')[0]}!
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">Portale personale QUADRO</p>
+    <div className="space-y-7">
+      {/* Welcome */}
+      <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-violet-700 text-white px-6 py-6 shadow-lg shadow-violet-200">
+        <p className="text-violet-200 text-sm font-medium">Portale personale</p>
+        <h1 className="text-2xl font-bold mt-1">Ciao, {nome.split(' ')[0]}!</h1>
+        <p className="text-violet-200 text-sm mt-1">
+          {commesseAperte.length > 0
+            ? `Hai ${commesseAperte.length} cantiere${commesseAperte.length > 1 ? 'i' : ''} in corso`
+            : 'Benvenuto nel tuo portale QUADRO'}
+        </p>
       </div>
 
-      {/* Riepilogo */}
-      <div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-3">
-        <div className="rounded-xl bg-violet-50 border border-violet-100 p-4">
-          <p className="text-xs text-violet-600 font-medium">Cantieri attivi</p>
-          <p className="text-2xl font-bold text-violet-800">{commesseAperte.length}</p>
-        </div>
-        <div className="rounded-xl bg-yellow-50 border border-yellow-100 p-4">
-          <p className="text-xs text-yellow-700 font-medium">Pagamenti in attesa</p>
-          <p className="text-2xl font-bold text-yellow-800">{fattureDaIncassare.length}</p>
-        </div>
-        <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 col-span-2 sm:col-span-1">
-          <p className="text-xs text-gray-500 font-medium">Totale cantieri</p>
-          <p className="text-2xl font-bold text-gray-800">{commesse.length}</p>
-        </div>
+      {/* KPI */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard
+          label="Attivi"
+          value={commesseAperte.length}
+          sub="Cantieri"
+          href="/cliente/lavori"
+          variant="info"
+        />
+        <StatCard
+          label="Da pagare"
+          value={fattureDaIncassare.length}
+          sub="Fatture"
+          href="/cliente/pagamenti"
+          variant={fattureDaIncassare.length > 0 ? 'warning' : 'default'}
+        />
+        <StatCard
+          label="Totali"
+          value={commesse.length}
+          sub="Cantieri"
+          href="/cliente/lavori"
+          variant="default"
+        />
       </div>
 
-      {/* Sezioni rapide */}
-      <div className="space-y-3">
-        <Link href="/cliente/lavori" className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-          <span className="text-3xl">🏗</span>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900">I miei lavori</h3>
-            <p className="text-sm text-gray-500">
-              {commesseAperte.length > 0
-                ? `${commesseAperte.length} cantiere${commesseAperte.length > 1 ? 'i' : ''} in corso`
-                : commesse.length > 0 ? 'Tutti i cantieri completati' : 'Nessun cantiere'}
-            </p>
-          </div>
-          <span className="text-gray-400 text-lg">›</span>
-        </Link>
-
-        <Link href="/cliente/pagamenti" className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-          <span className="text-3xl">💳</span>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900">Pagamenti</h3>
-            <p className="text-sm text-gray-500">
-              {fattureDaIncassare.length > 0
-                ? `${fattureDaIncassare.length} fattura${fattureDaIncassare.length > 1 ? 'e' : ''} in attesa · ${formatEuro(fattureDaIncassare.reduce((acc, f) => acc + totale(f.righe, f.aliquotaIva), 0))}`
-                : fatture.length > 0 ? 'Tutto in regola ✓' : 'Nessuna fattura'}
-            </p>
-          </div>
-          <span className="text-gray-400 text-lg">›</span>
-        </Link>
-
-        <Link href="/cliente/documenti" className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-          <span className="text-3xl">📄</span>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900">Documenti</h3>
-            <p className="text-sm text-gray-500">Fatture, Dichiarazioni di Conformità</p>
-          </div>
-          <span className="text-gray-400 text-lg">›</span>
-        </Link>
+      {/* Menu sezioni */}
+      <div className="space-y-2.5">
+        {MENU.map(item => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="group flex items-center gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:border-violet-200 hover:shadow-md transition-all"
+          >
+            <span className="text-2xl shrink-0">{item.icon}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 group-hover:text-violet-700">{item.titolo}</p>
+              <p className="text-xs text-gray-500 mt-0.5 truncate">{item.desc}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {item.badge}
+              <span className="text-gray-300 group-hover:text-violet-400 text-lg">›</span>
+            </div>
+          </Link>
+        ))}
       </div>
 
-      {/* Ultima attività */}
+      {/* Ultima foto cantiere */}
       {commesse.length > 0 && commesse[0].giornate[0]?.foto[0] && (
-        <div className="mt-6">
+        <div>
           <h2 className="text-sm font-semibold text-gray-500 mb-2">Ultima foto dal cantiere</h2>
-          <div className="rounded-xl overflow-hidden border border-gray-200">
+          <Link href={`/cliente/lavori/${commesse[0].id}`} className="block rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <img
               src={commesse[0].giornate[0].foto[0].url}
               alt="Ultima foto cantiere"
-              className="w-full object-cover max-h-48"
+              className="w-full object-cover max-h-52"
             />
-            <p className="text-xs text-gray-500 px-3 py-2">
-              {commesse[0].nome} · {formatData(commesse[0].giornate[0].data)}
-            </p>
-          </div>
+            <div className="px-4 py-3 bg-white">
+              <p className="text-sm font-medium text-gray-700">{commesse[0].nome}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{formatData(commesse[0].giornate[0].data)}</p>
+            </div>
+          </Link>
         </div>
       )}
     </div>

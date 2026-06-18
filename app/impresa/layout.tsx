@@ -23,29 +23,36 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
     redirect('/login')
   }
 
+  const userName = user.user_metadata?.full_name ?? user.email ?? ''
+
   return (
     <div className="min-h-full">
-      <header className="bg-blue-700 text-white shadow-md">
+      <header className="sticky top-0 z-40 bg-white shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-12 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500">
-                <span className="text-xs font-bold">Q</span>
+          <div className="flex h-14 items-center justify-between gap-4">
+            {/* Logo */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white text-sm font-bold select-none">
+                Q
               </div>
-              <span className="text-base font-bold tracking-tight">QUADRO</span>
-              <span className="hidden rounded-full bg-blue-500/60 px-2 py-0.5 text-xs font-semibold sm:inline-block">
+              <span className="text-base font-bold text-gray-900 hidden sm:block">QUADRO</span>
+              <span className="hidden md:inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
                 Impresa
               </span>
             </div>
+
+            {/* Actions */}
             <div className="flex items-center gap-2">
-              <span className="hidden text-xs text-blue-200 sm:block">
-                {user.user_metadata?.full_name ?? user.email}
-              </span>
+              {userName && (
+                <span className="hidden lg:block text-sm text-gray-500 truncate max-w-48">
+                  {userName.split(' ')[0]}
+                </span>
+              )}
               <NotificheBell count={alert.totale} href="/impresa/notifiche" colore="blue" />
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-blue-100 hover:bg-blue-600"
+                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
                 >
                   Esci
                 </button>

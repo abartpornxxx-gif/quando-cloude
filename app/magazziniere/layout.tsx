@@ -18,21 +18,52 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
     redirect('/login')
   }
 
+  const NAV_ITEMS = [
+    { label: 'Dashboard', href: '/magazziniere/dashboard' },
+    { label: 'Richieste', href: '/magazziniere/richieste' },
+    { label: 'Giacenza', href: '/magazziniere/magazzino' },
+  ]
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-yellow-600 text-white px-4 py-3 flex items-center gap-3">
-        <span className="font-bold text-lg">📦 Magazzino</span>
-        <a href="/magazziniere/dashboard" className="text-sm hover:underline">Dashboard</a>
-        <a href="/magazziniere/richieste" className="text-sm hover:underline">Richieste</a>
-        <a href="/magazziniere/magazzino" className="text-sm hover:underline">Giacenza</a>
-        <div className="ml-auto flex items-center gap-2">
-          <NotificheBell count={alertCount} href="/magazziniere/notifiche" colore="yellow" />
-          <form action={signOut}>
-            <button type="submit" className="text-sm text-yellow-100 hover:underline">Esci</button>
-          </form>
+      <header className="bg-amber-800 text-white shadow-lg">
+        <div className="mx-auto max-w-3xl px-4">
+          <div className="flex h-14 items-center justify-between">
+            {/* Logo + nav */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-600 font-bold text-sm select-none">Q</div>
+                <div className="hidden sm:block">
+                  <p className="font-bold text-sm leading-tight">QUADRO</p>
+                  <p className="text-amber-200 text-xs leading-tight">Magazzino</p>
+                </div>
+              </div>
+              <nav className="flex items-center gap-1">
+                {NAV_ITEMS.map(item => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-amber-100 hover:bg-amber-700 hover:text-white"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </nav>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <NotificheBell count={alertCount} href="/magazziniere/notifiche" colore="yellow" />
+              <form action={signOut}>
+                <button type="submit" className="rounded-lg px-3 py-1.5 text-sm font-medium text-amber-100 hover:bg-amber-700">
+                  Esci
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
-      </nav>
-      {children}
+      </header>
+      <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
     </div>
   )
 }

@@ -1,5 +1,7 @@
 import { requireMagazziniere } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { StatCard } from '@/components/ui/StatCard'
+import { Badge } from '@/components/ui/Badge'
 
 export default async function MagazziniereDashboard() {
   const { magazziniere } = await requireMagazziniere()
@@ -20,45 +22,70 @@ export default async function MagazziniereDashboard() {
   })
 
   return (
-    <div className="p-4 max-w-2xl mx-auto space-y-4">
-      <h1 className="text-xl font-bold">Ciao, {magazziniere.nome}</h1>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-          <p className="text-3xl font-bold text-red-600">{aperte}</p>
-          <p className="text-sm text-red-700">Richieste aperte</p>
-        </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
-          <p className="text-3xl font-bold text-yellow-600">{inPrep}</p>
-          <p className="text-sm text-yellow-700">In preparazione</p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold text-gray-900">Ciao, {magazziniere.nome.split(' ')[0]}!</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Gestione magazzino e richieste cantiere</p>
       </div>
 
-      <div className="bg-white rounded-xl border divide-y">
-        {recenti.length === 0 ? (
-          <p className="p-4 text-gray-400 text-sm">Nessuna richiesta in attesa</p>
-        ) : recenti.map(r => (
-          <a key={r.id} href={`/magazziniere/richieste/${r.id}`} className="block p-4 hover:bg-gray-50">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                {r.urgente && <span className="text-xs text-red-600 font-semibold">🚨 URGENTE — </span>}
-                <span className="text-sm font-medium">{r.descrizione}</span>
-                <p className="text-xs text-gray-500 mt-0.5">{r.operaio.nome} · {r.commessa.nome}</p>
-              </div>
-              <span className={[
-                'text-xs px-2 py-1 rounded-full shrink-0',
-                r.stato === 'richiesta' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700',
-              ].join(' ')}>
-                {r.stato === 'richiesta' ? 'Da fare' : 'In prep.'}
-              </span>
-            </div>
+      {/* KPI */}
+      <div className="grid grid-cols-2 gap-4">
+        <StatCard
+          label="Da evadere"
+          value={aperte}
+          sub={aperte > 0 ? 'Richieste in attesa' : 'Nessuna aperta'}
+          href="/magazziniere/richieste"
+          variant={aperte > 0 ? 'danger' : 'default'}
+        />
+        <StatCard
+          label="In preparazione"
+          value={inPrep}
+          sub={inPrep > 0 ? 'Materiale da consegnare' : 'Nessuna in corso'}
+          href="/magazziniere/richieste"
+          variant={inPrep > 0 ? 'warning' : 'default'}
+        />
+      </div>
+
+      {/* Lista richieste */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-700">Richieste in attesa</h2>
+          <a href="/magazziniere/richieste" className="text-xs text-amber-700 font-medium hover:text-amber-800">
+            Vedi tutte →
           </a>
-        ))}
-      </div>
+        </div>
 
-      <a href="/magazziniere/richieste" className="block text-center text-blue-600 text-sm py-2">
-        Vedi tutte le richieste →
-      </a>
+        {recenti.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+            <p className="text-2xl mb-2">✅</p>
+            <p className="text-sm font-semibold text-gray-700">Tutto evaso</p>
+            <p className="text-xs text-gray-400 mt-1">Nessuna richiesta in attesa</p>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden divide-y divide-gray-100">
+            {recenti.map(r => (
+              <a key={r.id} href={`/magazziniere/richieste/${r.id}`} className="flex items-start justify-between gap-3 px-4 py-4 hover:bg-gray-50 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {r.urgente && (
+                      <span className="inline-flex items-center rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-xs font-bold text-red-700">
+                        🚨 URGENTE
+                      </span>
+                    )}
+                    <p className="text-sm font-semibold text-gray-900 truncate">{r.descrizione}</p>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {r.operaio.nome} · {r.commessa.nome}
+                  </p>
+                </div>
+                <Badge variant={r.stato === 'richiesta' ? 'danger' : 'warning'}>
+                  {r.stato === 'richiesta' ? 'Da fare' : 'In prep.'}
+                </Badge>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -29,45 +29,49 @@ export default async function ClienteLayout({ children }: { children: React.Reac
   }
 
   const NAV = [
-    { label: '🏗 I miei lavori', href: '/cliente/lavori' },
-    { label: '💳 Pagamenti', href: '/cliente/pagamenti' },
-    { label: '📄 Documenti', href: '/cliente/documenti' },
-    { label: '✨ Servizi', href: '/cliente/servizi' },
+    { label: 'I miei lavori', href: '/cliente/lavori' },
+    { label: 'Pagamenti', href: '/cliente/pagamenti' },
+    { label: 'Documenti', href: '/cliente/documenti' },
+    { label: 'Servizi', href: '/cliente/servizi' },
   ]
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-violet-700 text-white shadow-md">
+      <header className="sticky top-0 z-40 bg-white shadow-sm">
         <div className="mx-auto max-w-3xl px-4">
-          <div className="flex h-14 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Link href="/cliente/dashboard" className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500">
-                  <span className="text-sm font-bold">Q</span>
-                </div>
-                <span className="text-base font-bold tracking-tight hidden sm:block">QUADRO</span>
-              </Link>
-            </div>
-            <div className="flex items-center gap-1 overflow-x-auto">
+          <div className="flex h-14 items-center justify-between gap-3">
+            {/* Logo */}
+            <Link href="/cliente/dashboard" className="flex items-center gap-2.5 shrink-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600 text-white text-sm font-bold select-none">Q</div>
+              <span className="font-bold text-gray-900 hidden sm:block">QUADRO</span>
+              <span className="hidden md:inline-flex items-center rounded-full bg-violet-50 border border-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
+                Portale
+              </span>
+            </Link>
+
+            {/* Nav links */}
+            <nav className="hidden sm:flex items-center gap-0.5 overflow-x-auto scrollbar-none">
               {NAV.map(item => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-violet-200 hover:bg-violet-600 hover:text-white transition-colors"
+                  className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-violet-50 hover:text-violet-700"
                 >
                   {item.label}
                 </Link>
               ))}
-            </div>
-            <div className="flex items-center gap-2 shrink-0 ml-2">
-              <span className="hidden text-xs text-violet-200 sm:block truncate max-w-32">
+            </nav>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="hidden lg:block text-sm text-gray-500 truncate max-w-32">
                 {nome.split(' ')[0]}
               </span>
               <NotificheBell count={alertCount} href="/cliente/notifiche" colore="violet" />
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-violet-100 hover:bg-violet-600"
+                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100"
                 >
                   Esci
                 </button>
@@ -75,7 +79,25 @@ export default async function ClienteLayout({ children }: { children: React.Reac
             </div>
           </div>
         </div>
-      </nav>
+
+        {/* Mobile nav */}
+        <div className="sm:hidden border-t border-gray-100">
+          <div className="mx-auto max-w-3xl px-4">
+            <div className="flex overflow-x-auto scrollbar-none">
+              {NAV.map(item => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="shrink-0 whitespace-nowrap px-3 py-2.5 text-sm font-medium text-gray-500 hover:text-violet-700"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </header>
+
       <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
     </div>
   )

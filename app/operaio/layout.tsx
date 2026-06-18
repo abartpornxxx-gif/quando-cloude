@@ -11,7 +11,6 @@ export default async function OperaioLayout({ children }: { children: React.Reac
 
   if (!user || user.user_metadata?.role !== 'operaio') redirect('/login')
 
-  // ORDINE 4 — Controlla rapportino pendente per il banner persistente
   let rapportinoPendente: { id: string; commessaNome: string } | null = null
   let alertCount = 0
 
@@ -39,26 +38,30 @@ export default async function OperaioLayout({ children }: { children: React.Reac
   }
 
   return (
-    <div className="min-h-full">
-      <nav className="bg-emerald-700 text-white shadow-md">
+    <div className="min-h-full bg-gray-50">
+      {/* Header */}
+      <nav className="bg-emerald-900 text-white shadow-lg">
         <div className="mx-auto max-w-2xl px-4">
           <div className="flex h-14 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 font-bold text-sm">Q</div>
-              <span className="font-bold">QUADRO</span>
-              <span className="hidden rounded-full bg-emerald-500/60 px-2 py-0.5 text-xs font-semibold sm:inline">Cantiere</span>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 font-bold text-sm select-none">Q</div>
+              <div>
+                <p className="font-bold text-sm leading-tight">QUADRO</p>
+                <p className="text-emerald-300 text-xs leading-tight">Cantiere</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {rapportinoPendente && (
-                <a href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`}
-                  className="flex items-center gap-1 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white animate-pulse">
-                  ⚠️ Rapportino
+                <a
+                  href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`}
+                  className="flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white"
+                >
+                  ⚠ Rapportino
                 </a>
               )}
               <NotificheBell count={alertCount} href="/operaio/notifiche" colore="emerald" />
               <form action={signOut}>
-                <button type="submit"
-                  className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-100 hover:bg-emerald-600">
+                <button type="submit" className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-200 hover:bg-emerald-800">
                   Esci
                 </button>
               </form>
@@ -67,57 +70,57 @@ export default async function OperaioLayout({ children }: { children: React.Reac
         </div>
       </nav>
 
-      {/* ORDINE 4 — Banner rapportino mancante (sempre visibile su tutte le pagine operaio) */}
+      {/* Banner rapportino mancante */}
       {rapportinoPendente && (
-        <div className="bg-red-600 text-white px-4 py-2 text-center text-sm">
-          <span className="font-semibold">⚠️ Hai un rapportino da compilare!</span>
+        <div className="bg-red-600 text-white px-4 py-2.5 text-center text-sm">
+          <span className="font-semibold">⚠ Rapportino da compilare:</span>
           {' '}
-          <a href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`}
-            className="underline font-bold">
-            Vai ora →
+          <span className="text-red-100">{rapportinoPendente.commessaNome}</span>
+          {' · '}
+          <a href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`} className="underline font-bold">
+            Compila ora →
           </a>
         </div>
       )}
 
       <OfflineBanner />
 
-      <main className="mx-auto max-w-2xl px-4 py-6 pb-24 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-2xl px-4 py-5 pb-24 sm:px-6">{children}</main>
 
-      {/* Bottom nav mobile */}
-      <nav className="fixed bottom-0 inset-x-0 z-30 border-t border-gray-200 bg-white safe-area-pb">
+      {/* Bottom nav */}
+      <nav className="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 safe-area-pb">
         <div className="mx-auto grid max-w-2xl grid-cols-5">
-          <a href="/operaio/dashboard"
-            className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
-            <span className="text-lg">🏗️</span>
-            <span>Cantieri</span>
-          </a>
-          <a href="/operaio/giornata/nuova"
-            className="flex flex-col items-center gap-1 py-3 text-xs font-semibold text-emerald-700">
-            <span className="text-lg">➕</span>
-            <span>Giornata</span>
-          </a>
-          <a href="/operaio/domani"
-            className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
-            <span className="text-lg">📅</span>
-            <span>Domani</span>
-          </a>
-          <a href="/operaio/calendario"
-            className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
-            <span className="text-lg">🗓️</span>
-            <span>Calendario</span>
-          </a>
-          <a href="/operaio/notifiche"
-            className="relative flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
-            <span className="text-lg relative inline-block">
-              🔔
-              {alertCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
-                  {alertCount > 9 ? '9+' : alertCount}
+          {[
+            { href: '/operaio/dashboard', icon: '🏗️', label: 'Cantieri' },
+            { href: '/operaio/giornata/nuova', icon: '➕', label: 'Giornata', accent: true },
+            { href: '/operaio/domani', icon: '📅', label: 'Domani' },
+            { href: '/operaio/calendario', icon: '🗓️', label: 'Calendario' },
+            { href: '/operaio/notifiche', icon: null, label: 'Avvisi', isAlert: true },
+          ].map(item => (
+            <a
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors ${
+                item.accent
+                  ? 'text-emerald-700 font-semibold'
+                  : 'text-gray-500 hover:text-emerald-700'
+              }`}
+            >
+              {item.isAlert ? (
+                <span className="relative text-lg">
+                  🔔
+                  {alertCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
+                      {alertCount > 9 ? '9+' : alertCount}
+                    </span>
+                  )}
                 </span>
+              ) : (
+                <span className="text-lg">{item.icon}</span>
               )}
-            </span>
-            <span>Avvisi</span>
-          </a>
+              <span>{item.label}</span>
+            </a>
+          ))}
         </div>
       </nav>
     </div>

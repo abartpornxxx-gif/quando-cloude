@@ -33,9 +33,9 @@ export function ImpresaNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="border-b border-blue-800 bg-blue-800">
+    <div className="border-b border-gray-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex gap-1 overflow-x-auto py-1 scrollbar-none">
+        <div className="flex overflow-x-auto scrollbar-none">
           {NAV.map(item => {
             const isActive =
               item.href === '/impresa/dashboard'
@@ -45,10 +45,10 @@ export function ImpresaNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`relative shrink-0 whitespace-nowrap px-3 py-3 text-sm font-medium border-b-2 transition-colors ${
                   isActive
-                    ? 'bg-white/20 text-white'
-                    : 'text-blue-200 hover:bg-white/10 hover:text-white'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
                 }`}
               >
                 {item.label}
@@ -57,6 +57,6 @@ export function ImpresaNav() {
           })}
         </div>
       </div>
-    </nav>
+    </div>
   )
 }
