@@ -302,10 +302,11 @@ model Giornata {
   risposte          ChecklistRisposta[]
   attrezzatureUsi   AttrezzaturaUso[]
   richiesteMateriale RichiestaMateriale[]
-  chatMessaggi      ChatMessaggio[]
-  rapportino        Rapportino?
-  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  chatMessaggi       ChatMessaggio[]
+  rapportino         Rapportino?
+  suggerimentoSpunte SuggerimentoSpunta[]
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("giornate")
 }
@@ -729,6 +730,7 @@ model SuggerimentoSpunta {
   suggerimentoId   String               @map("suggerimento_id") @db.Uuid
   suggerimento     SuggerimentoCantiere @relation(fields: [suggerimentoId], references: [id], onDelete: Cascade)
   giornataId       String               @map("giornata_id") @db.Uuid
+  giornata         Giornata             @relation(fields: [giornataId], references: [id], onDelete: Cascade)
   completato       Boolean              @default(false)
   createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz
 

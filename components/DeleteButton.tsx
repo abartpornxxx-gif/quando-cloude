@@ -17,7 +17,14 @@ export function DeleteButton({ action, label = 'Elimina', confirmMessage, varian
     e.preventDefault()
     const msg = confirmMessage ?? 'Sei sicuro di voler eliminare questo elemento?'
     if (confirm(msg)) {
-      startTransition(action)
+      startTransition(async () => {
+        try {
+          await action()
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Errore durante l\'eliminazione'
+          alert(message)
+        }
+      })
     }
   }
 

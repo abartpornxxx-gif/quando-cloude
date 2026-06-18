@@ -31,6 +31,17 @@ export async function salvaFornitore(formData: FormData) {
 
 export async function eliminaFornitore(id: string) {
   await requireImpresa()
+  const [nOrdini, nFatture] = await Promise.all([
+    prisma.ordineFornitore.count({ where: { fornitoreId: id } }),
+    prisma.fatturaPassiva.count({ where: { fornitoreId: id } }),
+  ])
+  const totale = nOrdini + nFatture
+  if (totale > 0) {
+    const parti: string[] = []
+    if (nOrdini > 0) parti.push(`${nOrdini} ordin${nOrdini === 1 ? 'e' : 'i'}`)
+    if (nFatture > 0) parti.push(`${nFatture} fattur${nFatture === 1 ? 'a' : 'e'} passive`)
+    throw new Error(`Impossibile eliminare il fornitore: ha ${parti.join(', ')} associat${totale === 1 ? 'o' : 'i'}.`)
+  }
   await prisma.fornitore.delete({ where: { id } })
   revalidatePath('/impresa/fornitori')
 }

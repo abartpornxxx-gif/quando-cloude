@@ -42,6 +42,10 @@ export async function creaPianificazione(input: {
 
 export async function eliminaPianificazione(id: string): Promise<void> {
   await requireImpresa()
+  const giornata = await prisma.giornata.findFirst({ where: { pianificazioneId: id }, select: { id: true } })
+  if (giornata) {
+    throw new Error('Impossibile eliminare la pianificazione: è già stata avviata una giornata di lavoro collegata.')
+  }
   await prisma.pianificazione.delete({ where: { id } })
   revalidatePath('/impresa/pianificazione')
   revalidatePath('/impresa/calendario')

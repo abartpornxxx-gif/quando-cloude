@@ -34,6 +34,19 @@ export async function salvaOperaio(formData: FormData) {
 
 export async function eliminaOperaio(id: string) {
   await requireImpresa()
+  const [nGiornate, nRichieste, nUsi] = await Promise.all([
+    prisma.giornata.count({ where: { operaioId: id } }),
+    prisma.richiestaMateriale.count({ where: { operaioId: id } }),
+    prisma.attrezzaturaUso.count({ where: { operaioId: id } }),
+  ])
+  const totale = nGiornate + nRichieste + nUsi
+  if (totale > 0) {
+    const parti: string[] = []
+    if (nGiornate > 0) parti.push(`${nGiornate} giornat${nGiornate === 1 ? 'a' : 'e'} di lavoro`)
+    if (nRichieste > 0) parti.push(`${nRichieste} richiesta materiale`)
+    if (nUsi > 0) parti.push(`${nUsi} uso attrezzatura`)
+    throw new Error(`Impossibile eliminare l'operaio: ha ${parti.join(', ')} registrat${totale === 1 ? 'o' : 'i'}. L'operaio ha dello storico che non può essere cancellato.`)
+  }
   await prisma.operaio.delete({ where: { id } })
   revalidatePath('/impresa/operai')
 }

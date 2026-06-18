@@ -22,6 +22,21 @@ export async function salvaMateriale(formData: FormData) {
 
 export async function eliminaMateriale(id: string) {
   await requireImpresa()
+  const [nMovimenti, nRigheOrdine, nGiornate, nRichieste] = await Promise.all([
+    prisma.movimentoMagazzino.count({ where: { materialeId: id } }),
+    prisma.ordineRiga.count({ where: { materialeId: id } }),
+    prisma.giornataMateriale.count({ where: { materialeId: id } }),
+    prisma.richiestaMateriale.count({ where: { materialeId: id } }),
+  ])
+  const totale = nMovimenti + nRigheOrdine + nGiornate + nRichieste
+  if (totale > 0) {
+    const parti: string[] = []
+    if (nMovimenti > 0) parti.push(`${nMovimenti} moviment${nMovimenti === 1 ? 'o' : 'i'} magazzino`)
+    if (nRigheOrdine > 0) parti.push(`${nRigheOrdine} rig${nRigheOrdine === 1 ? 'a' : 'he'} d'ordine`)
+    if (nGiornate > 0) parti.push(`utilizzato in ${nGiornate} giornat${nGiornate === 1 ? 'a' : 'e'}`)
+    if (nRichieste > 0) parti.push(`${nRichieste} richiesta materiale`)
+    throw new Error(`Impossibile eliminare il materiale: ${parti.join(', ')}. Modificare prima i record collegati.`)
+  }
   await prisma.materiale.delete({ where: { id } })
   revalidatePath('/impresa/materiali')
 }

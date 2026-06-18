@@ -22,6 +22,10 @@ export async function salvaAttrezzatura(formData: FormData) {
 
 export async function eliminaAttrezzatura(id: string) {
   await requireImpresa()
+  const nUsi = await prisma.attrezzaturaUso.count({ where: { attrezzaturaId: id } })
+  if (nUsi > 0) {
+    throw new Error(`Impossibile eliminare l'attrezzatura: ha ${nUsi} utilizz${nUsi === 1 ? 'o' : 'i'} registrat${nUsi === 1 ? 'o' : 'i'} nello storico.`)
+  }
   await prisma.attrezzatura.delete({ where: { id } })
   revalidatePath('/impresa/attrezzature')
 }

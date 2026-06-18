@@ -35,6 +35,21 @@ export async function salvaCliente(formData: FormData) {
 
 export async function eliminaCliente(id: string) {
   await requireImpresa()
+  const [nCommesse, nPreventivi, nFatture, nRichieste] = await Promise.all([
+    prisma.commessa.count({ where: { clienteId: id } }),
+    prisma.preventivo.count({ where: { clienteId: id } }),
+    prisma.fatturaAttiva.count({ where: { clienteId: id } }),
+    prisma.richiestaOfferta.count({ where: { clienteId: id } }),
+  ])
+  const totale = nCommesse + nPreventivi + nFatture + nRichieste
+  if (totale > 0) {
+    const parti: string[] = []
+    if (nCommesse > 0) parti.push(`${nCommesse} commess${nCommesse === 1 ? 'a' : 'e'}`)
+    if (nPreventivi > 0) parti.push(`${nPreventivi} preventiv${nPreventivi === 1 ? 'o' : 'i'}`)
+    if (nFatture > 0) parti.push(`${nFatture} fattur${nFatture === 1 ? 'a' : 'e'}`)
+    if (nRichieste > 0) parti.push(`${nRichieste} richiesta offerte`)
+    throw new Error(`Impossibile eliminare il cliente: ha ${parti.join(', ')} associat${totale === 1 ? 'a' : 'e'}. Elimina prima i record collegati.`)
+  }
   await prisma.cliente.delete({ where: { id } })
   revalidatePath('/impresa/clienti')
 }

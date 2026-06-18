@@ -98,6 +98,8 @@ export async function annullaGiornata(giornataId: string): Promise<void> {
         }
       }
     }
+    // Elimina spunte promemoria orfane (giornataId non ha FK constraint verso giornate)
+    await tx.suggerimentoSpunta.deleteMany({ where: { giornataId } })
     await tx.giornata.delete({ where: { id: giornataId } })
   })
 

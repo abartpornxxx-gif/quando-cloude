@@ -91,9 +91,10 @@ export async function inviaRapportino(
     })
 
     // Reso materiale: crea movimenti di tipo 'reso' in magazzino
-    if (input.materialiReso && input.materialiReso.length > 0) {
+    const resiValidi = (input.materialiReso ?? []).filter(r => r.quantita > 0)
+    if (resiValidi.length > 0) {
       await tx.movimentoMagazzino.createMany({
-        data: input.materialiReso.map(r => ({
+        data: resiValidi.map(r => ({
           materialeId: r.materialeId,
           tipo: 'reso' as const,
           quantita: r.quantita,

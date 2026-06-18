@@ -31,6 +31,10 @@ export async function salvaOfferta(id: string | null, formData: FormData) {
 
 export async function eliminaOfferta(id: string) {
   await requireImpresa()
+  const nRichieste = await prisma.richiestaOfferta.count({ where: { offertaId: id } })
+  if (nRichieste > 0) {
+    throw new Error(`Impossibile eliminare l'offerta: ha ${nRichieste} richiest${nRichieste === 1 ? 'a' : 'e'} da clienti. Chiudi prima le richieste.`)
+  }
   await prisma.offertaCatalogo.delete({ where: { id } })
   revalidatePath('/impresa/catalogo')
 }

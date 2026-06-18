@@ -96,6 +96,10 @@ export async function trasformaInCommessa(preventivoId: string) {
 
 export async function eliminaPreventivo(id: string) {
   await requireImpresa()
+  const commessa = await prisma.commessa.findFirst({ where: { preventivoId: id }, select: { nome: true } })
+  if (commessa) {
+    throw new Error(`Impossibile eliminare il preventivo: è collegato alla commessa "${commessa.nome}". Elimina prima la commessa.`)
+  }
   await prisma.preventivo.delete({ where: { id } })
   revalidatePath('/impresa/preventivi')
 }
