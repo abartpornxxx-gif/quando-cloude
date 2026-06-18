@@ -16,6 +16,9 @@ export async function inviaRapportino(
     oreStraordinarie: number
     attrezzatureIds: string[]
     materialiReso?: Array<{ materialeId: string; descrizione: string; quantita: number }>
+    cosaFareDomani?: string
+    urgenzaDomani?: number
+    stimaOreDomani?: number
   }
 ): Promise<void> {
   const { operaio } = await requireOperaio()
@@ -38,6 +41,9 @@ export async function inviaRapportino(
         noteGiornoSuccessivo: input.noteGiornoSuccessivo?.trim() || null,
         oreOrdinarie: input.oreOrdinarie,
         oreStraordinarie: input.oreStraordinarie,
+        cosaFareDomani: input.cosaFareDomani?.trim() || null,
+        urgenzaDomani: input.urgenzaDomani ?? null,
+        stimaOreDomani: input.stimaOreDomani ?? null,
       },
     })
 

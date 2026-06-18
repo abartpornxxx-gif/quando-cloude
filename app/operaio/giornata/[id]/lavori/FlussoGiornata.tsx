@@ -11,9 +11,16 @@
 
 import { useState, useEffect, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { avanzaFase, annullaGiornata, uploadFotoAvanzamento } from './actions'
+import { avanzaFase, annullaGiornata, uploadFotoAvanzamento, toggleSpunta } from './actions'
 
 type Fase = 'inizio' | 'mattina' | 'pausa' | 'pomeriggio' | 'fine' | 'completata'
+
+interface Suggerimento {
+  id: string
+  testo: string
+  categoria: string | null
+  completato: boolean
+}
 
 interface Props {
   giornataId: string
@@ -30,6 +37,7 @@ interface Props {
   commessa: { id: string; nome: string; indirizzoCantiere?: string | null }
   pianificazione: { lavoroDaFare: string | null; noteMateriale: string | null } | null
   foto: { id: string; url: string }[]
+  suggerimenti: Suggerimento[]
 }
 
 function calcolaFineMs(inizio: string | null, durataMinuti: number): number | null {
@@ -59,7 +67,7 @@ const FASE_BG: Record<Fase, string> = {
 export default function FlussoGiornata({
   giornataId, fase,
   inizioMattina, fineMattina, inizioPomeriggio, finePomeriggio,
-  config, commessa, pianificazione, foto,
+  config, commessa, pianificazione, foto, suggerimenti,
 }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -67,6 +75,17 @@ export default function FlussoGiornata({
   const [uploading, setUploading] = useState(false)
   const [pronta, setPronta] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [spunteLocali, setSpunteLocali] = useState<Record<string, boolean>>(
+    Object.fromEntries(suggerimenti.map(s => [s.id, s.completato]))
+  )
+
+  function spuntaSuggerimento(id: string) {
+    const nuovoStato = !spunteLocali[id]
+    setSpunteLocali(prev => ({ ...prev, [id]: nuovoStato }))
+    toggleSpunta(giornataId, id, nuovoStato).catch(() => {
+      setSpunteLocali(prev => ({ ...prev, [id]: !nuovoStato }))
+    })
+  }
 
   const fineMattinaMs    = calcolaFineMs(inizioMattina,    config.durataMattinaMinuti)
   const finePausaMs      = calcolaFineMs(fineMattina,      config.durataPausaMinuti)
@@ -309,6 +328,52 @@ export default function FlussoGiornata({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Promemoria interattivi — visibili in fase fine */}
+      {fase === 'fine' && suggerimenti.length > 0 && (
+        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
+          <div className="bg-emerald-50 px-5 py-3 border-b border-emerald-100">
+            <p className="text-sm font-bold text-emerald-800">
+              ✅ Promemoria di fine giornata
+            </p>
+            <p className="text-xs text-emerald-600 mt-0.5">
+              {Object.values(spunteLocali).filter(Boolean).length}/{suggerimenti.length} completati
+            </p>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {suggerimenti.map(s => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => spuntaSuggerimento(s.id)}
+                className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${
+                  spunteLocali[s.id] ? 'bg-emerald-50/60' : 'hover:bg-gray-50'
+                }`}
+              >
+                <div className={`shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  spunteLocali[s.id]
+                    ? 'bg-emerald-500 border-emerald-500'
+                    : 'border-gray-300 bg-white'
+                }`}>
+                  {spunteLocali[s.id] && (
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${spunteLocali[s.id] ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                    {s.testo}
+                  </p>
+                  {s.categoria && (
+                    <p className="text-xs text-gray-400 mt-0.5">{s.categoria}</p>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

@@ -31,13 +31,13 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
           <div className="flex h-14 items-center justify-between">
             {/* Logo + nav */}
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2.5 shrink-0">
+              <a href="/magazziniere/dashboard" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-600 font-bold text-sm select-none">Q</div>
                 <div className="hidden sm:block">
                   <p className="font-bold text-sm leading-tight">QUADRO</p>
                   <p className="text-amber-200 text-xs leading-tight">Magazzino</p>
                 </div>
-              </div>
+              </a>
               <nav className="flex items-center gap-1">
                 {NAV_ITEMS.map(item => (
                   <a

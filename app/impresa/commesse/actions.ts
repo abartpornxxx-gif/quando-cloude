@@ -34,10 +34,18 @@ export async function salvaCommessa(formData: FormData) {
   }
 }
 
-export async function eliminaCommessa(id: string) {
+export async function archiviaCommessa(id: string) {
   await requireImpresa()
-  await prisma.commessa.delete({ where: { id } })
+  await prisma.commessa.update({ where: { id }, data: { archiviata: true } })
   revalidatePath('/impresa/commesse')
+  revalidatePath('/impresa/commesse/archiviate')
+}
+
+export async function ripristinaCommessa(id: string) {
+  await requireImpresa()
+  await prisma.commessa.update({ where: { id }, data: { archiviata: false } })
+  revalidatePath('/impresa/commesse')
+  revalidatePath('/impresa/commesse/archiviate')
 }
 
 export async function assegnaOperaio(commessaId: string, operaioId: string) {

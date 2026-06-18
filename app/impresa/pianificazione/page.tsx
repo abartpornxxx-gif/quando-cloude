@@ -39,7 +39,7 @@ export default async function PianificazionePage({
 
   const [commesse, operai, rawPians] = await Promise.all([
     prisma.commessa.findMany({
-      where: { stato: 'aperta' },
+      where: { stato: 'aperta', archiviata: false },
       select: { id: true, nome: true, indirizzoCantiere: true },
       orderBy: { nome: 'asc' },
     }),
@@ -67,11 +67,19 @@ export default async function PianificazionePage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">Pianificazione settimanale</h1>
-        <p className="mt-0.5 text-sm text-gray-500">
-          Trascina un operaio dal pannello sinistro sul cantiere desiderato
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Pianificazione settimanale</h1>
+          <p className="mt-0.5 text-sm text-gray-500">
+            Trascina un operaio dal pannello sinistro sul cantiere desiderato
+          </p>
+        </div>
+        <a
+          href="/impresa/pianificazione/domani"
+          className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+        >
+          📅 Pianifica domani
+        </a>
       </div>
       <PianificazioneBoard
         weekDays={weekDays}

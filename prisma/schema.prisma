@@ -217,6 +217,7 @@ model Commessa {
   cliente           Cliente?          @relation(fields: [clienteId], references: [id])
   indirizzoCantiere String?           @map("indirizzo_cantiere")
   stato             StatoCommessa     @default(aperta)
+  archiviata        Boolean           @default(false)
   preventivato      Int               @default(0)
   costiMateriali    Int               @default(0) @map("costi_materiali")
   costiManodopera   Int               @default(0) @map("costi_manodopera")
@@ -395,6 +396,8 @@ model Pianificazione {
   lavoroDaFare    String?   @map("lavoro_da_fare")
   noteMateriale   String?   @map("note_materiale")
   note            String?
+  stimaImpresaOre Float?    @map("stima_impresa_ore")
+  confermata      Boolean   @default(false)
   sostituito      Boolean   @default(false)
   giornata        Giornata?
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -494,6 +497,10 @@ model Rapportino {
   noteGiornoSuccessivo String?  @map("note_giorno_successivo")
   oreOrdinarie         Float    @default(0) @map("ore_ordinarie")
   oreStraordinarie     Float    @default(0) @map("ore_straordinarie")
+  // Pianificazione giorno successivo (compilata dall'operaio)
+  cosaFareDomani       String?  @map("cosa_fare_domani")
+  urgenzaDomani        Int?     @map("urgenza_domani")
+  stimaOreDomani       Float?   @map("stima_ore_domani")
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("rapportini")
@@ -700,6 +707,33 @@ model RichiestaOfferta {
   updatedAt  DateTime              @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("richieste_offerte")
+}
+
+// ─── Suggerimenti/promemoria interattivi per operai ──────────────────────────
+
+model SuggerimentoCantiere {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  testo     String
+  categoria String?
+  ordine    Int      @default(0)
+  attivo    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  spunte    SuggerimentoSpunta[]
+
+  @@map("suggerimenti_cantiere")
+}
+
+model SuggerimentoSpunta {
+  id               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  suggerimentoId   String               @map("suggerimento_id") @db.Uuid
+  suggerimento     SuggerimentoCantiere @relation(fields: [suggerimentoId], references: [id], onDelete: Cascade)
+  giornataId       String               @map("giornata_id") @db.Uuid
+  completato       Boolean              @default(false)
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([suggerimentoId, giornataId])
+  @@map("suggerimenti_spunte")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

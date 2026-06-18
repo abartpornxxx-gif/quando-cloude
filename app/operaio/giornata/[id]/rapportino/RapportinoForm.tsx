@@ -25,6 +25,10 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
   const [noteGiornoSuccessivo, setNoteGiornoSuccessivo] = useState('')
   const [oreOrdinarie, setOreOrdinarie] = useState('8')
   const [oreStraordinarie, setOreStraordinarie] = useState('0')
+  // Pianificazione domani
+  const [cosaFareDomani, setCosaFareDomani] = useState('')
+  const [urgenzaDomani, setUrgenzaDomani] = useState<number>(3)
+  const [stimaOreDomani, setStimeOreDomani] = useState('')
   const [attrRiconsegnate, setAttrRiconsegnate] = useState<string[]>(
     attrezzatureUsate.map(a => a.id)
   )
@@ -84,6 +88,9 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
           oreStraordinarie: oreSt,
           attrezzatureIds: attrRiconsegnate,
           materialiReso: resoValidi.length > 0 ? resoValidi : undefined,
+          cosaFareDomani: cosaFareDomani.trim() || undefined,
+          urgenzaDomani: cosaFareDomani.trim() ? urgenzaDomani : undefined,
+          stimaOreDomani: cosaFareDomani.trim() && stimaOreDomani ? parseFloat(stimaOreDomani) : undefined,
         })
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')
@@ -245,6 +252,96 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
           className="w-full border rounded-xl px-3 py-2 text-sm"
           rows={2}
         />
+      </div>
+
+      {/* Pianificazione giorno successivo */}
+      <div className="border border-emerald-200 rounded-xl p-4 bg-emerald-50 space-y-4">
+        <div>
+          <p className="text-sm font-bold text-emerald-800">📅 Pianificazione di domani</p>
+          <p className="text-xs text-emerald-600 mt-0.5">
+            Queste info aiutano l&apos;impresa a organizzare le giornate del giorno dopo.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-emerald-900 mb-1">Cosa c&apos;è da fare domani?</label>
+          <textarea
+            value={cosaFareDomani}
+            onChange={e => setCosaFareDomani(e.target.value)}
+            placeholder="Descrivi il lavoro da continuare o iniziare domani…"
+            className="w-full border border-emerald-200 rounded-xl px-3 py-2 text-sm bg-white"
+            rows={3}
+          />
+        </div>
+
+        {cosaFareDomani.trim() && (
+          <>
+            <div>
+              <label className="block text-sm font-semibold text-emerald-900 mb-2">
+                Urgenza: <span className="text-emerald-700">{urgenzaDomani}/5</span>
+              </label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map(v => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setUrgenzaDomani(v)}
+                    className={`flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-colors ${
+                      urgenzaDomani === v
+                        ? v >= 4 ? 'bg-red-500 border-red-500 text-white'
+                          : v === 3 ? 'bg-amber-500 border-amber-500 text-white'
+                          : 'bg-emerald-500 border-emerald-500 text-white'
+                        : 'bg-white border-gray-200 text-gray-500'
+                    }`}
+                  >
+                    {v}
+                    {v === 1 && ' 🟢'}
+                    {v === 3 && ' 🟡'}
+                    {v === 5 && ' 🔴'}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-emerald-600 mt-1">
+                {urgenzaDomani <= 2 ? 'Bassa — si può rimandare' :
+                 urgenzaDomani === 3 ? 'Media — da fare domani' :
+                 urgenzaDomani === 4 ? 'Alta — priorità' :
+                 'Urgentissimo — non rimandare'}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-emerald-900 mb-1">
+                Ore stimate per il lavoro
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                {['2', '4', '6', '8'].map(v => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setStimeOreDomani(stimaOreDomani === v ? '' : v)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-colors ${
+                      stimaOreDomani === v
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'bg-white border-gray-200 text-gray-600'
+                    }`}
+                  >
+                    {v}h
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  min="0.5"
+                  max="12"
+                  step="0.5"
+                  value={stimaOreDomani}
+                  onChange={e => setStimeOreDomani(e.target.value)}
+                  placeholder="Ore"
+                  className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {errore && <p className="text-red-600 text-sm">{errore}</p>}

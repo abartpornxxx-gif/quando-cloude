@@ -53,16 +53,14 @@ export async function avanzaFase(
   await prisma.giornata.update({
     where: { id: giornataId },
     data: {
-      fase: transizione.fase as any,
+      fase: transizione.fase as never,
       ...(transizione.campo ? { [transizione.campo]: new Date() } : {}),
     },
   })
 
   revalidatePath(`/operaio/giornata/${giornataId}/lavori`)
 
-  // Quando la giornata raggiunge 'fine', invia notifiche all'operaio (push + email)
   if (transizione.fase === 'fine') {
-    // Fire-and-forget: non blocca la risposta se le notifiche falliscono
     Promise.all([
       inviaPushRapportino(operaio.id, giornataId).catch(() => {}),
       operaio.email
@@ -83,7 +81,6 @@ export async function annullaGiornata(giornataId: string): Promise<void> {
   if (giornata.stato === 'inviata') throw new Error('Non puoi annullare una giornata già inviata')
 
   await prisma.$transaction(async tx => {
-    // Rilascia attrezzature
     if (giornata.attrezzatureUsi.length > 0) {
       await tx.attrezzaturaUso.updateMany({
         where: { giornataId, riconsegnata: false },
@@ -137,4 +134,14 @@ export async function uploadFotoAvanzamento(
 
   revalidatePath(`/operaio/giornata/${giornataId}/lavori`)
   return { url: urlData.publicUrl }
+}
+
+export async function toggleSpunta(giornataId: string, suggerimentoId: string, completato: boolean): Promise<void> {
+  await requireOperaio()
+
+  await prisma.suggerimentoSpunta.upsert({
+    where: { suggerimentoId_giornataId: { suggerimentoId, giornataId } },
+    update: { completato },
+    create: { suggerimentoId, giornataId, completato },
+  })
 }

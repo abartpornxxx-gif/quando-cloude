@@ -1,36 +1,25 @@
 import { requireImpresa } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { salvaSuggerimento } from '../actions'
 
-interface Props {
-  params: Promise<{ id: string }>
-}
-
-export default async function ModificaSuggerimentoPage({ params }: Props) {
+export default async function NuovoSuggerimentoPage() {
   await requireImpresa()
-  const { id } = await params
-
-  const s = await prisma.suggerimentoCantiere.findUnique({ where: { id } })
-  if (!s) notFound()
 
   return (
     <div className="max-w-lg">
       <PageHeader
-        title="Modifica promemoria"
+        title="Nuovo promemoria"
         backHref="/impresa/checklist"
         backLabel="Promemoria cantiere"
       />
       <form action={salvaSuggerimento} className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 space-y-5">
-        <input type="hidden" name="id" value={s.id} />
         <div>
           <label className="block text-sm font-semibold mb-1.5">Testo del promemoria *</label>
           <input
             name="testo"
             type="text"
             required
-            defaultValue={s.testo}
+            placeholder="es. Pulire il cantiere prima di andare via"
             className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -39,7 +28,6 @@ export default async function ModificaSuggerimentoPage({ params }: Props) {
           <input
             name="categoria"
             type="text"
-            defaultValue={s.categoria ?? ''}
             placeholder="es. Sicurezza, Fine giornata, Attrezzatura"
             className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -49,17 +37,18 @@ export default async function ModificaSuggerimentoPage({ params }: Props) {
           <input
             name="ordine"
             type="number"
-            defaultValue={s.ordine}
+            defaultValue={0}
             min={0}
             className="w-24 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <p className="text-xs text-gray-400 mt-1">0 = primo, numeri più alti = più in basso</p>
         </div>
         <div className="flex gap-3 pt-2">
           <button
             type="submit"
             className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
           >
-            Salva modifiche
+            Salva promemoria
           </button>
           <a
             href="/impresa/checklist"

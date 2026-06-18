@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ImpresaNav } from '@/components/ImpresaNav'
 import { NotificheBell } from '@/components/NotificheBell'
 import { alertImpresa } from '@/lib/notifiche'
+import Link from 'next/link'
 
 export default async function ImpresaLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -32,7 +33,7 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-4">
             {/* Logo + brand */}
-            <div className="flex items-center gap-3 shrink-0">
+            <Link href="/impresa/dashboard" className="flex items-center gap-3 shrink-0 hover:opacity-80 transition-opacity">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white text-sm font-bold select-none shadow-sm">
                 Q
               </div>
@@ -40,7 +41,7 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
                 <span className="text-base font-bold text-white tracking-tight">QUADRO</span>
                 <span className="hidden sm:block text-xs font-medium text-slate-400">Impresa</span>
               </div>
-            </div>
+            </Link>
 
             {/* Actions */}
             <div className="flex items-center gap-1.5">

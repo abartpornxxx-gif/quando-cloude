@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { formatEuro } from '@/lib/format'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
-import { eliminaCommessa } from './actions'
+import { archiviaCommessa } from './actions'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Badge } from '@/components/ui/Badge'
@@ -26,10 +26,12 @@ function BudgetBar({ costi, preventivato }: { costi: number; preventivato: numbe
 
 export default async function CommessePage() {
   const commesse = await prisma.commessa.findMany({
+    where: { archiviata: false },
     orderBy: { createdAt: 'desc' },
     include: { cliente: { select: { nome: true } } },
   })
 
+  const archiviate = await prisma.commessa.count({ where: { archiviata: true } })
   const aperte = commesse.filter(c => c.stato === 'aperta').length
   const chiuse = commesse.filter(c => c.stato === 'chiusa').length
 
@@ -39,12 +41,22 @@ export default async function CommessePage() {
         title="Commesse"
         subtitle={`${aperte} aperte · ${chiuse} chiuse`}
         action={
-          <Link
-            href="/impresa/commesse/nuova"
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
-          >
-            + Nuova
-          </Link>
+          <div className="flex items-center gap-2">
+            {archiviate > 0 && (
+              <Link
+                href="/impresa/commesse/archiviate"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 shadow-sm hover:bg-gray-50 transition-colors"
+              >
+                Archivio ({archiviate})
+              </Link>
+            )}
+            <Link
+              href="/impresa/commesse/nuova"
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+            >
+              + Nuova
+            </Link>
+          </div>
         }
       />
 
@@ -117,7 +129,12 @@ export default async function CommessePage() {
                   {c.preventivato > 0 && <BudgetBar costi={costi} preventivato={c.preventivato} />}
                 </Link>
                 <div className="flex items-center px-3 border-l border-gray-100">
-                  <DeleteButton action={eliminaCommessa.bind(null, c.id)} label="✕" />
+                  <DeleteButton
+                    action={archiviaCommessa.bind(null, c.id)}
+                    label="Archivia"
+                    variant="warning"
+                    confirmMessage={`Archiviare "${c.nome}"? I dati (giornate, foto, fatture) vengono conservati e puoi ripristinarla in qualsiasi momento.`}
+                  />
                 </div>
               </div>
             )

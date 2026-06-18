@@ -6,14 +6,15 @@ import { usePathname } from 'next/navigation'
 const MACRO = [
   {
     label: 'Cantieri',
-    prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/giornate', '/impresa/pianificazione', '/impresa/calendario', '/impresa/checklist', '/impresa/assenze'],
+    prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/giornate', '/impresa/pianificazione', '/impresa/calendario', '/impresa/checklist', '/impresa/assenze', '/impresa/archiviate'],
     items: [
       { label: 'Commesse', href: '/impresa/commesse', desc: 'Cantieri aperti' },
       { label: 'Preventivi', href: '/impresa/preventivi', desc: 'Offerte ai clienti' },
       { label: 'Giornate', href: '/impresa/giornate', desc: 'Storico lavori' },
       { label: 'Pianificazione', href: '/impresa/pianificazione', desc: 'Turni operai' },
+      { label: 'Pianifica domani', href: '/impresa/pianificazione/domani', desc: 'Da rapportini serali' },
       { label: 'Calendario', href: '/impresa/calendario', desc: 'Vista mensile' },
-      { label: 'Checklist', href: '/impresa/checklist', desc: 'Modelli' },
+      { label: 'Promemoria', href: '/impresa/checklist', desc: 'Suggerimenti operai' },
       { label: 'Assenze', href: '/impresa/assenze', desc: 'Richieste operai' },
     ],
   },

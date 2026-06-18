@@ -43,13 +43,13 @@ export default async function OperaioLayout({ children }: { children: React.Reac
       <nav className="bg-emerald-900 text-white shadow-lg">
         <div className="mx-auto max-w-2xl px-4">
           <div className="flex h-14 items-center justify-between">
-            <div className="flex items-center gap-2.5">
+            <a href="/operaio/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 font-bold text-sm select-none">Q</div>
               <div>
                 <p className="font-bold text-sm leading-tight">QUADRO</p>
                 <p className="text-emerald-300 text-xs leading-tight">Cantiere</p>
               </div>
-            </div>
+            </a>
             <div className="flex items-center gap-2">
               {rapportinoPendente && (
                 <a
