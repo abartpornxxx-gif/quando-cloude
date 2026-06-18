@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ImpresaNav } from '@/components/ImpresaNav'
+import { NotificheBell } from '@/components/NotificheBell'
+import { alertImpresa } from '@/lib/notifiche'
 
 export default async function ImpresaLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -11,6 +13,8 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
   if (!user || user.user_metadata?.role !== 'impresa') {
     redirect('/login')
   }
+
+  const alert = await alertImpresa()
 
   async function signOut() {
     'use server'
@@ -33,10 +37,11 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
                 Impresa
               </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <span className="hidden text-xs text-blue-200 sm:block">
                 {user.user_metadata?.full_name ?? user.email}
               </span>
+              <NotificheBell count={alert.totale} href="/impresa/notifiche" colore="blue" />
               <form action={signOut}>
                 <button
                   type="submit"

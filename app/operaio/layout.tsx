@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { OfflineBanner } from '@/components/OfflineBanner'
+import { NotificheBell } from '@/components/NotificheBell'
+import { alertOperaio } from '@/lib/notifiche'
 
 export default async function OperaioLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -11,15 +13,21 @@ export default async function OperaioLayout({ children }: { children: React.Reac
 
   // ORDINE 4 — Controlla rapportino pendente per il banner persistente
   let rapportinoPendente: { id: string; commessaNome: string } | null = null
+  let alertCount = 0
+
   if (user.email) {
     const operaio = await prisma.operaio.findFirst({ where: { email: user.email }, select: { id: true } })
     if (operaio) {
-      const g = await prisma.giornata.findFirst({
-        where: { operaioId: operaio.id, fase: 'fine', stato: 'bozza', rapportino: null },
-        select: { id: true, commessa: { select: { nome: true } } },
-        orderBy: { data: 'desc' },
-      })
+      const [g, count] = await Promise.all([
+        prisma.giornata.findFirst({
+          where: { operaioId: operaio.id, fase: 'fine', stato: 'bozza', rapportino: null },
+          select: { id: true, commessa: { select: { nome: true } } },
+          orderBy: { data: 'desc' },
+        }),
+        alertOperaio(operaio.id),
+      ])
       if (g) rapportinoPendente = { id: g.id, commessaNome: g.commessa.nome }
+      alertCount = count
     }
   }
 
@@ -40,13 +48,14 @@ export default async function OperaioLayout({ children }: { children: React.Reac
               <span className="font-bold">QUADRO</span>
               <span className="hidden rounded-full bg-emerald-500/60 px-2 py-0.5 text-xs font-semibold sm:inline">Cantiere</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {rapportinoPendente && (
                 <a href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`}
                   className="flex items-center gap-1 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white animate-pulse">
                   ⚠️ Rapportino
                 </a>
               )}
+              <NotificheBell count={alertCount} href="/operaio/notifiche" colore="emerald" />
               <form action={signOut}>
                 <button type="submit"
                   className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-100 hover:bg-emerald-600">
@@ -97,10 +106,17 @@ export default async function OperaioLayout({ children }: { children: React.Reac
             <span className="text-lg">🗓️</span>
             <span>Calendario</span>
           </a>
-          <a href="/operaio/profilo"
-            className="flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
-            <span className="text-lg">👤</span>
-            <span>Profilo</span>
+          <a href="/operaio/notifiche"
+            className="relative flex flex-col items-center gap-1 py-3 text-xs font-medium text-gray-600 hover:text-emerald-700">
+            <span className="text-lg relative inline-block">
+              🔔
+              {alertCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
+                  {alertCount > 9 ? '9+' : alertCount}
+                </span>
+              )}
+            </span>
+            <span>Avvisi</span>
           </a>
         </div>
       </nav>

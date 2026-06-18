@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 
 type Richiesta = {
   id: string
+  giornataId: string
   descrizione: string
   urgente: boolean
   stato: string
@@ -173,6 +174,14 @@ export default function RichiestaDettaglio({
           )}
         </div>
       )}
+
+      {/* Link alla chat della giornata */}
+      <a
+        href={`/magazziniere/chat/${richiesta.giornataId}`}
+        className="flex items-center justify-center gap-2 w-full border border-yellow-300 bg-yellow-50 text-yellow-800 font-semibold py-3 rounded-xl hover:bg-yellow-100"
+      >
+        💬 Apri chat con l&apos;operaio
+      </a>
     </div>
   )
 }

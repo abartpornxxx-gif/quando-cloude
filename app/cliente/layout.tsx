@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { NotificheBell } from '@/components/NotificheBell'
+import { alertCliente } from '@/lib/notifiche'
 
 async function signOut() {
   'use server'
@@ -18,6 +21,12 @@ export default async function ClienteLayout({ children }: { children: React.Reac
   }
 
   const nome = user.user_metadata?.full_name ?? user.email ?? 'Cliente'
+
+  let alertCount = 0
+  if (user.email) {
+    const cliente = await prisma.cliente.findFirst({ where: { email: user.email }, select: { id: true } })
+    if (cliente) alertCount = await alertCliente(cliente.id)
+  }
 
   const NAV = [
     { label: '🏗 I miei lavori', href: '/cliente/lavori' },
@@ -54,6 +63,7 @@ export default async function ClienteLayout({ children }: { children: React.Reac
               <span className="hidden text-xs text-violet-200 sm:block truncate max-w-32">
                 {nome.split(' ')[0]}
               </span>
+              <NotificheBell count={alertCount} href="/cliente/notifiche" colore="violet" />
               <form action={signOut}>
                 <button
                   type="submit"

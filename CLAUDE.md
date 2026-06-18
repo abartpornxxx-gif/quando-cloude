@@ -80,7 +80,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Fase 7 completata — Catalogo offerte aggiuntive. In attesa di validazione.**
+- Fase corrente: **Fase 8 completata — Notifiche in-app e potenziamento chat. In attesa di validazione.**
 
 ### Decisioni architetturali recenti
 - **Countdown**: visibile SOLO all'impresa (in `/impresa/giornate`). L'operaio vede solo stato generico e pulsante bloccato/attivo.
@@ -95,5 +95,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 - **Fase 6 — Portale Cliente**: `requireCliente()` in `lib/auth.ts` linka user via `clienti.email`. RLS SELECT-only su 9 tabelle (clienti, commesse, giornate, giornata_foto, rapportini, fatture_attive, fattura_attiva_righe, dichiarazioni_conformita, preventivi) con policy `auth.jwt() ->> 'email' = email` o sub-select via JOIN. Route: `/cliente/lavori` (lista commesse + barra avanzamento), `/cliente/lavori/[id]` (diario + foto), `/cliente/pagamenti` (fatture + IBAN bonifico), `/cliente/documenti` (lista DiCo + fatture), `/cliente/documenti/fattura/[id]` e `/cliente/documenti/dico/[id]` (view print-friendly protect per ruolo cliente). `IMPRESA_IBAN` in `.env.local` per mostrare coordinate bonifico. Sicurezza: `commessa.clienteId !== cliente.id → notFound()` e `dico.commessa.clienteId !== cliente.id → notFound()` su ogni pagina.
 
 - **Fase 7 — Catalogo offerte aggiuntive**: modelli `OffertaCatalogo` + `RichiestaOfferta`. Enum: `StatoRichiestaOfferta` (nuova/vista/in_preventivo/chiusa). Storage bucket `foto-catalogo` (pubblico, max 5 MB). Impresa: CRUD offerte su `/impresa/catalogo` con upload foto via browser client Supabase, toggle attiva/nascosta, ordine visualizzazione. Vetrina cliente su `/cliente/servizi` (solo offerte attive): card con foto + descrizione + "A partire da". Pulsante "Mi interessa" apre modal con nota libera e selezione commessa opzionale → crea `RichiestaOfferta`. Gestione impresa su `/impresa/richieste-offerte` (lista con badge "nuove") e `/impresa/richieste-offerte/[id]` (dettaglio + "Crea preventivo" crea preventivo con nota pre-compilata e redirect a `/impresa/preventivi/[id]`). Dashboard impresa: 5° KPI "Richieste offerte" con contatore nuove. RLS: impresa gestisce tutto, cliente vede solo offerte attive e proprie richieste.
+
+- **Fase 8 — Notifiche in-app e potenziamento chat**: `lib/notifiche.ts` centrale con funzioni `alertImpresa/Operaio/Magazziniere/Cliente()` + `listaNotifiche*()` calcolate dallo stato DB (no tabella notifiche separata). `components/NotificheBell.tsx` (campanellino con badge rosso) nei layout di tutti i ruoli. Pagine: `/impresa/notifiche`, `/operaio/notifiche`, `/magazziniere/notifiche`, `/cliente/notifiche`. Chat magazziniere: `/magazziniere/chat/[giornataId]` con link da RichiestaDettaglio. Rilevamento presenza: solo stato `giornata.fase` dal DB (NON GPS) — TODO LEGALE art. 4 L. 300/1970 ben visibile. Push: `lib/push.ts` con 7 funzioni stub (attivare con `npm install web-push` + VAPID in `.env.local`). Email: `lib/email.ts` con 9 funzioni stub (attivare con `npm install resend` + `RESEND_API_KEY` in `.env.local`).
 
 - Aggiorna questa riga a fine di ogni fase.
