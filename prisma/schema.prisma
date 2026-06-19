@@ -792,6 +792,20 @@ model SuggerimentoSpunta {
   @@map("suggerimenti_spunte")
 }
 
+// ─── Stato lettura notifiche ─────────────────────────────────────────────────
+// Traccia quali notifiche calcolate (tipo + refId) sono state lette per utente.
+// Le notifiche stesse restano calcolate dallo stato DB (nessuna tabella separata).
+model NotificaLetta {
+  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId  String   @map("user_id") @db.Uuid
+  tipo    String
+  refId   String   @map("ref_id")
+  lettoAt DateTime @default(now()) @map("letto_at") @db.Timestamptz
+
+  @@unique([userId, tipo, refId])
+  @@map("notifiche_lette")
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Configurazione orari di lavoro (un solo record — singleton)
 model ConfigurazioneOrari {

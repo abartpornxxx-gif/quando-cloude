@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { NotificheBell } from '@/components/NotificheBell'
-import { alertOperaio } from '@/lib/notifiche'
+import { listaNotificheOperaio } from '@/lib/notifiche'
 import Image from 'next/image'
 
 export default async function OperaioLayout({ children }: { children: React.ReactNode }) {
@@ -18,16 +18,16 @@ export default async function OperaioLayout({ children }: { children: React.Reac
   if (user.email) {
     const operaio = await prisma.operaio.findFirst({ where: { email: user.email }, select: { id: true } })
     if (operaio) {
-      const [g, count] = await Promise.all([
+      const [g, notifiche] = await Promise.all([
         prisma.giornata.findFirst({
           where: { operaioId: operaio.id, fase: 'fine', stato: 'bozza', rapportino: null },
           select: { id: true, commessa: { select: { nome: true } } },
           orderBy: { data: 'desc' },
         }),
-        alertOperaio(operaio.id),
+        listaNotificheOperaio(operaio.id, user.id),
       ])
       if (g) rapportinoPendente = { id: g.id, commessaNome: g.commessa.nome }
-      alertCount = count
+      alertCount = notifiche.filter(n => !n.letta).length
     }
   }
 

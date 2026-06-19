@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ImpresaNav } from '@/components/ImpresaNav'
 import { NotificheBell } from '@/components/NotificheBell'
-import { alertImpresa } from '@/lib/notifiche'
+import { listaNotificheImpresa } from '@/lib/notifiche'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -16,7 +16,8 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
     redirect('/login')
   }
 
-  const alert = await alertImpresa()
+  const notifiche = await listaNotificheImpresa(user.id)
+  const alertCount = notifiche.filter(n => !n.letta).length
 
   async function signOut() {
     'use server'
@@ -51,7 +52,7 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
                   {userName.split(' ')[0]}
                 </span>
               )}
-              <NotificheBell count={alert.totale} href="/impresa/notifiche" colore="blue" />
+              <NotificheBell count={alertCount} href="/impresa/notifiche" colore="blue" />
               <form action={signOut}>
                 <button
                   type="submit"

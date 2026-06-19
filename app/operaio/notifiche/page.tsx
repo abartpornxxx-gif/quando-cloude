@@ -3,6 +3,7 @@ import { listaNotificheOperaio } from '@/lib/notifiche'
 import Image from 'next/image'
 import Link from 'next/link'
 import { formatData } from '@/lib/format'
+import { segnaTutteLetteOperaio } from './actions'
 
 const TIPO_ICON: Record<string, string> = {
   rapportino:    '/immagini/icona-rapportino.png',
@@ -17,15 +18,27 @@ function NotificaIcon({ tipo }: { tipo: string }) {
 }
 
 export default async function NotificheOperaioPage() {
-  const { operaio } = await requireOperaio()
-  const items = await listaNotificheOperaio(operaio.id)
+  const { user, operaio } = await requireOperaio()
+  const items = await listaNotificheOperaio(operaio.id, user.id)
+
+  const nonLette = items.filter(n => !n.letta)
+  const lette = items.filter(n => n.letta)
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">I miei avvisi</h1>
-        {items.length > 0 && (
-          <span className="rounded-full bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5">{items.length}</span>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold">I miei avvisi</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {nonLette.length > 0 ? `${nonLette.length} non letti` : 'Tutto letto'}
+          </p>
+        </div>
+        {nonLette.length > 0 && (
+          <form action={segnaTutteLetteOperaio}>
+            <button type="submit" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 shadow-sm whitespace-nowrap">
+              Segna tutte lette
+            </button>
+          </form>
         )}
       </div>
 
@@ -37,9 +50,9 @@ export default async function NotificheOperaioPage() {
         </div>
       )}
 
-      {items.length > 0 && (
+      {nonLette.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 divide-y shadow-sm">
-          {items.map(item => (
+          {nonLette.map(item => (
             <Link key={`${item.tipo}-${item.id}`} href={item.href}
               className={`flex items-center gap-3 p-4 hover:bg-gray-50 ${item.urgente ? 'bg-red-50' : ''}`}>
               <NotificaIcon tipo={item.tipo} />
@@ -54,6 +67,33 @@ export default async function NotificheOperaioPage() {
             </Link>
           ))}
         </div>
+      )}
+
+      {nonLette.length === 0 && items.length > 0 && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center text-sm text-green-700">
+          Hai letto tutti gli avvisi. Ottimo!
+        </div>
+      )}
+
+      {lette.length > 0 && (
+        <details className="group">
+          <summary className="cursor-pointer text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1 list-none select-none">
+            <svg className="h-3 w-3 transition-transform group-open:rotate-90" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 2l4 4-4 4"/></svg>
+            Già letti ({lette.length})
+          </summary>
+          <div className="bg-white rounded-xl border border-gray-100 divide-y opacity-60 mt-2">
+            {lette.map(item => (
+              <Link key={`${item.tipo}-${item.id}`} href={item.href}
+                className="flex items-center gap-3 p-4 hover:bg-gray-50">
+                <NotificaIcon tipo={item.tipo} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-500 truncate line-through">{item.titolo}</p>
+                  {item.sottotitolo && <p className="text-xs text-gray-400 truncate">{item.sottotitolo}</p>}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </details>
       )}
 
       <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-xs text-gray-500">

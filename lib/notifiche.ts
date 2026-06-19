@@ -1,6 +1,7 @@
 /**
  * Centro notifiche QUADRO — tutti i conteggi sono CALCOLATI dallo stato DB.
  * Non c'è una tabella "notifiche" separata: si legge lo stato esistente.
+ * La tabella `notifiche_lette` traccia solo il flag letta/non-letta per utente.
  */
 
 import { prisma } from './prisma'
@@ -9,6 +10,16 @@ const TRA_30_GIORNI = () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 const TRA_14_GIORNI = () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
 const IERI = () => new Date(Date.now() - 24 * 60 * 60 * 1000)
 const SETTIMANA_FA = () => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
+// ─── Helper lettura ───────────────────────────────────────────────────────────
+
+async function getNotificheLette(userId: string): Promise<Set<string>> {
+  const rows = await prisma.notificaLetta.findMany({
+    where: { userId },
+    select: { tipo: true, refId: true },
+  })
+  return new Set(rows.map(r => `${r.tipo}:${r.refId}`))
+}
 
 // ─── IMPRESA ─────────────────────────────────────────────────────────────────
 
@@ -65,13 +76,14 @@ export type ItemNotifica = {
   href: string
   urgente?: boolean
   data?: Date | string | null
+  letta?: boolean
 }
 
-export async function listaNotificheImpresa(): Promise<ItemNotifica[]> {
+export async function listaNotificheImpresa(userId?: string): Promise<ItemNotifica[]> {
   const tra30 = TRA_30_GIORNI()
   const items: ItemNotifica[] = []
 
-  const [rapportini, fatture, offerte, richiesteMat, mezzi] = await Promise.all([
+  const [rapportini, fatture, offerte, richiesteMat, mezzi, lette] = await Promise.all([
     prisma.giornata.findMany({
       where: { fase: 'fine', stato: 'bozza', rapportino: null },
       include: {
@@ -113,6 +125,7 @@ export async function listaNotificheImpresa(): Promise<ItemNotifica[]> {
       orderBy: { scadenzaBollo: 'asc' },
       take: 10,
     }),
+    userId ? getNotificheLette(userId) : Promise.resolve(new Set<string>()),
   ])
 
   for (const g of rapportini) {
@@ -124,6 +137,7 @@ export async function listaNotificheImpresa(): Promise<ItemNotifica[]> {
       href: `/impresa/giornate/${g.id}/chat`,
       urgente: true,
       data: g.data,
+      letta: lette.has(`rapportino:${g.id}`),
     })
   }
 
@@ -137,6 +151,7 @@ export async function listaNotificheImpresa(): Promise<ItemNotifica[]> {
       href: `/impresa/fatture/${f.id}`,
       urgente: !!scaduta,
       data: f.dataScadenza,
+      letta: lette.has(`fattura:${f.id}`),
     })
   }
 
@@ -148,6 +163,7 @@ export async function listaNotificheImpresa(): Promise<ItemNotifica[]> {
       sottotitolo: r.cliente.nome,
       href: `/impresa/richieste-offerte/${r.id}`,
       data: r.createdAt,
+      letta: lette.has(`offerta:${r.id}`),
     })
   }
 
@@ -160,6 +176,7 @@ export async function listaNotificheImpresa(): Promise<ItemNotifica[]> {
       href: `/impresa/commesse`,
       urgente: rm.urgente,
       data: rm.createdAt,
+      letta: lette.has(`materiale:${rm.id}`),
     })
   }
 
@@ -175,6 +192,7 @@ export async function listaNotificheImpresa(): Promise<ItemNotifica[]> {
       href: `/impresa/mezzi`,
       urgente: prossima ? new Date(prossima) < new Date() : false,
       data: prossima,
+      letta: lette.has(`mezzo:${m.id}`),
     })
   }
 
@@ -202,7 +220,7 @@ export async function alertOperaio(operaioId: string): Promise<number> {
   return rapportini + pianificazioni
 }
 
-export async function listaNotificheOperaio(operaioId: string): Promise<ItemNotifica[]> {
+export async function listaNotificheOperaio(operaioId: string, userId?: string): Promise<ItemNotifica[]> {
   const domani = new Date()
   domani.setDate(domani.getDate() + 1)
   domani.setHours(0, 0, 0, 0)
@@ -211,7 +229,7 @@ export async function listaNotificheOperaio(operaioId: string): Promise<ItemNoti
 
   const items: ItemNotifica[] = []
 
-  const [rapportini, pianificazioni, chatRecente] = await Promise.all([
+  const [rapportini, pianificazioni, chatRecente, lette] = await Promise.all([
     prisma.giornata.findMany({
       where: { operaioId, fase: 'fine', stato: 'bozza', rapportino: null },
       include: { commessa: { select: { nome: true } } },
@@ -222,7 +240,6 @@ export async function listaNotificheOperaio(operaioId: string): Promise<ItemNoti
       where: { operaioId, sostituito: false, data: { gte: domani, lt: dopodomani } },
       include: { commessa: { select: { nome: true } } },
     }),
-    // Messaggi di impresa/magazziniere nelle ultime 24h nelle giornate dell'operaio
     prisma.chatMessaggio.findMany({
       where: {
         ruolo: { not: 'operaio' },
@@ -234,6 +251,7 @@ export async function listaNotificheOperaio(operaioId: string): Promise<ItemNoti
       take: 5,
       distinct: ['giornataId'],
     }),
+    userId ? getNotificheLette(userId) : Promise.resolve(new Set<string>()),
   ])
 
   for (const g of rapportini) {
@@ -245,6 +263,7 @@ export async function listaNotificheOperaio(operaioId: string): Promise<ItemNoti
       href: `/operaio/giornata/${g.id}/rapportino`,
       urgente: true,
       data: g.data,
+      letta: lette.has(`rapportino:${g.id}`),
     })
   }
 
@@ -256,6 +275,7 @@ export async function listaNotificheOperaio(operaioId: string): Promise<ItemNoti
       sottotitolo: p.commessa.nome,
       href: '/operaio/domani',
       data: p.data,
+      letta: lette.has(`pianificazione:${p.id}`),
     })
   }
 
@@ -267,6 +287,7 @@ export async function listaNotificheOperaio(operaioId: string): Promise<ItemNoti
       sottotitolo: m.giornata.commessa.nome,
       href: `/operaio/giornata/${m.giornataId}/chat`,
       data: m.createdAt,
+      letta: lette.has(`chat:${m.id}`),
     })
   }
 
@@ -279,16 +300,19 @@ export async function alertMagazziniere(): Promise<number> {
   return prisma.richiestaMateriale.count({ where: { stato: 'richiesta' } })
 }
 
-export async function listaNotificheMagazziniere(): Promise<ItemNotifica[]> {
-  const richieste = await prisma.richiestaMateriale.findMany({
-    where: { stato: 'richiesta' },
-    include: {
-      operaio: { select: { nome: true } },
-      commessa: { select: { nome: true } },
-    },
-    orderBy: [{ urgente: 'desc' }, { createdAt: 'asc' }],
-    take: 20,
-  })
+export async function listaNotificheMagazziniere(userId?: string): Promise<ItemNotifica[]> {
+  const [richieste, lette] = await Promise.all([
+    prisma.richiestaMateriale.findMany({
+      where: { stato: 'richiesta' },
+      include: {
+        operaio: { select: { nome: true } },
+        commessa: { select: { nome: true } },
+      },
+      orderBy: [{ urgente: 'desc' }, { createdAt: 'asc' }],
+      take: 20,
+    }),
+    userId ? getNotificheLette(userId) : Promise.resolve(new Set<string>()),
+  ])
 
   return richieste.map(r => ({
     id: r.id,
@@ -298,6 +322,7 @@ export async function listaNotificheMagazziniere(): Promise<ItemNotifica[]> {
     href: `/magazziniere/richieste/${r.id}`,
     urgente: r.urgente,
     data: r.createdAt,
+    letta: lette.has(`materiale:${r.id}`),
   }))
 }
 
@@ -323,12 +348,12 @@ export async function alertCliente(clienteId: string): Promise<number> {
   return fatture + commesseChiuse
 }
 
-export async function listaNotificheCliente(clienteId: string): Promise<ItemNotifica[]> {
+export async function listaNotificheCliente(clienteId: string, userId?: string): Promise<ItemNotifica[]> {
   const tra14 = TRA_14_GIORNI()
   const settimanafa = SETTIMANA_FA()
   const items: ItemNotifica[] = []
 
-  const [fatture, commesseChiuse, dicoRecenti, pianificazioni] = await Promise.all([
+  const [fatture, commesseChiuse, dicoRecenti, pianificazioni, lette] = await Promise.all([
     prisma.fatturaAttiva.findMany({
       where: {
         clienteId,
@@ -362,6 +387,7 @@ export async function listaNotificheCliente(clienteId: string): Promise<ItemNoti
       orderBy: { data: 'asc' },
       take: 5,
     }),
+    userId ? getNotificheLette(userId) : Promise.resolve(new Set<string>()),
   ])
 
   for (const f of fatture) {
@@ -374,6 +400,7 @@ export async function listaNotificheCliente(clienteId: string): Promise<ItemNoti
       href: `/cliente/documenti/fattura/${f.id}`,
       urgente: !!scaduta,
       data: f.dataScadenza,
+      letta: lette.has(`fattura:${f.id}`),
     })
   }
 
@@ -385,6 +412,7 @@ export async function listaNotificheCliente(clienteId: string): Promise<ItemNoti
       sottotitolo: 'Il cantiere è stato chiuso',
       href: `/cliente/lavori/${c.id}`,
       data: c.updatedAt,
+      letta: lette.has(`lavoro:${c.id}`),
     })
   }
 
@@ -396,6 +424,7 @@ export async function listaNotificheCliente(clienteId: string): Promise<ItemNoti
       sottotitolo: `Dichiarazione di Conformità — ${d.commessa?.nome ?? ''}`,
       href: `/cliente/documenti/dico/${d.id}`,
       data: d.createdAt,
+      letta: lette.has(`documento:${d.id}`),
     })
   }
 
@@ -407,6 +436,7 @@ export async function listaNotificheCliente(clienteId: string): Promise<ItemNoti
       sottotitolo: `${p.operaio.nome} · ${new Date(p.data).toLocaleDateString('it-IT')}`,
       href: `/cliente/lavori/${p.commessaId}`,
       data: p.data,
+      letta: lette.has(`appuntamento:${p.id}`),
     })
   }
 

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { formatData } from '@/lib/format'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { segnaTutteLetteImpresa } from './actions'
 
 // TODO LEGALE — art. 4 L. 300/1970:
 // La sezione "Operai attivi ora" mostra solo giornate in corso come da DB (giornata.fase ≠ completata).
@@ -39,13 +40,13 @@ const FASE_LABEL: Record<string, string> = {
 }
 
 export default async function NotificheImpresaPage() {
-  await requireImpresa()
+  const user = await requireImpresa()
 
   // Messaggi recenti non letti (ultimi 24h, non da impresa)
   const ieri = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
   const [items, giornateAttive, messaggiRecenti] = await Promise.all([
-    listaNotificheImpresa(),
+    listaNotificheImpresa(user.id),
     // Operai con giornata aperta OGGI — visione stato lavori, non presenza GPS
     prisma.giornata.findMany({
       where: {
@@ -83,16 +84,28 @@ export default async function NotificheImpresaPage() {
     }),
   ])
 
-  const urgenti = items.filter(i => i.urgente)
-  const normali = items.filter(i => !i.urgente)
+  const nonLette = items.filter(i => !i.letta)
+  const urgenti = nonLette.filter(i => i.urgente)
+  const normali = nonLette.filter(i => !i.urgente)
+  const lette = items.filter(i => i.letta)
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Centro notifiche</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{items.length + messaggiRecenti.length} elementi</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {nonLette.length > 0 ? `${nonLette.length} non lette` : 'Tutto letto'}
+            {messaggiRecenti.length > 0 && ` · ${messaggiRecenti.length} messaggi`}
+          </p>
         </div>
+        {nonLette.length > 0 && (
+          <form action={segnaTutteLetteImpresa}>
+            <button type="submit" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 shadow-sm whitespace-nowrap">
+              Segna tutte lette
+            </button>
+          </form>
+        )}
       </div>
 
       {items.length === 0 && messaggiRecenti.length === 0 && (
@@ -101,6 +114,12 @@ export default async function NotificheImpresaPage() {
           title="Tutto in ordine"
           description="Nessun elemento richiede attenzione in questo momento"
         />
+      )}
+
+      {nonLette.length === 0 && items.length > 0 && messaggiRecenti.length === 0 && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-center text-sm text-green-700">
+          Hai letto tutte le notifiche. Ottimo lavoro!
+        </div>
       )}
 
       {/* Messaggi chat recenti — con mittente visibile */}
@@ -221,6 +240,29 @@ export default async function NotificheImpresaPage() {
             Stato giornata da DB · nessuna geolocalizzazione attiva
           </p>
         </div>
+      )}
+
+      {/* Già lette */}
+      {lette.length > 0 && (
+        <details className="group">
+          <summary className="cursor-pointer text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1 list-none select-none">
+            <svg className="h-3 w-3 transition-transform group-open:rotate-90" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 2l4 4-4 4"/></svg>
+            Già lette ({lette.length})
+          </summary>
+          <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 opacity-60 mt-2">
+            {lette.map(item => (
+              <Link key={`${item.tipo}-${item.id}`} href={item.href}
+                className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
+                <NotificaIcon tipo={item.tipo} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-600 truncate line-through">{item.titolo}</p>
+                  {item.sottotitolo && <p className="text-xs text-gray-400 truncate">{item.sottotitolo}</p>}
+                </div>
+                {item.data && <p className="text-xs text-gray-400 shrink-0">{formatData(item.data)}</p>}
+              </Link>
+            ))}
+          </div>
+        </details>
       )}
 
       <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">

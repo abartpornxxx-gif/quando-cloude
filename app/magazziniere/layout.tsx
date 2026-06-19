@@ -3,14 +3,15 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
-import { alertMagazziniere } from '@/lib/notifiche'
+import { listaNotificheMagazziniere } from '@/lib/notifiche'
 
 export default async function MagazzinoLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.user_metadata?.role !== 'magazziniere') redirect('/login')
 
-  const alertCount = await alertMagazziniere()
+  const notifiche = await listaNotificheMagazziniere(user.id)
+  const alertCount = notifiche.filter(n => !n.letta).length
 
   async function signOut() {
     'use server'

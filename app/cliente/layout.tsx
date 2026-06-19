@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
-import { alertCliente } from '@/lib/notifiche'
+import { listaNotificheCliente } from '@/lib/notifiche'
 
 async function signOut() {
   'use server'
@@ -26,7 +26,10 @@ export default async function ClienteLayout({ children }: { children: React.Reac
   let alertCount = 0
   if (user.email) {
     const cliente = await prisma.cliente.findFirst({ where: { email: user.email }, select: { id: true } })
-    if (cliente) alertCount = await alertCliente(cliente.id)
+    if (cliente) {
+      const notifiche = await listaNotificheCliente(cliente.id, user.id)
+      alertCount = notifiche.filter(n => !n.letta).length
+    }
   }
 
   const NAV = [
