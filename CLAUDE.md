@@ -120,7 +120,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Fase 10 completata + Stress test eseguito. In attesa di validazione.**
+- Fase corrente: **Fase 11 completata. In attesa di validazione.**
 
 ### Decisioni architetturali recenti
 - **Countdown**: visibile SOLO all'impresa (in `/impresa/giornate`). L'operaio vede solo stato generico e pulsante bloccato/attivo.
@@ -142,5 +142,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 - **Fase 10 — Bug fix + nuove funzioni**: Archiviazione commesse (no delete, FK safe) con pagina `/impresa/commesse/archiviate` + ripristino. Chat modernizzata con bolle per ruolo (operaio/impresa/magazziniere), scorciatoie messaggi rapidi, separatori per data. Centro notifiche impresa: messaggi recenti con avatar+mittente visibile. Rapportino operaio: nuova sezione "Pianifica domani" (cosaFareDomani, urgenza 1-5, stimaOre). Pagina `/impresa/pianificazione/domani` aggrega suggerimenti da rapportini e permette conferma con stima impresa. Promemoria interattivi operai: `SuggerimentoCantiere` configurabili da impresa (`/impresa/checklist`), spuntabili in `FlussoGiornata` fase "fine". Logo QUADRO → link dashboard in tutti i layout. Schema DB: nuovi campi `archiviata` (commesse), `cosaFareDomani/urgenzaDomani/stimaOreDomani` (rapportini), `stimaImpresaOre/confermata` (pianificazioni). Nuove tabelle: `suggerimenti_cantiere`, `suggerimenti_spunte`. Script SQL in `fase10-schema.sql`.
 - **Stress Test (post Fase 10)**: Guard FK su TUTTI i delete — eliminaCliente, eliminaOperaio, eliminaFornitore, eliminaMateriale, eliminaAttrezzatura, eliminaMezzo, eliminaPreventivo, eliminaPianificazione, eliminaOfferta: contano i record figli PRIMA di tentare il delete e lanciano un errore leggibile se esistono. `DeleteButton` aggiornato con try-catch che mostra alert() invece di crashare su error boundary. `SuggerimentoSpunta` ora ha FK relation esplicita verso `Giornata` in schema.prisma. `annullaGiornata` pulisce le spunte orfane prima di eliminare la giornata. Migrazione SQL in `stress-test-fix.sql` (aggiunge FK su `suggerimenti_spunte.giornata_id`). Fix nav: rimosso prefix `/impresa/archiviate` (errato, il prefisso corretto è già `/impresa/commesse`).
+
+- **Fase 11 — Checklist adempimenti di cantiere**: Nuovi modelli Prisma: `TipoLavoro`, `AdempimentoModello`, `AdempimentoCommessa`; campo `tipoLavoroId` su `Commessa`. Migrazione SQL in `adempimenti-schema.sql`. CRUD tipi lavoro in `/impresa/tipi-lavoro/` (lista, nuovo, [id] con gestione voci). `CommessaForm` aggiornato con dropdown tipo lavoro. `salvaCommessa`: auto-applica checklist dal modello al momento della creazione. Dettaglio commessa: sezione `AdempimentiSection` (componente Client) con barra progresso, spunta interattiva (toggle checkbox + tracciamento chi/quando), pulsante "Applica checklist" (idempotente, aggiunge solo voci mancanti), aggiunta voci custom, eliminazione voci. Lista commesse: badge `X/Y adem.` per ciascuna. Dashboard: widget "Adempimenti in sospeso" (visibile solo se esistono). Nav impresa: "Tipi lavoro" in macro-categoria Cantieri. Collegamento DiCo e Foto via campo `collegamento` (badge colorati). Disclaimer D.Lgs. 81/2008 in tutte le pagine tipi lavoro.
 
 - Aggiorna questa riga a fine di ogni fase.
