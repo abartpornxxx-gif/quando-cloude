@@ -21,10 +21,11 @@ const MACRO = [
   },
   {
     label: 'Persone',
-    prefixes: ['/impresa/clienti', '/impresa/operai', '/impresa/fornitori'],
+    prefixes: ['/impresa/clienti', '/impresa/operai', '/impresa/fornitori', '/impresa/magazzinieri'],
     items: [
       { label: 'Clienti', href: '/impresa/clienti', desc: 'Anagrafica' },
       { label: 'Operai', href: '/impresa/operai', desc: 'Squadre e ore' },
+      { label: 'Magazzinieri', href: '/impresa/magazzinieri', desc: 'Gestione accessi' },
       { label: 'Fornitori', href: '/impresa/fornitori', desc: 'Anagrafica' },
     ],
   },

@@ -2,11 +2,16 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { salvaCliente } from '../actions'
+import { GestioneAccesso } from '@/components/ui/GestioneAccesso'
 
 export default async function ModificaClientePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const cliente = await prisma.cliente.findUnique({ where: { id } })
   if (!cliente) notFound()
+
+  const hasAccess = cliente.email
+    ? !!(await prisma.profile.findFirst({ where: { email: cliente.email } }))
+    : false
 
   const dv = {
     id: cliente.id,
@@ -25,7 +30,7 @@ export default async function ModificaClientePage({ params }: { params: Promise<
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl space-y-6">
       <div className="mb-6 flex items-center gap-3">
         <Link href="/impresa/clienti" className="text-sm text-gray-500 hover:text-gray-700">
           ← Clienti
@@ -33,6 +38,14 @@ export default async function ModificaClientePage({ params }: { params: Promise<
         <span className="text-gray-300">/</span>
         <h1 className="text-xl font-bold text-gray-900">{cliente.nome}</h1>
       </div>
+
+      <GestioneAccesso
+        email={cliente.email ?? null}
+        ruolo="cliente"
+        nome={cliente.nome}
+        hasAccess={hasAccess}
+        revalidate={`/impresa/clienti/${id}`}
+      />
 
       <form action={salvaCliente} className="space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <input type="hidden" name="id" value={dv.id} />
