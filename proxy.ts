@@ -59,10 +59,19 @@ export async function proxy(request: NextRequest) {
     // Utente autenticato
     const role = user.user_metadata?.role as UserRole | undefined
 
+    // Helper: crea un redirect portando con sé i cookie di sessione aggiornati.
+    // Senza questo, se Supabase ha appena rinnovato il token e c'è contestualmente
+    // un redirect, il browser non riceve il cookie aggiornato e la sessione scade.
+    function redirectWithSession(dest: string) {
+      const res = NextResponse.redirect(new URL(dest, request.url))
+      supabaseResponse.cookies.getAll().forEach(c => res.cookies.set(c.name, c.value))
+      return res
+    }
+
     // Reindirizza dalla root o da rotte pubbliche alla propria dashboard
     if (pathname === '/' || isPublic) {
       const dest = role ? ROLE_HOME[role] : '/login'
-      return NextResponse.redirect(new URL(dest, request.url))
+      return redirectWithSession(dest)
     }
 
     // Impedisce di accedere all'area di un altro ruolo
@@ -74,7 +83,7 @@ export async function proxy(request: NextRequest) {
         (pathname.startsWith('/magazziniere/') && role !== 'magazziniere')
 
       if (inWrongArea) {
-        return NextResponse.redirect(new URL(ROLE_HOME[role], request.url))
+        return redirectWithSession(ROLE_HOME[role])
       }
     }
 
