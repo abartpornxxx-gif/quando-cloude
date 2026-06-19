@@ -21,31 +21,31 @@ function RingChart({
   hex: string
 }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0
-  const r = 36
+  const r = 40
   const circ = parseFloat((2 * Math.PI * r).toFixed(2))
   const dash = parseFloat(((pct / 100) * circ).toFixed(2))
   const gap = parseFloat((circ - dash).toFixed(2))
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative w-24 h-24">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 96 96" aria-hidden="true">
-          <circle cx="48" cy="48" r={r} fill="none" stroke="#f1f5f9" strokeWidth="9" />
+      <div className="relative w-28 h-28">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 112 112" aria-hidden="true">
+          <circle cx="56" cy="56" r={r} fill="none" stroke="#f1f5f9" strokeWidth="10" />
           {pct > 0 && (
             <circle
-              cx="48" cy="48" r={r} fill="none"
-              stroke={hex} strokeWidth="9"
+              cx="56" cy="56" r={r} fill="none"
+              stroke={hex} strokeWidth="10"
               strokeDasharray={`${dash} ${gap}`}
               strokeLinecap="round"
             />
           )}
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xl font-bold text-gray-900 leading-none">{pct}%</span>
+          <span className="text-2xl font-bold text-gray-900 leading-none">{pct}%</span>
         </div>
       </div>
       <div className="text-center">
-        <p className="text-sm font-semibold text-gray-800">{label}</p>
+        <p className="text-sm font-bold text-gray-800">{label}</p>
         <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
       </div>
     </div>
@@ -182,13 +182,15 @@ export default async function ImpresaDashboardPage() {
             sub={`su ${commesseTotali} totali`}
             href="/impresa/commesse"
             variant="info"
+            icon="/immagini/icona-cantieri.png"
           />
           <StatCard
             label="Rapportini"
             value={rapportiniMancanti > 0 ? rapportiniMancanti : '✓'}
             sub={rapportiniMancanti > 0 ? 'Mancanti — da gestire' : 'Tutto in regola'}
-            href="/impresa/giornate"
-            variant={rapportiniMancanti > 0 ? 'danger' : 'default'}
+            href="/impresa/rapportini"
+            variant={rapportiniMancanti > 0 ? 'danger' : 'success'}
+            icon="/immagini/icona-rapportino.png"
           />
           <StatCard
             label="Scadenze 30g"
@@ -196,13 +198,15 @@ export default async function ImpresaDashboardPage() {
             sub={scadenzeVicine > 0 ? 'Fatture in scadenza' : 'Nessuna scadenza'}
             href="/impresa/scadenzario"
             variant={scadenzeVicine > 0 ? 'warning' : 'default'}
+            icon="/immagini/icona-calendario.png"
           />
           <StatCard
             label="Ordini aperti"
             value={ordiniAperti}
-            sub="Da fornitori"
+            sub="Materiale da fornitori"
             href="/impresa/ordini"
-            variant="default"
+            variant={ordiniAperti > 0 ? 'info' : 'default'}
+            icon="/immagini/icona-materiale.png"
           />
         </div>
       </div>

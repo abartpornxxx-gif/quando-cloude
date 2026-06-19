@@ -8,6 +8,9 @@ import { useState } from 'react'
 const MACRO = [
   {
     label: 'Cantieri',
+    icon: '/immagini/icona-cantieri.png',
+    iconBg: 'bg-amber-100',
+    dot: 'bg-amber-400',
     prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/giornate', '/impresa/pianificazione', '/impresa/calendario', '/impresa/checklist', '/impresa/assenze', '/impresa/tipi-lavoro', '/impresa/rapportini'],
     items: [
       { label: 'Commesse', href: '/impresa/commesse', desc: 'Cantieri aperti' },
@@ -24,6 +27,9 @@ const MACRO = [
   },
   {
     label: 'Persone',
+    icon: '/immagini/icona-presenza.png',
+    iconBg: 'bg-violet-100',
+    dot: 'bg-violet-400',
     prefixes: ['/impresa/clienti', '/impresa/operai', '/impresa/fornitori', '/impresa/magazzinieri'],
     items: [
       { label: 'Clienti', href: '/impresa/clienti', desc: 'Anagrafica' },
@@ -34,6 +40,9 @@ const MACRO = [
   },
   {
     label: 'Magazzino',
+    icon: '/immagini/icona-magazzino.png',
+    iconBg: 'bg-cyan-100',
+    dot: 'bg-cyan-500',
     prefixes: ['/impresa/materiali', '/impresa/ordini', '/impresa/magazzino', '/impresa/mezzi', '/impresa/attrezzature'],
     items: [
       { label: 'Materiali', href: '/impresa/materiali', desc: 'Listino prezzi' },
@@ -45,6 +54,9 @@ const MACRO = [
   },
   {
     label: 'Finanza',
+    icon: '/immagini/icona-finanza.png',
+    iconBg: 'bg-emerald-100',
+    dot: 'bg-emerald-500',
     prefixes: ['/impresa/fatture', '/impresa/fatture-passive', '/impresa/scadenzario', '/impresa/dico'],
     items: [
       { label: 'Fatture', href: '/impresa/fatture', desc: 'Da incassare' },
@@ -55,6 +67,9 @@ const MACRO = [
   },
   {
     label: 'Offerte',
+    icon: '/immagini/icona-offerte.png',
+    iconBg: 'bg-purple-100',
+    dot: 'bg-purple-500',
     prefixes: ['/impresa/catalogo', '/impresa/richieste-offerte'],
     items: [
       { label: 'Catalogo', href: '/impresa/catalogo', desc: 'Offerte ai clienti' },
@@ -63,6 +78,9 @@ const MACRO = [
   },
   {
     label: 'Impostazioni',
+    icon: '/immagini/icona-impostazioni.png',
+    iconBg: 'bg-slate-100',
+    dot: 'bg-slate-400',
     prefixes: ['/impresa/configurazione'],
     items: [
       { label: 'Configurazione', href: '/impresa/configurazione', desc: 'Orari e opzioni' },
@@ -101,20 +119,29 @@ export function ImpresaNav() {
             return (
               <div key={macro.label} className="group relative flex items-stretch">
                 <button
-                  className={`flex items-center gap-1 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                     isActive
                       ? 'border-blue-500 text-blue-400'
                       : 'border-transparent text-slate-400 hover:text-slate-200'
                   }`}
                 >
+                  {/* Colored dot indicator */}
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${macro.dot} opacity-80`} />
                   {macro.label}
-                  <svg className="h-3 w-3 opacity-60 transition-transform group-hover:rotate-180" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg className="h-3 w-3 opacity-50 transition-transform group-hover:rotate-180" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M2 4l4 4 4-4" />
                   </svg>
                 </button>
 
                 <div className="absolute top-full left-0 z-50 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-150 pt-1">
-                  <div className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[200px]">
+                  <div className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[220px]">
+                    {/* Dropdown header */}
+                    <div className={`flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 ${macro.iconBg}`}>
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/70">
+                        <Image src={macro.icon} width={15} height={15} alt="" />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-600">{macro.label}</span>
+                    </div>
                     {macro.items.map(item => {
                       const itemActive = pathname.startsWith(item.href)
                       return (
@@ -139,11 +166,22 @@ export function ImpresaNav() {
           })}
         </div>
 
-        {/* ── Mobile: riga con indicatore sezione attiva + hamburger ── */}
+        {/* ── Mobile: riga con sezione attiva + hamburger ── */}
         <div className="md:hidden flex items-center justify-between px-0 py-2">
-          <span className="text-sm text-slate-300 font-medium truncate">
-            {MACRO.find(m => m.prefixes.some(p => pathname.startsWith(p)))?.label ?? 'Dashboard'}
-          </span>
+          <div className="flex items-center gap-2">
+            {(() => {
+              const activeMacro = MACRO.find(m => m.prefixes.some(p => pathname.startsWith(p)))
+              if (activeMacro) return (
+                <>
+                  <div className={`flex h-6 w-6 items-center justify-center rounded-md ${activeMacro.iconBg}`}>
+                    <Image src={activeMacro.icon} width={13} height={13} alt="" />
+                  </div>
+                  <span className="text-sm text-slate-300 font-medium">{activeMacro.label}</span>
+                </>
+              )
+              return <span className="text-sm text-slate-300 font-medium">Dashboard</span>
+            })()}
+          </div>
           <button
             onClick={() => setMenuAperto(v => !v)}
             className="rounded-lg p-2 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -165,14 +203,8 @@ export function ImpresaNav() {
       {/* ── Mobile drawer ── */}
       {menuAperto && (
         <div className="fixed inset-0 z-50 md:hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={chiudiMenu}
-            aria-hidden="true"
-          />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={chiudiMenu} aria-hidden="true" />
 
-          {/* Pannello */}
           <div className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col overflow-hidden">
             {/* Header pannello */}
             <div className="flex items-center justify-between px-4 py-3.5 bg-slate-900 shrink-0">
@@ -190,7 +222,7 @@ export function ImpresaNav() {
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto py-3">
               {/* Dashboard */}
-              <div className="px-3 mb-2">
+              <div className="px-3 mb-3">
                 <Link
                   href="/impresa/dashboard"
                   onClick={chiudiMenu}
@@ -198,19 +230,31 @@ export function ImpresaNav() {
                     isDashboard ? 'bg-blue-50 text-blue-700' : 'text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <Image src="/immagini/icona-dashboard.png" width={18} height={18} alt="" className="opacity-60 shrink-0" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 shrink-0">
+                    <Image src="/immagini/icona-dashboard.png" width={16} height={16} alt="" />
+                  </div>
                   Dashboard
                 </Link>
               </div>
+
+              {/* Separatore */}
+              <div className="mx-4 border-t border-gray-100 mb-3" />
 
               {/* Categorie */}
               {MACRO.map(macro => {
                 const macroActive = macro.prefixes.some(p => pathname.startsWith(p))
                 return (
-                  <div key={macro.label} className="px-3 mb-4">
-                    <p className={`text-[11px] font-bold uppercase tracking-wider px-3 mb-1 ${macroActive ? 'text-blue-600' : 'text-gray-400'}`}>
-                      {macro.label}
-                    </p>
+                  <div key={macro.label} className="px-3 mb-3">
+                    {/* Category header */}
+                    <div className="flex items-center gap-2 px-3 mb-1.5">
+                      <div className={`flex h-7 w-7 items-center justify-center rounded-lg shrink-0 ${macro.iconBg}`}>
+                        <Image src={macro.icon} width={14} height={14} alt="" />
+                      </div>
+                      <p className={`text-[11px] font-bold uppercase tracking-wider ${macroActive ? 'text-blue-600' : 'text-gray-400'}`}>
+                        {macro.label}
+                      </p>
+                    </div>
+                    {/* Items */}
                     <div className="space-y-0.5">
                       {macro.items.map(item => {
                         const itemActive = pathname.startsWith(item.href)

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { NotificheBell } from '@/components/NotificheBell'
 import { listaNotificheOperaio } from '@/lib/notifiche'
+import { OperaioBottomNav } from '@/components/OperaioBottomNav'
 import Image from 'next/image'
 
 export default async function OperaioLayout({ children }: { children: React.ReactNode }) {
@@ -94,45 +95,7 @@ export default async function OperaioLayout({ children }: { children: React.Reac
 
       <main className="mx-auto max-w-2xl px-4 py-5 pb-24 sm:px-6">{children}</main>
 
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 safe-area-pb">
-        <div className="mx-auto grid max-w-2xl grid-cols-6">
-          {[
-            { href: '/operaio/dashboard', icon: '/immagini/icona-cantieri.png', label: 'Cantieri' },
-            { href: '/operaio/giornata/nuova', icon: '➕', label: 'Giornata', accent: true },
-            { href: '/operaio/domani', icon: '/immagini/icona-calendario.png', label: 'Domani' },
-            { href: '/operaio/calendario', icon: '/immagini/icona-calendario.png', label: 'Calendario' },
-            { href: '/operaio/notifiche', icon: null, label: 'Avvisi', isAlert: true },
-            { href: '/operaio/profilo', icon: '/immagini/icona-impostazioni.png', label: 'Profilo' },
-          ].map(item => (
-            <a
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors ${
-                item.accent
-                  ? 'text-emerald-700 font-semibold'
-                  : 'text-gray-500 hover:text-emerald-700'
-              }`}
-            >
-              {item.isAlert ? (
-                <span className="relative">
-                  <Image src="/immagini/icona-notifiche.png" width={24} height={24} alt="Avvisi" className="opacity-70" />
-                  {alertCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
-                      {alertCount > 9 ? '9+' : alertCount}
-                    </span>
-                  )}
-                </span>
-              ) : item.icon?.startsWith('/') ? (
-                <Image src={item.icon} width={24} height={24} alt={item.label} className="opacity-70" />
-              ) : (
-                <span className="text-lg">{item.icon}</span>
-              )}
-              <span>{item.label}</span>
-            </a>
-          ))}
-        </div>
-      </nav>
+      <OperaioBottomNav alertCount={alertCount} />
     </div>
   )
 }

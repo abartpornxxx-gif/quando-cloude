@@ -92,8 +92,10 @@ export default async function CommessePage() {
             return (
               <div
                 key={c.id}
-                className="flex items-stretch rounded-2xl border border-gray-200 bg-white shadow-sm hover:border-blue-200 hover:shadow-md transition-all overflow-hidden"
+                className="flex items-stretch rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all overflow-hidden"
               >
+                {/* Accent border sinistra per stato */}
+                <div className={`w-1 shrink-0 ${c.stato === 'aperta' ? 'bg-emerald-400' : 'bg-gray-200'}`} />
                 <Link
                   href={`/impresa/commesse/${c.id}`}
                   className="flex-1 min-w-0 p-4 sm:p-5"
