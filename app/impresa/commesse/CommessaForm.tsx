@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { euroToCents } from '@/lib/format'
 
 type Cliente = { id: string; nome: string }
+type TipoLavoro = { id: string; nome: string }
 
 interface Importi {
   preventivato: number
@@ -19,13 +20,14 @@ interface Importi {
 interface Props {
   action: (fd: FormData) => Promise<void>
   clienti: Cliente[]
+  tipiLavoro?: TipoLavoro[]
   defaultValues?: {
     id?: string; nome?: string; clienteId?: string; indirizzoCantiere?: string
-    stato?: string; note?: string
+    stato?: string; note?: string; tipoLavoroId?: string
   } & Partial<Importi>
 }
 
-export function CommessaForm({ action, clienti, defaultValues }: Props) {
+export function CommessaForm({ action, clienti, tipiLavoro = [], defaultValues }: Props) {
   const [importi, setImporti] = useState<Importi>({
     preventivato: defaultValues?.preventivato ?? 0,
     costiMateriali: defaultValues?.costiMateriali ?? 0,
@@ -75,6 +77,17 @@ export function CommessaForm({ action, clienti, defaultValues }: Props) {
           <input name="indirizzoCantiere" defaultValue={defaultValues?.indirizzoCantiere}
             className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
         </div>
+        {tipiLavoro.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Tipo di lavoro</label>
+            <select name="tipoLavoroId" defaultValue={defaultValues?.tipoLavoroId ?? ''}
+              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+              <option value="">— Nessun tipo —</option>
+              {tipiLavoro.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+            </select>
+            <p className="mt-1 text-xs text-gray-400">Determina la checklist di adempimenti da applicare.</p>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700">Note</label>
           <textarea name="note" rows={2} defaultValue={defaultValues?.note}

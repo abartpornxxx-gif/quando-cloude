@@ -89,6 +89,7 @@ export default async function ImpresaDashboardPage() {
     fattureIncassate,
     commesseConMargine,
     commesseRecenti,
+    commesseAdempimenti,
   ] = await Promise.all([
     prisma.commessa.count(),
     prisma.commessa.count({ where: { stato: 'aperta' } }),
@@ -111,6 +112,16 @@ export default async function ImpresaDashboardPage() {
     prisma.commessa.findMany({
       where: { stato: 'aperta' },
       include: { cliente: { select: { nome: true } } },
+      orderBy: { updatedAt: 'desc' },
+      take: 5,
+    }),
+    prisma.commessa.findMany({
+      where: { stato: 'aperta', archiviata: false, adempimenti: { some: { fatto: false } } },
+      include: {
+        cliente: { select: { nome: true } },
+        _count: { select: { adempimenti: true } },
+        adempimenti: { where: { fatto: true }, select: { id: true } },
+      },
       orderBy: { updatedAt: 'desc' },
       take: 5,
     }),
@@ -298,6 +309,50 @@ export default async function ImpresaDashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Adempimenti in sospeso */}
+      {commesseAdempimenti.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Adempimenti cantiere in sospeso</p>
+          <div className="rounded-2xl border border-amber-200 bg-white shadow-sm overflow-hidden">
+            <div className="divide-y divide-gray-100">
+              {commesseAdempimenti.map(c => {
+                const totale = c._count.adempimenti
+                const fatti = c.adempimenti.length
+                const mancanti = totale - fatti
+                const pct = totale > 0 ? Math.round((fatti / totale) * 100) : 0
+                return (
+                  <Link key={c.id} href={`/impresa/commesse/${c.id}`} className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors group">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 truncate">{c.nome}</p>
+                      {c.cliente && <p className="text-xs text-gray-400">{c.cliente.nome}</p>}
+                    </div>
+                    <div className="shrink-0 flex items-center gap-3">
+                      <div className="w-24">
+                        <div className="flex justify-between text-xs text-gray-400 mb-1">
+                          <span>{fatti}/{totale}</span>
+                          <span>{pct}%</span>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                      <span className="text-xs font-semibold text-amber-700 bg-amber-50 rounded-full px-2 py-0.5">
+                        {mancanti} mancant{mancanti === 1 ? 'e' : 'i'}
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+            <div className="border-t border-gray-100 bg-gray-50 px-5 py-2.5 text-right">
+              <Link href="/impresa/commesse" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+                Vedi tutte le commesse →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Azioni rapide */}
       <div>

@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 const MACRO = [
   {
     label: 'Cantieri',
-    prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/giornate', '/impresa/pianificazione', '/impresa/calendario', '/impresa/checklist', '/impresa/assenze'],
+    prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/giornate', '/impresa/pianificazione', '/impresa/calendario', '/impresa/checklist', '/impresa/assenze', '/impresa/tipi-lavoro'],
     items: [
       { label: 'Commesse', href: '/impresa/commesse', desc: 'Cantieri aperti' },
       { label: 'Preventivi', href: '/impresa/preventivi', desc: 'Offerte ai clienti' },
@@ -16,6 +16,7 @@ const MACRO = [
       { label: 'Calendario', href: '/impresa/calendario', desc: 'Vista mensile' },
       { label: 'Promemoria', href: '/impresa/checklist', desc: 'Suggerimenti operai' },
       { label: 'Assenze', href: '/impresa/assenze', desc: 'Richieste operai' },
+      { label: 'Tipi lavoro', href: '/impresa/tipi-lavoro', desc: 'Checklist adempimenti' },
     ],
   },
   {

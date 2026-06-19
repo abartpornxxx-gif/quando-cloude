@@ -28,7 +28,11 @@ export default async function CommessePage() {
   const commesse = await prisma.commessa.findMany({
     where: { archiviata: false },
     orderBy: { createdAt: 'desc' },
-    include: { cliente: { select: { nome: true } } },
+    include: {
+      cliente: { select: { nome: true } },
+      _count: { select: { adempimenti: true } },
+      adempimenti: { where: { fatto: true }, select: { id: true } },
+    },
   })
 
   const archiviate = await prisma.commessa.count({ where: { archiviata: true } })
@@ -82,6 +86,9 @@ export default async function CommessePage() {
               c.preventivato > 0
                 ? Math.round(((c.preventivato - costi) / c.preventivato) * 100)
                 : null
+            const totAdempimenti = c._count.adempimenti
+            const fattiAdempimenti = c.adempimenti.length
+            const adempimentiOk = totAdempimenti === 0 || fattiAdempimenti === totAdempimenti
             return (
               <div
                 key={c.id}
@@ -101,6 +108,17 @@ export default async function CommessePage() {
                         >
                           {c.stato === 'aperta' ? 'Aperta' : 'Chiusa'}
                         </Badge>
+                        {totAdempimenti > 0 && (
+                          <span
+                            className={`text-xs rounded-full px-2 py-0.5 font-medium ${
+                              adempimentiOk
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : 'bg-amber-50 text-amber-700'
+                            }`}
+                          >
+                            {adempimentiOk ? '✓' : '!'} {fattiAdempimenti}/{totAdempimenti} adem.
+                          </span>
+                        )}
                       </div>
                       <p className="mt-0.5 text-sm text-gray-500">
                         {c.cliente?.nome ?? 'Senza cliente'}

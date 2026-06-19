@@ -7,19 +7,23 @@ import { CommessaForm } from '../CommessaForm'
 import { DeleteButton } from '@/components/DeleteButton'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
+import { AdempimentiSection } from './AdempimentiSection'
 
 export default async function CommessaDettPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [c, tuttiOperai] = await Promise.all([
+  const [c, tuttiOperai, tipiLavoro] = await Promise.all([
     prisma.commessa.findUnique({
       where: { id },
       include: {
         cliente: { select: { nome: true } },
         preventivo: { select: { id: true } },
         operai: { include: { operaio: { select: { id: true, nome: true, ruolo: true } } } },
+        tipoLavoro: { select: { id: true, nome: true } },
+        adempimenti: { orderBy: [{ ordine: 'asc' }, { createdAt: 'asc' }] },
       },
     }),
     prisma.operaio.findMany({ orderBy: { nome: 'asc' }, select: { id: true, nome: true, ruolo: true } }),
+    prisma.tipoLavoro.findMany({ where: { attivo: true }, orderBy: [{ ordine: 'asc' }, { nome: 'asc' }], select: { id: true, nome: true } }),
   ])
   if (!c) notFound()
 
@@ -37,6 +41,7 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
     indirizzoCantiere: c.indirizzoCantiere ?? '',
     stato: c.stato,
     note: c.note ?? '',
+    tipoLavoroId: c.tipoLavoroId ?? '',
     preventivato: c.preventivato,
     costiMateriali: c.costiMateriali,
     costiManodopera: c.costiManodopera,
@@ -124,8 +129,15 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
         <span className="text-gray-300 group-hover:text-blue-400 text-lg">›</span>
       </Link>
 
+      {/* Adempimenti cantiere */}
+      <AdempimentiSection
+        commessaId={c.id}
+        tipoLavoro={c.tipoLavoro}
+        adempimenti={c.adempimenti}
+      />
+
       {/* Form modifica */}
-      <CommessaForm action={salvaCommessa} clienti={clienti} defaultValues={defaultValues} />
+      <CommessaForm action={salvaCommessa} clienti={clienti} tipiLavoro={tipiLavoro} defaultValues={defaultValues} />
 
       {/* Operai assegnati */}
       <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">

@@ -4,7 +4,10 @@ import { salvaCommessa } from '../actions'
 import { CommessaForm } from '../CommessaForm'
 
 export default async function NuovaCommessaPage() {
-  const clienti = await prisma.cliente.findMany({ orderBy: { nome: 'asc' }, select: { id: true, nome: true } })
+  const [clienti, tipiLavoro] = await Promise.all([
+    prisma.cliente.findMany({ orderBy: { nome: 'asc' }, select: { id: true, nome: true } }),
+    prisma.tipoLavoro.findMany({ where: { attivo: true }, orderBy: [{ ordine: 'asc' }, { nome: 'asc' }], select: { id: true, nome: true } }),
+  ])
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -13,7 +16,7 @@ export default async function NuovaCommessaPage() {
         <span className="text-gray-300">/</span>
         <h1 className="text-xl font-bold text-gray-900">Nuova commessa</h1>
       </div>
-      <CommessaForm action={salvaCommessa} clienti={clienti} />
+      <CommessaForm action={salvaCommessa} clienti={clienti} tipiLavoro={tipiLavoro} />
     </div>
   )
 }

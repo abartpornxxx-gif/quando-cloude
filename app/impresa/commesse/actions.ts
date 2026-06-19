@@ -10,6 +10,7 @@ import { StatoCommessa } from '@/app/generated/prisma/client'
 export async function salvaCommessa(formData: FormData) {
   await requireImpresa()
   const id = formData.get('id') as string | null
+  const tipoLavoroId = (formData.get('tipoLavoroId') as string) || null
 
   const data = {
     nome: formData.get('nome') as string,
@@ -22,6 +23,7 @@ export async function salvaCommessa(formData: FormData) {
     costiMezzi: euroToCents(formData.get('costiMezzi') as string),
     fatturato: euroToCents(formData.get('fatturato') as string),
     note: (formData.get('note') as string) || null,
+    tipoLavoroId,
   }
 
   if (id) {
@@ -30,6 +32,25 @@ export async function salvaCommessa(formData: FormData) {
     redirect('/impresa/commesse')
   } else {
     const c = await prisma.commessa.create({ data })
+    // Auto-applica la checklist se è stato scelto un tipo lavoro
+    if (tipoLavoroId) {
+      const modelli = await prisma.adempimentoModello.findMany({
+        where: { tipoLavoroId },
+        orderBy: [{ ordine: 'asc' }, { createdAt: 'asc' }],
+      })
+      if (modelli.length > 0) {
+        await prisma.adempimentoCommessa.createMany({
+          data: modelli.map(m => ({
+            commessaId: c.id,
+            modelloId: m.id,
+            testo: m.testo,
+            note: m.note,
+            collegamento: m.collegamento,
+            ordine: m.ordine,
+          })),
+        })
+      }
+    }
     redirect(`/impresa/commesse/${c.id}`)
   }
 }

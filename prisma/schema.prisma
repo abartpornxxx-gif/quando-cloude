@@ -226,6 +226,8 @@ model Commessa {
   preventivoId      String?           @unique @map("preventivo_id") @db.Uuid
   preventivo        Preventivo?       @relation(fields: [preventivoId], references: [id])
   note              String?
+  tipoLavoroId      String?           @map("tipo_lavoro_id") @db.Uuid
+  tipoLavoro        TipoLavoro?       @relation(fields: [tipoLavoroId], references: [id], onDelete: SetNull)
   createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
   operai             CommessaOperaio[]
@@ -240,6 +242,7 @@ model Commessa {
   fatturePassive          FatturaPassiva[]
   dichiarazioniConformita DichiarazioneConformita[]
   richiesteOfferte        RichiestaOfferta[]
+  adempimenti             AdempimentoCommessa[]
 
   @@map("commesse")
 }
@@ -708,6 +711,57 @@ model RichiestaOfferta {
   updatedAt  DateTime              @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("richieste_offerte")
+}
+
+// ─── Adempimenti di cantiere ─────────────────────────────────────────────────
+
+model TipoLavoro {
+  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome        String
+  descrizione String?
+  attivo      Boolean              @default(true)
+  ordine      Int                  @default(0)
+  modelli     AdempimentoModello[]
+  commesse    Commessa[]
+  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("tipi_lavoro")
+}
+
+model AdempimentoModello {
+  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipoLavoroId String              @map("tipo_lavoro_id") @db.Uuid
+  tipoLavoro   TipoLavoro          @relation(fields: [tipoLavoroId], references: [id], onDelete: Cascade)
+  testo        String
+  note         String?
+  collegamento String?
+  ordine       Int                 @default(0)
+  adempimenti  AdempimentoCommessa[]
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("adempimenti_modello")
+}
+
+model AdempimentoCommessa {
+  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId   String              @map("commessa_id") @db.Uuid
+  commessa     Commessa            @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  modelloId    String?             @map("modello_id") @db.Uuid
+  modello      AdempimentoModello? @relation(fields: [modelloId], references: [id], onDelete: SetNull)
+  testo        String
+  note         String?
+  collegamento String?
+  ordine       Int                 @default(0)
+  fatto        Boolean             @default(false)
+  fattoDa      String?             @map("fatto_da")
+  fattoAt      DateTime?           @map("fatto_at") @db.Timestamptz
+  notaSpunta   String?             @map("nota_spunta")
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("adempimenti_commessa")
 }
 
 // ─── Suggerimenti/promemoria interattivi per operai ──────────────────────────
