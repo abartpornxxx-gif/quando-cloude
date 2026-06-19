@@ -1,4 +1,5 @@
 import { requireCliente } from '@/lib/auth'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { formatEuro, formatData } from '@/lib/format'
 import { Badge } from '@/components/ui/Badge'
@@ -81,7 +82,7 @@ export default async function ClientePagamentiPage() {
 
       {fatture.length === 0 ? (
         <EmptyState
-          icon="💳"
+          icon="/immagini/icona-pagamenti.png"
           title="Nessuna fattura"
           description="Non ci sono ancora fatture associate al tuo account."
         />

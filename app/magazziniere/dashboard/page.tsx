@@ -70,7 +70,8 @@ export default async function MagazziniereDashboard() {
                   <div className="flex items-center gap-2 flex-wrap">
                     {r.urgente && (
                       <span className="inline-flex items-center rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-xs font-bold text-red-700">
-                        🚨 URGENTE
+                        <Image src="/immagini/icona-urgente.png" width={12} height={12} alt="" className="shrink-0" />
+                        {' '}URGENTE
                       </span>
                     )}
                     <p className="text-sm font-semibold text-gray-900 truncate">{r.descrizione}</p>

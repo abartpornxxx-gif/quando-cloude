@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
+import Image from 'next/image'
 import { inviaMsgOperaio, richiediMateriale, getMessaggi } from './actions'
 
 type Messaggio = {
@@ -118,7 +119,8 @@ export default function ChatGiornata({ giornataId, messaggi: messaggiIniziali }:
           />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={urgente} onChange={e => setUrgente(e.target.checked)} />
-            🚨 Urgente
+            <Image src="/immagini/icona-urgente.png" width={14} height={14} alt="" className="shrink-0" />
+            Urgente
           </label>
           <div className="flex gap-2">
             <button

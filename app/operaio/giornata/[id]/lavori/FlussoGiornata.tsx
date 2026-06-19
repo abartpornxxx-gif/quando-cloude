@@ -10,6 +10,7 @@
 // NON rimuovere questo commento senza aver completato la verifica con il consulente del lavoro/legale.
 
 import { useState, useEffect, useTransition, useRef } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { avanzaFase, annullaGiornata, uploadFotoAvanzamento, toggleSpunta } from './actions'
 
@@ -228,7 +229,10 @@ export default function FlussoGiornata({
         <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Cantiere</p>
         <p className="font-bold text-base text-gray-900">{commessa.nome}</p>
         {commessa.indirizzoCantiere && (
-          <p className="text-sm text-gray-500 mt-0.5">📍 {commessa.indirizzoCantiere}</p>
+          <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1">
+            <Image src="/immagini/icona-posizione.png" width={13} height={13} alt="" className="shrink-0 opacity-60" />
+            {commessa.indirizzoCantiere}
+          </p>
         )}
       </div>
 

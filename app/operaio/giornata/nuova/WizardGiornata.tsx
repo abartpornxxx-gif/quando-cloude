@@ -9,6 +9,7 @@
 // NON rimuovere questo commento senza aver completato la verifica legale.
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { inviaGiornata } from '../actions'
@@ -260,7 +261,10 @@ export function WizardGiornata({ operaioId, commesse, mezzi, materiali, checklis
                     }`}>
                     <p className="font-semibold text-gray-900">{c.nome}</p>
                     {c.indirizzoCantiere && (
-                      <p className="text-sm text-gray-500 mt-0.5">📍 {c.indirizzoCantiere}</p>
+                      <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1">
+                        <Image src="/immagini/icona-posizione.png" width={12} height={12} alt="" className="shrink-0 opacity-60" />
+                        {c.indirizzoCantiere}
+                      </p>
                     )}
                   </button>
                 ))}

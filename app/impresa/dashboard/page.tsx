@@ -1,4 +1,5 @@
 import { requireImpresa } from '@/lib/auth'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/format'
@@ -157,13 +158,15 @@ export default async function ImpresaDashboardPage() {
           {rapportiniMancanti > 0 && (
             <Link href="/impresa/giornate"
               className="flex items-center gap-1.5 rounded-xl bg-red-500/20 border border-red-500/40 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30">
-              ⚠ {rapportiniMancanti} rapportini mancanti
+              <Image src="/immagini/icona-avviso.png" width={13} height={13} alt="" className="shrink-0" />
+              {rapportiniMancanti} rapportini mancanti
             </Link>
           )}
           {richiesteNuove > 0 && (
             <Link href="/impresa/richieste-offerte"
               className="flex items-center gap-1.5 rounded-xl bg-violet-500/20 border border-violet-500/40 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:bg-violet-500/30">
-              📬 {richiesteNuove} nuove richieste
+              <Image src="/immagini/icona-richieste.png" width={13} height={13} alt="" className="shrink-0" />
+              {richiesteNuove} nuove richieste
             </Link>
           )}
         </div>
@@ -276,7 +279,7 @@ export default async function ImpresaDashboardPage() {
 
           {commesseRecenti.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <p className="text-4xl mb-3">🏗️</p>
+              <Image src="/immagini/vuoto-cantieri.png" width={64} height={64} alt="" className="mb-3 opacity-70 mx-auto" />
               <p className="text-sm font-semibold text-gray-600">Nessun cantiere aperto</p>
               <Link href="/impresa/preventivi/nuovo"
                 className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700">

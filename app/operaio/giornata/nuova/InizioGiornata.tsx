@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Image from 'next/image'
 import { iniziaGiornata } from './actions'
 
 type Commessa = { id: string; nome: string; indirizzoCantiere?: string | null }
@@ -71,8 +72,9 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
           <div>
             <p className="text-lg font-bold leading-tight">{pianificazione.commessa.nome}</p>
             {pianificazione.commessa.indirizzoCantiere && (
-              <p className="text-sm text-emerald-200 mt-1">
-                📍 {pianificazione.commessa.indirizzoCantiere}
+              <p className="text-sm text-emerald-200 mt-1 flex items-center gap-1">
+                <Image src="/immagini/icona-posizione.png" width={12} height={12} alt="" className="shrink-0 brightness-0 invert opacity-80" />
+                {pianificazione.commessa.indirizzoCantiere}
               </p>
             )}
             {pianificazione.mezzo && (

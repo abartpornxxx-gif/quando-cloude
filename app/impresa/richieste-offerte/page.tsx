@@ -1,4 +1,5 @@
 import { requireImpresa } from '@/lib/auth'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatData } from '@/lib/format'
@@ -41,7 +42,7 @@ export default async function RichiesteOffertePage() {
 
       {richieste.length === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center">
-          <p className="text-2xl mb-2">📬</p>
+          <Image src="/immagini/icona-richieste.png" width={56} height={56} alt="" className="mx-auto mb-2 opacity-80" />
           <p className="text-gray-500">Nessuna richiesta ancora</p>
           <p className="text-sm text-gray-400 mt-1">Le richieste arrivano quando un cliente clicca "Mi interessa"</p>
         </div>

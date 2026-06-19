@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useTransition } from 'react'
+import Image from 'next/image'
 import { aggiornaStatoRichiesta, uploadFotoConsegna } from '../actions'
 import { useRouter } from 'next/navigation'
 
@@ -76,13 +77,19 @@ export default function RichiestaDettaglio({
     <div className="p-4 max-w-xl mx-auto space-y-4">
       <div className="bg-white rounded-xl border p-4 space-y-2">
         {richiesta.urgente && (
-          <p className="text-red-600 font-bold text-sm">🚨 URGENTE</p>
+          <p className="text-red-600 font-bold text-sm flex items-center gap-1.5">
+            <Image src="/immagini/icona-urgente.png" width={14} height={14} alt="" className="shrink-0" />
+            URGENTE
+          </p>
         )}
         <p className="font-semibold text-lg">{richiesta.descrizione}</p>
         <p className="text-sm text-gray-500">Operaio: {richiesta.operaio.nome}</p>
         <p className="text-sm text-gray-500">Cantiere: {richiesta.commessa.nome}</p>
         {richiesta.commessa.indirizzoCantiere && (
-          <p className="text-sm text-gray-500">📍 {richiesta.commessa.indirizzoCantiere}</p>
+          <p className="text-sm text-gray-500 flex items-center gap-1">
+            <Image src="/immagini/icona-posizione.png" width={13} height={13} alt="" className="shrink-0 opacity-60" />
+            {richiesta.commessa.indirizzoCantiere}
+          </p>
         )}
         <p className="text-sm text-gray-400">{new Date(richiesta.createdAt).toLocaleString('it-IT')}</p>
         <p className="text-sm">

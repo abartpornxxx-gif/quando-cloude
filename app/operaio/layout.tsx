@@ -59,7 +59,8 @@ export default async function OperaioLayout({ children }: { children: React.Reac
                   href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`}
                   className="flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white"
                 >
-                  ⚠ Rapportino
+                  <Image src="/immagini/icona-avviso.png" width={12} height={12} alt="" className="brightness-0 invert" />
+                  Rapportino
                 </a>
               )}
               <NotificheBell count={alertCount} href="/operaio/notifiche" colore="emerald" />
@@ -76,7 +77,10 @@ export default async function OperaioLayout({ children }: { children: React.Reac
       {/* Banner rapportino mancante */}
       {rapportinoPendente && (
         <div className="bg-red-600 text-white px-4 py-2.5 text-center text-sm">
-          <span className="font-semibold">⚠ Rapportino da compilare:</span>
+          <span className="font-semibold inline-flex items-center gap-1">
+            <Image src="/immagini/icona-avviso.png" width={14} height={14} alt="" className="brightness-0 invert" />
+            Rapportino da compilare:
+          </span>
           {' '}
           <span className="text-red-100">{rapportinoPendente.commessaNome}</span>
           {' · '}

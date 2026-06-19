@@ -1,4 +1,5 @@
 import { requireImpresa } from '@/lib/auth'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import GiornateMonitor from './GiornateMonitor'
 
@@ -71,7 +72,8 @@ export default async function GiornateImpresaPage() {
       {rapportiniMancanti.length > 0 && (
         <div className="rounded-2xl bg-amber-50 border border-amber-200 p-5">
           <p className="font-semibold text-amber-800 text-sm">
-            ⚠️ {rapportiniMancanti.length} rapportino{rapportiniMancanti.length > 1 ? 'i' : ''} mancante{rapportiniMancanti.length > 1 ? 'i' : ''}
+            <Image src="/immagini/icona-avviso.png" width={15} height={15} alt="" className="shrink-0 inline-block mr-1.5" />
+            {rapportiniMancanti.length} rapportino{rapportiniMancanti.length > 1 ? 'i' : ''} mancante{rapportiniMancanti.length > 1 ? 'i' : ''}
           </p>
           <div className="mt-2 space-y-1">
             {rapportiniMancanti.map(g => (

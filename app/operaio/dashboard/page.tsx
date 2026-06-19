@@ -48,7 +48,10 @@ export default async function OperaioDashboardPage() {
       {/* Banner rapportino urgente */}
       {giornataRapportinoPendente && (
         <div className="rounded-2xl bg-red-600 text-white p-5 shadow-lg shadow-red-200">
-          <p className="font-bold text-base">⚠️ Rapportino da compilare</p>
+          <p className="font-bold text-base flex items-center gap-2">
+            <Image src="/immagini/icona-avviso.png" width={18} height={18} alt="" className="brightness-0 invert shrink-0" />
+            Rapportino da compilare
+          </p>
           <p className="text-sm mt-1 text-red-200">
             {giornataRapportinoPendente.commessa.nome}
             {' · '}
@@ -134,7 +137,10 @@ export default async function OperaioDashboardPage() {
                     <p className="font-semibold text-gray-900 truncate">{c.nome}</p>
                     {c.cliente && <p className="text-sm text-gray-500 mt-0.5">{c.cliente.nome}</p>}
                     {c.indirizzoCantiere && (
-                      <p className="mt-1.5 text-xs text-gray-400">📍 {c.indirizzoCantiere}</p>
+                      <p className="mt-1.5 text-xs text-gray-400 flex items-center gap-1">
+                        <Image src="/immagini/icona-posizione.png" width={12} height={12} alt="" className="shrink-0 opacity-60" />
+                        {c.indirizzoCantiere}
+                      </p>
                     )}
                   </div>
                   <Badge variant="success" dot>Aperta</Badge>

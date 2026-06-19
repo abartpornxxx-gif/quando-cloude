@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { formatData } from '@/lib/format'
 
 const TIPO_ICON: Record<string, string> = {
-  fattura: '💳',
+  fattura: '🧾',
   lavoro: '🏗',
   documento: '📄',
   appuntamento: '📅',

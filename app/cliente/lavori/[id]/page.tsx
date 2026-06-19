@@ -1,4 +1,5 @@
 import { requireCliente } from '@/lib/auth'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -58,7 +59,10 @@ export default async function ClienteCommessaPage({ params }: Props) {
       </div>
 
       {c.indirizzoCantiere && (
-        <p className="text-sm text-gray-500">📍 {c.indirizzoCantiere}</p>
+        <p className="text-sm text-gray-500 flex items-center gap-1">
+          <Image src="/immagini/icona-posizione.png" width={13} height={13} alt="" className="shrink-0 opacity-60" />
+          {c.indirizzoCantiere}
+        </p>
       )}
 
       {/* Barra avanzamento */}

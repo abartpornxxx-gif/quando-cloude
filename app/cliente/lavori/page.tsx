@@ -1,4 +1,5 @@
 import { requireCliente } from '@/lib/auth'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatData } from '@/lib/format'
@@ -97,7 +98,10 @@ export default async function ClienteLavoriPage() {
                     {c.nome}
                   </h2>
                   {c.indirizzoCantiere && (
-                    <p className="text-xs text-gray-500 mt-0.5">📍 {c.indirizzoCantiere}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                      <Image src="/immagini/icona-posizione.png" width={12} height={12} alt="" className="shrink-0 opacity-60" />
+                      {c.indirizzoCantiere}
+                    </p>
                   )}
 
                   {/* Barra avanzamento */}

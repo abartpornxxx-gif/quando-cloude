@@ -53,7 +53,7 @@ export default async function ClienteDashboardPage() {
     },
     {
       href: '/cliente/pagamenti',
-      icon: '💳',
+      icon: '/immagini/icona-pagamenti.png',
       titolo: 'Pagamenti',
       desc: fattureDaIncassare.length > 0
         ? `${fattureDaIncassare.length} fattura${fattureDaIncassare.length > 1 ? 'e' : ''} · ${formatEuro(totaleDaPagare)}`
@@ -69,7 +69,7 @@ export default async function ClienteDashboardPage() {
     },
     {
       href: '/cliente/servizi',
-      icon: '✨',
+      icon: '/immagini/icona-servizi.png',
       titolo: 'Servizi aggiuntivi',
       desc: 'Scopri le nostre offerte',
       badge: null,

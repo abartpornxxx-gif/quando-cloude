@@ -1,4 +1,5 @@
 import { requireImpresa } from '@/lib/auth'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
@@ -133,9 +134,9 @@ export default async function ScadenzarioPage() {
         <p className="text-gray-400 text-sm">Nessuna scadenza aperta. Ottimo!</p>
       )}
 
-      <Sezione titolo="⚠ Scadute" items={scadute} colore="text-red-700" />
-      <Sezione titolo="⏰ In scadenza (prossimi 30 giorni)" items={inScadenza} colore="text-orange-700" />
-      <Sezione titolo="📅 Future" items={future} colore="text-gray-700" />
+      <Sezione titolo="Scadute" items={scadute} colore="text-red-700" />
+      <Sezione titolo="In scadenza (prossimi 30 giorni)" items={inScadenza} colore="text-orange-700" />
+      <Sezione titolo="Future" items={future} colore="text-gray-700" />
     </div>
   )
 }

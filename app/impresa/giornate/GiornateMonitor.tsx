@@ -3,6 +3,7 @@
 // ORDINE 1 — Il countdown è INTERNO, visibile solo all'impresa (non all'operaio)
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 
 type GiornataAttiva = {
   id: string
@@ -78,7 +79,7 @@ export default function GiornateMonitor({ giornate, config }: Props) {
             rimanentiMs = Math.max(0, finePomeriggioMs - now)
             faseTesto = rimanentiMs > 0 ? `Pomeriggio — rimanenti ${formatDurata(rimanentiMs)}` : 'Pomeriggio completato'
           } else if (g.fase === 'fine') {
-            faseTesto = '⚠️ In attesa rapportino'
+            faseTesto = 'In attesa rapportino'
           }
 
           const badgeColor =

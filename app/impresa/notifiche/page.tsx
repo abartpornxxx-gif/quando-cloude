@@ -1,4 +1,5 @@
 import { requireImpresa } from '@/lib/auth'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { listaNotificheImpresa } from '@/lib/notifiche'
 import Link from 'next/link'
@@ -15,7 +16,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 const TIPO_ICON: Record<string, string> = {
   rapportino: '📋',
   fattura:    '💰',
-  offerta:    '✨',
+  offerta:    '🎁',
   materiale:  '📦',
   mezzo:      '🚐',
   chat:       '💬',
@@ -135,7 +136,8 @@ export default async function NotificheImpresaPage() {
       {urgenti.length > 0 && (
         <div>
           <h2 className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">
-            ⚠ Da gestire subito ({urgenti.length})
+            <Image src="/immagini/icona-avviso.png" width={13} height={13} alt="" className="inline-block mr-1 mb-0.5" />
+            Da gestire subito ({urgenti.length})
           </h2>
           <div className="rounded-2xl border border-red-200 bg-white shadow-sm divide-y divide-gray-100">
             {urgenti.map(item => (
