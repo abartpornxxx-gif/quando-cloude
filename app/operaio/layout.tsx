@@ -96,13 +96,14 @@ export default async function OperaioLayout({ children }: { children: React.Reac
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 safe-area-pb">
-        <div className="mx-auto grid max-w-2xl grid-cols-5">
+        <div className="mx-auto grid max-w-2xl grid-cols-6">
           {[
             { href: '/operaio/dashboard', icon: '/immagini/icona-cantieri.png', label: 'Cantieri' },
             { href: '/operaio/giornata/nuova', icon: '➕', label: 'Giornata', accent: true },
             { href: '/operaio/domani', icon: '/immagini/icona-calendario.png', label: 'Domani' },
             { href: '/operaio/calendario', icon: '/immagini/icona-calendario.png', label: 'Calendario' },
             { href: '/operaio/notifiche', icon: null, label: 'Avvisi', isAlert: true },
+            { href: '/operaio/profilo', icon: '/immagini/icona-impostazioni.png', label: 'Profilo' },
           ].map(item => (
             <a
               key={item.href}

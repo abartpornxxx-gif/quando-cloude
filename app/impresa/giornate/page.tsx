@@ -102,7 +102,10 @@ export default async function GiornateImpresaPage() {
 
         {Object.entries(perData).map(([data, gs]) => (
           <div key={data} className="mb-5">
-            <p className="text-xs font-semibold text-gray-500 mb-2">📅 {data}</p>
+            <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
+              <Image src="/immagini/icona-calendario.png" width={12} height={12} alt="" className="opacity-60" />
+              {data}
+            </p>
             <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden divide-y divide-gray-100">
               {gs.map(g => {
                 const { ord, str } = totaleOre(g.ore)
@@ -153,7 +156,8 @@ export default async function GiornateImpresaPage() {
                           href={`/impresa/giornate/${g.id}/chat`}
                           className="inline-block text-xs font-medium text-blue-600 hover:text-blue-800"
                         >
-                          💬 Chat
+                          <Image src="/immagini/icona-chat.png" width={12} height={12} alt="" className="inline-block mr-0.5 opacity-70" />
+                          Chat
                         </a>
                       </div>
                     </div>

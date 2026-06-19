@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
 const MACRO = [
@@ -85,6 +86,7 @@ export function ImpresaNav() {
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
+            <Image src="/immagini/icona-dashboard.png" width={13} height={13} alt="" className="brightness-0 invert opacity-70" />
             Dashboard
           </Link>
 

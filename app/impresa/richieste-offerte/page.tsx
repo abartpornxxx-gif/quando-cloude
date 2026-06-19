@@ -61,7 +61,7 @@ export default async function RichiesteOffertePage() {
                 <img src={r.offerta.fotoUrl} alt="" className="h-12 w-12 rounded-lg object-cover shrink-0" />
               ) : (
                 <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                  <span className="text-xl">🔌</span>
+                  <Image src="/immagini/icona-offerte.png" width={28} height={28} alt="" className="opacity-60" />
                 </div>
               )}
               <div className="flex-1 min-w-0">

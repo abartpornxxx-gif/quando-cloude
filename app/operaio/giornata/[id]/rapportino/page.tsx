@@ -1,5 +1,6 @@
 import { requireOperaio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
 import { notFound, redirect } from 'next/navigation'
 import RapportinoForm from './RapportinoForm'
 
@@ -30,7 +31,7 @@ export default async function RapportinoPage({ params }: Props) {
   if (giornata.rapportino) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8 text-center">
-        <p className="text-4xl mb-4">✅</p>
+        <Image src="/immagini/successo.png" width={80} height={80} alt="" className="mx-auto mb-4 opacity-90" />
         <p className="text-xl font-bold mb-2">Rapportino già inviato</p>
         <p className="text-gray-500 mb-6">Hai concluso la giornata del {new Date(giornata.data).toLocaleDateString('it-IT')}</p>
         <a href="/operaio/dashboard" className="text-blue-600 underline">Torna alla dashboard</a>

@@ -1,4 +1,5 @@
 import { requireImpresa } from '@/lib/auth'
+import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/format'
@@ -45,7 +46,7 @@ export default async function CatalogoPaginaImpresa() {
               <img src={o.fotoUrl} alt={o.titolo} className="h-40 w-full object-cover" />
             ) : (
               <div className="h-40 bg-gray-100 flex items-center justify-center">
-                <span className="text-4xl">🔌</span>
+                <Image src="/immagini/icona-offerte.png" width={56} height={56} alt="" className="opacity-60" />
               </div>
             )}
             <div className="p-4 space-y-2">

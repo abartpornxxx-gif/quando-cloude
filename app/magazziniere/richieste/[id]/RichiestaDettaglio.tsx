@@ -146,7 +146,8 @@ export default function RichiestaDettaglio({
           disabled={pending}
           className="w-full bg-yellow-500 text-white font-bold py-3 rounded-xl disabled:opacity-50"
         >
-          📦 Prendo in carico
+          <Image src="/immagini/icona-materiale.png" width={16} height={16} alt="" className="brightness-0 invert shrink-0" />
+          Prendo in carico
         </button>
       )}
 
@@ -187,7 +188,8 @@ export default function RichiestaDettaglio({
         href={`/magazziniere/chat/${richiesta.giornataId}`}
         className="flex items-center justify-center gap-2 w-full border border-yellow-300 bg-yellow-50 text-yellow-800 font-semibold py-3 rounded-xl hover:bg-yellow-100"
       >
-        💬 Apri chat con l&apos;operaio
+        <Image src="/immagini/icona-chat.png" width={16} height={16} alt="" className="opacity-80" />
+        Apri chat con l&apos;operaio
       </a>
     </div>
   )

@@ -375,7 +375,8 @@ export default async function ImpresaDashboardPage() {
           </Link>
           <Link href="/impresa/notifiche"
             className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
-            🔔 Notifiche
+            <Image src="/immagini/icona-notifiche.png" width={14} height={14} alt="" className="opacity-70" />
+            Notifiche
           </Link>
         </div>
       </div>

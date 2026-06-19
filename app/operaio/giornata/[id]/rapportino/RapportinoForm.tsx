@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Image from 'next/image'
 import { inviaRapportino } from './actions'
 
 type Attrezzatura = { id: string; nome: string }
@@ -257,7 +258,10 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
       {/* Pianificazione giorno successivo */}
       <div className="border border-emerald-200 rounded-xl p-4 bg-emerald-50 space-y-4">
         <div>
-          <p className="text-sm font-bold text-emerald-800">📅 Pianificazione di domani</p>
+          <p className="text-sm font-bold text-emerald-800 flex items-center gap-1.5">
+            <Image src="/immagini/icona-calendario.png" width={14} height={14} alt="" className="opacity-70 shrink-0" />
+            Pianificazione di domani
+          </p>
           <p className="text-xs text-emerald-600 mt-0.5">
             Queste info aiutano l&apos;impresa a organizzare le giornate del giorno dopo.
           </p>

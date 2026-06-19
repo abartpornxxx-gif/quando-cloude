@@ -1,5 +1,6 @@
 import { requireMagazziniere } from '@/lib/auth'
 import { listaNotificheMagazziniere } from '@/lib/notifiche'
+import Image from 'next/image'
 import Link from 'next/link'
 import { formatData } from '@/lib/format'
 
@@ -18,7 +19,7 @@ export default async function NotificheMagazzinierePage() {
 
       {items.length === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-          <p className="text-3xl mb-2">✅</p>
+          <Image src="/immagini/successo.png" width={64} height={64} alt="" className="mx-auto mb-3 opacity-80" />
           <p className="font-semibold text-gray-700">Nessuna richiesta pendente</p>
         </div>
       )}
@@ -30,7 +31,7 @@ export default async function NotificheMagazzinierePage() {
             {items.map(item => (
               <Link key={item.id} href={item.href}
                 className={`flex items-center gap-3 p-4 hover:bg-gray-50 ${item.urgente ? 'bg-orange-50 border-l-4 border-l-orange-400' : ''}`}>
-                <span className="text-xl shrink-0">📦</span>
+                <Image src="/immagini/icona-materiale.png" width={20} height={20} alt="" className="shrink-0 opacity-80" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{item.titolo}</p>
                   <p className="text-xs text-gray-500 truncate">{item.sottotitolo}</p>

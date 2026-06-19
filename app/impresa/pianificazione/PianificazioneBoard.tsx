@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   DndContext,
@@ -181,7 +182,7 @@ function DropCell({
           </div>
           {p.lavoroDaFare && !p.sostituito && (
             <p className="text-[9px] text-gray-500 truncate mt-0.5 px-0.5" title={p.lavoroDaFare}>
-              📋 {p.lavoroDaFare}
+              {p.lavoroDaFare}
             </p>
           )}
           {sostituendoId === p.id && (

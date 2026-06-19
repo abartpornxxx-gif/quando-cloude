@@ -298,7 +298,8 @@ export default function FlussoGiornata({
           href={`/operaio/giornata/${giornataId}/rapportino`}
           className="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 rounded-2xl text-lg text-center shadow-lg shadow-green-200 transition-all active:scale-95"
         >
-          📋 Compila rapportino (obbligatorio)
+          <Image src="/immagini/icona-rapportino.png" width={20} height={20} alt="" className="brightness-0 invert shrink-0" />
+          Compila rapportino (obbligatorio)
         </a>
       )}
 
@@ -340,7 +341,8 @@ export default function FlussoGiornata({
         <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
           <div className="bg-emerald-50 px-5 py-3 border-b border-emerald-100">
             <p className="text-sm font-bold text-emerald-800">
-              ✅ Promemoria di fine giornata
+              <Image src="/immagini/successo.png" width={14} height={14} alt="" className="inline-block mr-1 mb-0.5 opacity-80" />
+              Promemoria di fine giornata
             </p>
             <p className="text-xs text-emerald-600 mt-0.5">
               {Object.values(spunteLocali).filter(Boolean).length}/{suggerimenti.length} completati
@@ -386,7 +388,7 @@ export default function FlussoGiornata({
         href={`/operaio/giornata/${giornataId}/chat`}
         className="flex items-center gap-3 w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-semibold text-gray-700 hover:border-gray-300 transition-colors shadow-sm"
       >
-        <span className="text-base">💬</span>
+        <Image src="/immagini/icona-chat.png" width={18} height={18} alt="" className="shrink-0 opacity-70" />
         <span className="flex-1">Chat con magazziniere / impresa</span>
         <span className="text-gray-300">›</span>
       </a>

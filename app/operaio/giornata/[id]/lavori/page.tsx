@@ -1,5 +1,6 @@
 import { requireOperaio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
 import { notFound, redirect } from 'next/navigation'
 import FlussoGiornata from './FlussoGiornata'
 
@@ -50,7 +51,10 @@ export default async function LavoriPage({ params }: Props) {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
         <h1 className="text-lg font-bold flex-1">{giornata.commessa.nome}</h1>
-        <a href={`/operaio/giornata/${id}/chat`} className="text-blue-600 text-sm">💬 Chat</a>
+        <a href={`/operaio/giornata/${id}/chat`} className="text-blue-600 text-sm flex items-center gap-1">
+          <Image src="/immagini/icona-chat.png" width={14} height={14} alt="" className="opacity-70" />
+          Chat
+        </a>
       </div>
       <FlussoGiornata
         giornataId={id}

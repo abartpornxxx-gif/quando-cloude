@@ -1,5 +1,6 @@
 import { requireCliente } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
 import Link from 'next/link'
 import { formatData, formatEuro } from '@/lib/format'
 
@@ -41,7 +42,7 @@ export default async function ClienteDocumentiPage() {
 
       {!haDocumenti && (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">📄</div>
+          <Image src="/immagini/vuoto-documenti.png" width={80} height={80} alt="" className="mx-auto mb-4 opacity-70" />
           <p className="text-gray-400 text-sm">Nessun documento disponibile ancora.</p>
         </div>
       )}
@@ -58,7 +59,7 @@ export default async function ClienteDocumentiPage() {
                 className="flex items-center justify-between p-4 hover:bg-gray-50"
               >
                 <div className="flex items-center gap-3">
-                  <div className="text-2xl">🧾</div>
+                  <Image src="/immagini/icona-finanza.png" width={28} height={28} alt="" className="opacity-80" />
                   <div>
                     <p className="font-semibold text-sm">
                       Fattura n. {f.numero}/{f.anno}
@@ -92,7 +93,7 @@ export default async function ClienteDocumentiPage() {
                 className="flex items-center justify-between p-4 hover:bg-gray-50"
               >
                 <div className="flex items-center gap-3">
-                  <div className="text-2xl">📋</div>
+                  <Image src="/immagini/icona-rapportino.png" width={28} height={28} alt="" className="opacity-80" />
                   <div>
                     <p className="font-semibold text-sm">{d.tipoImpianto}</p>
                     <p className="text-xs text-gray-400">

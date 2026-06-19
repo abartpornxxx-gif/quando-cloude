@@ -1,5 +1,6 @@
 import { requireMagazziniere } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
 import { formatData } from '@/lib/format'
 import Link from 'next/link'
 
@@ -45,6 +46,7 @@ export default async function MagazzinoPage() {
 
       {righe.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
+          <Image src="/immagini/icona-magazzino.png" width={64} height={64} alt="" className="mx-auto mb-3 opacity-60" />
           <p className="text-gray-400 text-sm">Nessun movimento registrato ancora.</p>
         </div>
       ) : (

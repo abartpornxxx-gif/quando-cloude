@@ -52,7 +52,7 @@ export default async function OrdiniPage() {
 
       {ordini.length === 0 ? (
         <EmptyState
-          icon="📦"
+          icon="/immagini/icona-materiale.png"
           title="Nessun ordine"
           description="Crea il primo ordine a un fornitore di materiali."
           action={

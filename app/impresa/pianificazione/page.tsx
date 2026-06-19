@@ -1,5 +1,6 @@
 import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
 import { PianificazioneBoard } from './PianificazioneBoard'
 
 const GIORNI_ITA = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
@@ -78,7 +79,8 @@ export default async function PianificazionePage({
           href="/impresa/pianificazione/domani"
           className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
         >
-          📅 Pianifica domani
+          <Image src="/immagini/icona-calendario.png" width={14} height={14} alt="" className="brightness-0 invert shrink-0" />
+          Pianifica domani
         </a>
       </div>
       <PianificazioneBoard

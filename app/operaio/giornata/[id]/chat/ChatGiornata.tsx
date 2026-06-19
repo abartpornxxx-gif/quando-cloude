@@ -109,7 +109,10 @@ export default function ChatGiornata({ giornataId, messaggi: messaggiIniziali }:
       {/* Form richiesta materiale */}
       {mostraRichiesta && (
         <div className="bg-yellow-50 border-t border-yellow-200 p-4 space-y-2">
-          <p className="text-sm font-semibold text-yellow-800">📦 Richiedi materiale al magazzino</p>
+          <p className="text-sm font-semibold text-yellow-800 flex items-center gap-1.5">
+            <Image src="/immagini/icona-materiale.png" width={15} height={15} alt="" className="shrink-0 opacity-80" />
+            Richiedi materiale al magazzino
+          </p>
           <textarea
             value={descRichiesta}
             onChange={e => setDescRichiesta(e.target.value)}
@@ -147,7 +150,7 @@ export default function ChatGiornata({ giornataId, messaggi: messaggiIniziali }:
           className="p-2 rounded-lg border text-sm"
           title="Richiedi materiale"
         >
-          📦
+          <Image src="/immagini/icona-materiale.png" width={18} height={18} alt="Richiedi materiale" className="opacity-80" />
         </button>
         <textarea
           value={testo}

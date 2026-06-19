@@ -20,9 +20,9 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
   }
 
   const NAV_ITEMS = [
-    { label: 'Dashboard', href: '/magazziniere/dashboard' },
-    { label: 'Richieste', href: '/magazziniere/richieste' },
-    { label: 'Giacenza', href: '/magazziniere/magazzino' },
+    { label: 'Dashboard', href: '/magazziniere/dashboard', icon: '/immagini/icona-dashboard.png' },
+    { label: 'Richieste', href: '/magazziniere/richieste', icon: '/immagini/icona-materiale.png' },
+    { label: 'Giacenza', href: '/magazziniere/magazzino', icon: '/immagini/icona-magazzino.png' },
   ]
 
   return (
@@ -48,7 +48,8 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
                     href={item.href}
                     className="rounded-lg px-3 py-1.5 text-sm font-medium text-amber-100 hover:bg-amber-700 hover:text-white"
                   >
-                    {item.label}
+                    <Image src={item.icon} width={14} height={14} alt="" className="brightness-0 invert opacity-80" />
+                  {item.label}
                   </a>
                 ))}
               </nav>

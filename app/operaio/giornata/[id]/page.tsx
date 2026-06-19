@@ -1,5 +1,6 @@
 import { requireOperaio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatData, formatEuro } from '@/lib/format'
@@ -40,8 +41,12 @@ export default async function GiornataDettaglioPage({ params }: { params: Promis
         {g.mezzo && <Row label="Mezzo" value={`${g.mezzo.nome}${g.mezzo.targa ? ` (${g.mezzo.targa})` : ''}`} />}
         {g.lavoroSvolto && <Row label="Lavoro svolto" value={g.lavoroSvolto} />}
         {g.note && <Row label="Note" value={g.note} />}
-        <Row label="Ore ordinarie" value={`${oreOrdinarie} h`} />
-        {oreStraordinarie > 0 && <Row label="Ore straordinarie" value={`${oreStraordinarie} h`} />}
+        <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
+          <Image src="/immagini/icona-tempo.png" width={13} height={13} alt="" className="opacity-60 shrink-0" />
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ore registrate</span>
+        </div>
+        <Row label="Ordinarie" value={`${oreOrdinarie} h`} />
+        {oreStraordinarie > 0 && <Row label="Straordinarie" value={`${oreStraordinarie} h`} />}
       </div>
 
       {g.materiali.length > 0 && (

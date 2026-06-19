@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/format'
 import { salvaCommessa, assegnaOperaio, rimuoviAssegnazione } from '../actions'
@@ -118,7 +119,7 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
         className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group"
       >
         <div className="flex items-center gap-3">
-          <span className="text-xl">📦</span>
+          <Image src="/immagini/icona-materiale.png" width={22} height={22} alt="" className="shrink-0 opacity-80" />
           <div>
             <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">
               Materiali &amp; Report

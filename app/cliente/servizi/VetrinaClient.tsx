@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Image from 'next/image'
 import { formatEuro } from '@/lib/format'
 import { inviaRichiesta } from './actions'
 
@@ -58,7 +59,7 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
   if (offerte.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-violet-200 bg-white p-12 text-center">
-        <p className="text-4xl mb-3">🔌</p>
+        <Image src="/immagini/icona-offerte.png" width={72} height={72} alt="" className="mx-auto mb-3 opacity-70" />
         <p className="text-gray-600 font-medium">Nessun servizio disponibile al momento</p>
         <p className="text-sm text-gray-400 mt-1">Torna presto, il catalogo viene aggiornato periodicamente</p>
       </div>
@@ -76,7 +77,7 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
                 <img src={o.fotoUrl} alt={o.titolo} className="h-48 w-full object-cover" />
               ) : (
                 <div className="h-48 bg-gradient-to-br from-violet-50 to-violet-100 flex items-center justify-center">
-                  <span className="text-5xl">🔌</span>
+                  <Image src="/immagini/icona-offerte.png" width={72} height={72} alt="" className="opacity-60" />
                 </div>
               )}
               <div className="p-4 flex flex-col flex-1 space-y-2">

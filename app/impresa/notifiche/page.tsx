@@ -14,12 +14,19 @@ import { EmptyState } from '@/components/ui/EmptyState'
 // Prima di attivare tracciamento posizione: accordo sindacale o autorizzazione ispettorato + informativa GDPR.
 
 const TIPO_ICON: Record<string, string> = {
-  rapportino: '📋',
-  fattura:    '💰',
-  offerta:    '🎁',
-  materiale:  '📦',
+  rapportino: '/immagini/icona-rapportino.png',
+  fattura:    '/immagini/icona-finanza.png',
+  offerta:    '/immagini/icona-offerte.png',
+  materiale:  '/immagini/icona-materiale.png',
   mezzo:      '🚐',
-  chat:       '💬',
+  chat:       '/immagini/icona-chat.png',
+}
+
+function NotificaIcon({ tipo }: { tipo: string }) {
+  const src = TIPO_ICON[tipo]
+  if (!src) return <Image src="/immagini/icona-notifiche.png" width={20} height={20} alt="" className="shrink-0 opacity-70" />
+  if (src.startsWith('/')) return <Image src={src} width={20} height={20} alt="" className="shrink-0 opacity-80" />
+  return <span className="text-xl shrink-0">{src}</span>
 }
 
 const FASE_LABEL: Record<string, string> = {
@@ -100,7 +107,8 @@ export default async function NotificheImpresaPage() {
       {messaggiRecenti.length > 0 && (
         <div>
           <h2 className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">
-            💬 Messaggi recenti ({messaggiRecenti.length})
+            <Image src="/immagini/icona-chat.png" width={13} height={13} alt="" className="inline-block mr-1 mb-0.5 opacity-80" />
+            Messaggi recenti ({messaggiRecenti.length})
           </h2>
           <div className="rounded-2xl border border-blue-200 bg-white shadow-sm divide-y divide-gray-100">
             {messaggiRecenti.map(m => (
@@ -143,7 +151,7 @@ export default async function NotificheImpresaPage() {
             {urgenti.map(item => (
               <Link key={`${item.tipo}-${item.id}`} href={item.href}
                 className="flex items-center gap-3 p-4 hover:bg-red-50 transition-colors">
-                <span className="text-xl shrink-0">{TIPO_ICON[item.tipo] ?? '🔔'}</span>
+                <NotificaIcon tipo={item.tipo} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{item.titolo}</p>
                   {item.sottotitolo && <p className="text-xs text-gray-500 truncate">{item.sottotitolo}</p>}
@@ -166,7 +174,7 @@ export default async function NotificheImpresaPage() {
             {normali.map(item => (
               <Link key={`${item.tipo}-${item.id}`} href={item.href}
                 className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
-                <span className="text-xl shrink-0">{TIPO_ICON[item.tipo] ?? '🔔'}</span>
+                <NotificaIcon tipo={item.tipo} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{item.titolo}</p>
                   {item.sottotitolo && <p className="text-xs text-gray-500 truncate">{item.sottotitolo}</p>}
@@ -186,7 +194,8 @@ export default async function NotificheImpresaPage() {
               (giornata aperta nel DB). NON attivare geolocalizzazione senza accordo sindacale
               o autorizzazione ispettorato del lavoro + informativa GDPR agli operai. */}
           <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-            🏗 Cantieri attivi oggi ({giornateAttive.length})
+            <Image src="/immagini/icona-presenza.png" width={13} height={13} alt="" className="inline-block mr-1 mb-0.5 opacity-80" />
+            Cantieri attivi oggi ({giornateAttive.length})
           </h2>
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm divide-y divide-gray-100">
             {giornateAttive.map(g => (
@@ -215,7 +224,10 @@ export default async function NotificheImpresaPage() {
       )}
 
       <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
-        <p className="font-semibold mb-1">📬 Notifiche push e email</p>
+        <p className="font-semibold mb-1 flex items-center gap-1.5">
+          <Image src="/immagini/icona-notifiche.png" width={14} height={14} alt="" className="opacity-80" />
+          Notifiche push e email
+        </p>
         <p className="text-xs">Configura VAPID e Resend in <code className="bg-blue-100 px-1 rounded">.env.local</code> per ricevere notifiche anche fuori dall&apos;app.
         {' '}<Link href="/impresa/configurazione" className="underline">Vai alla configurazione →</Link></p>
       </div>

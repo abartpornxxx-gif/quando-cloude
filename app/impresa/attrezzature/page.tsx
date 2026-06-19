@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
 import { eliminaAttrezzatura } from './actions'
@@ -29,6 +30,7 @@ export default async function AttrezzaturePage() {
 
       {items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center">
+          <Image src="/immagini/icona-attrezzatura.png" width={72} height={72} alt="" className="mx-auto mb-3 opacity-60" />
           <p className="text-gray-500">Nessuna attrezzatura registrata.</p>
         </div>
       ) : (

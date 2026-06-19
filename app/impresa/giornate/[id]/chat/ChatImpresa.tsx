@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
+import Image from 'next/image'
 import { inviaMsgImpresa, getMessaggiImpresa } from './actions'
 
 type Messaggio = {
@@ -103,7 +104,7 @@ export default function ChatImpresa({ giornataId, messaggi: messaggiIniziali }: 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 bg-gray-50">
         {messaggi.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <p className="text-4xl mb-2">💬</p>
+            <Image src="/immagini/icona-chat.png" width={56} height={56} alt="" className="mx-auto mb-2 opacity-60" />
             <p className="text-sm text-gray-500 font-medium">Nessun messaggio</p>
             <p className="text-xs text-gray-400 mt-1">Scrivi il primo messaggio all&apos;operaio</p>
           </div>

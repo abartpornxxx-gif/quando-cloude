@@ -25,7 +25,7 @@ export default async function CommesseArchiviateePage() {
 
       {commesse.length === 0 ? (
         <EmptyState
-          icon="📦"
+          icon="/immagini/vuoto-cantieri.png"
           title="Nessuna commessa archiviata"
           description="Le commesse archiviate appaiono qui. Puoi archiviarle dalla lista principale."
           action={

@@ -1,6 +1,7 @@
 import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { formatData, formatEuro } from '@/lib/format'
 import { segnaVista, segnaChiusa, trasformaInPreventivo } from '../actions'
@@ -100,7 +101,8 @@ export default async function RichiestaDettaglioPage({ params }: Props) {
         {puoCrearePreventivo && (
           <form action={trasformaInPreventivo.bind(null, r.id)}>
             <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-              📋 Crea preventivo
+              <Image src="/immagini/icona-rapportino.png" width={14} height={14} alt="" className="brightness-0 invert shrink-0" />
+              Crea preventivo
             </button>
           </form>
         )}
