@@ -4,6 +4,15 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/format'
 import { StatCard } from '@/components/ui/StatCard'
+import {
+  Building2,
+  ClipboardList,
+  CalendarClock,
+  Boxes,
+  AlertTriangle,
+  MessageSquare,
+  Bell,
+} from 'lucide-react'
 
 // ─── Grafici SVG (Server Component, nessuna libreria) ─────────────────────────
 
@@ -158,14 +167,14 @@ export default async function ImpresaDashboardPage() {
           {rapportiniMancanti > 0 && (
             <Link href="/impresa/giornate"
               className="flex items-center gap-1.5 rounded-xl bg-red-500/20 border border-red-500/40 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30">
-              <Image src="/immagini/icona-avviso.png" width={13} height={13} alt="" className="shrink-0" />
+              <AlertTriangle size={13} className="shrink-0" />
               {rapportiniMancanti} rapportini mancanti
             </Link>
           )}
           {richiesteNuove > 0 && (
             <Link href="/impresa/richieste-offerte"
               className="flex items-center gap-1.5 rounded-xl bg-violet-500/20 border border-violet-500/40 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:bg-violet-500/30">
-              <Image src="/immagini/icona-richieste.png" width={13} height={13} alt="" className="shrink-0" />
+              <MessageSquare size={13} className="shrink-0" />
               {richiesteNuove} nuove richieste
             </Link>
           )}
@@ -182,7 +191,7 @@ export default async function ImpresaDashboardPage() {
             sub={`su ${commesseTotali} totali`}
             href="/impresa/commesse"
             variant="info"
-            icon="/immagini/icona-cantieri.png"
+            icon={Building2}
           />
           <StatCard
             label="Rapportini"
@@ -190,7 +199,7 @@ export default async function ImpresaDashboardPage() {
             sub={rapportiniMancanti > 0 ? 'Mancanti — da gestire' : 'Tutto in regola'}
             href="/impresa/rapportini"
             variant={rapportiniMancanti > 0 ? 'danger' : 'success'}
-            icon="/immagini/icona-rapportino.png"
+            icon={ClipboardList}
           />
           <StatCard
             label="Scadenze 30g"
@@ -198,7 +207,7 @@ export default async function ImpresaDashboardPage() {
             sub={scadenzeVicine > 0 ? 'Fatture in scadenza' : 'Nessuna scadenza'}
             href="/impresa/scadenzario"
             variant={scadenzeVicine > 0 ? 'warning' : 'default'}
-            icon="/immagini/icona-calendario.png"
+            icon={CalendarClock}
           />
           <StatCard
             label="Ordini aperti"
@@ -206,7 +215,7 @@ export default async function ImpresaDashboardPage() {
             sub="Materiale da fornitori"
             href="/impresa/ordini"
             variant={ordiniAperti > 0 ? 'info' : 'default'}
-            icon="/immagini/icona-materiale.png"
+            icon={Boxes}
           />
         </div>
       </div>
@@ -379,7 +388,7 @@ export default async function ImpresaDashboardPage() {
           </Link>
           <Link href="/impresa/notifiche"
             className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
-            <Image src="/immagini/icona-notifiche.png" width={14} height={14} alt="" className="opacity-70" />
+            <Bell size={14} className="text-gray-500" />
             Notifiche
           </Link>
         </div>

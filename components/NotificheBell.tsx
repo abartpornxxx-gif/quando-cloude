@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import Image from 'next/image'
+import { Bell } from 'lucide-react'
 
 interface Props {
   count: number
@@ -17,7 +17,7 @@ export function NotificheBell({ count, href, colore = 'blue' }: Props) {
 
   return (
     <Link href={href} className={`relative flex h-8 w-8 items-center justify-center rounded-lg ${ringCls} transition-colors`} title="Notifiche">
-      <Image src="/immagini/icona-notifiche.png" width={20} height={20} alt="Notifiche" className="brightness-0 invert" />
+      <Bell size={18} className="text-white" />
       {count > 0 && (
         <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
           {count > 9 ? '9+' : count}

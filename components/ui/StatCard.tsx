@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import Image from 'next/image'
+import type { LucideIcon } from 'lucide-react'
 
 type Variant = 'default' | 'danger' | 'warning' | 'success' | 'info' | 'purple'
 
@@ -51,22 +51,31 @@ const ICON_BG: Record<Variant, string> = {
   purple:  'bg-violet-100',
 }
 
+const ICON_CLS: Record<Variant, string> = {
+  default: 'text-gray-500',
+  danger:  'text-red-500',
+  warning: 'text-amber-600',
+  success: 'text-emerald-600',
+  info:    'text-blue-600',
+  purple:  'text-violet-600',
+}
+
 interface StatCardProps {
   label: string
   value: string | number
   sub?: string
   href?: string
   variant?: Variant
-  icon?: string
+  icon?: LucideIcon
 }
 
-export function StatCard({ label, value, sub, href, variant = 'default', icon }: StatCardProps) {
+export function StatCard({ label, value, sub, href, variant = 'default', icon: Icon }: StatCardProps) {
   const cls = VARIANTS[variant]
   const inner = (
     <div className={`rounded-2xl border ${cls.card} p-5 shadow-sm hover:shadow-md transition-all group`}>
-      {icon && (
+      {Icon && (
         <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${ICON_BG[variant]}`}>
-          <Image src={icon} width={20} height={20} alt="" />
+          <Icon size={20} className={ICON_CLS[variant]} />
         </div>
       )}
       <p className={`text-[11px] font-bold uppercase tracking-wider ${cls.label}`}>{label}</p>

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
 import { listaNotificheMagazziniere } from '@/lib/notifiche'
+import { LayoutDashboard, Inbox, Warehouse, type LucideIcon } from 'lucide-react'
 
 export default async function MagazzinoLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -20,10 +21,10 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
     redirect('/login')
   }
 
-  const NAV_ITEMS = [
-    { label: 'Dashboard', href: '/magazziniere/dashboard', icon: '/immagini/icona-dashboard.png' },
-    { label: 'Richieste', href: '/magazziniere/richieste', icon: '/immagini/icona-materiale.png' },
-    { label: 'Giacenza', href: '/magazziniere/magazzino', icon: '/immagini/icona-magazzino.png' },
+  const NAV_ITEMS: { label: string; href: string; Icon: LucideIcon }[] = [
+    { label: 'Dashboard', href: '/magazziniere/dashboard', Icon: LayoutDashboard },
+    { label: 'Richieste', href: '/magazziniere/richieste', Icon: Inbox },
+    { label: 'Giacenza', href: '/magazziniere/magazzino', Icon: Warehouse },
   ]
 
   return (
@@ -47,10 +48,10 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
                   <a
                     key={item.href}
                     href={item.href}
-                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-amber-100 hover:bg-amber-700 hover:text-white"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-amber-100 hover:bg-amber-700 hover:text-white"
                   >
-                    <Image src={item.icon} width={14} height={14} alt="" className="brightness-0 invert opacity-80" />
-                  {item.label}
+                    <item.Icon size={14} className="opacity-80 shrink-0" />
+                    {item.label}
                   </a>
                 ))}
               </nav>

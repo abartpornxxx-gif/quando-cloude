@@ -1,19 +1,27 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import Image from 'next/image'
+import { HardHat, Calendar, CalendarDays, Bell, UserCircle, type LucideIcon } from 'lucide-react'
 
 interface Props {
   alertCount: number
 }
 
-const NAV = [
-  { href: '/operaio/dashboard', icon: '/immagini/icona-cantieri.png', label: 'Cantieri' },
-  { href: '/operaio/giornata/nuova', icon: null, label: 'Giornata', isNew: true },
-  { href: '/operaio/domani', icon: '/immagini/icona-calendario.png', label: 'Domani' },
-  { href: '/operaio/calendario', icon: '/immagini/icona-calendario.png', label: 'Storico' },
-  { href: '/operaio/notifiche', icon: '/immagini/icona-notifiche.png', label: 'Avvisi', isAlert: true },
-  { href: '/operaio/profilo', icon: '/immagini/icona-impostazioni.png', label: 'Profilo' },
+type NavItem = {
+  href: string
+  Icon: LucideIcon | null
+  label: string
+  isNew?: boolean
+  isAlert?: boolean
+}
+
+const NAV: NavItem[] = [
+  { href: '/operaio/dashboard', Icon: HardHat, label: 'Cantieri' },
+  { href: '/operaio/giornata/nuova', Icon: null, label: 'Giornata', isNew: true },
+  { href: '/operaio/domani', Icon: Calendar, label: 'Domani' },
+  { href: '/operaio/calendario', Icon: CalendarDays, label: 'Storico' },
+  { href: '/operaio/notifiche', Icon: Bell, label: 'Avvisi', isAlert: true },
+  { href: '/operaio/profilo', Icon: UserCircle, label: 'Profilo' },
 ]
 
 export function OperaioBottomNav({ alertCount }: Props) {
@@ -25,6 +33,7 @@ export function OperaioBottomNav({ alertCount }: Props) {
         {NAV.map(item => {
           const isActive = pathname === item.href || (item.href !== '/operaio/dashboard' && pathname.startsWith(item.href))
           const isGiornata = item.href === '/operaio/giornata/nuova'
+          const { Icon } = item
 
           return (
             <a
@@ -42,12 +51,7 @@ export function OperaioBottomNav({ alertCount }: Props) {
               ) : item.isAlert ? (
                 /* Avvisi con badge */
                 <div className={`relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${isActive ? 'bg-emerald-100' : 'bg-gray-100'}`}>
-                  <Image
-                    src={item.icon!}
-                    width={18} height={18}
-                    alt={item.label}
-                    className={isActive ? '' : 'opacity-60'}
-                  />
+                  {Icon && <Icon size={20} className={isActive ? 'text-emerald-700' : 'text-gray-500'} />}
                   {alertCount > 0 && (
                     <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
                       {alertCount > 9 ? '9+' : alertCount}
@@ -57,12 +61,7 @@ export function OperaioBottomNav({ alertCount }: Props) {
               ) : (
                 /* Icona normale con contenitore */
                 <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${isActive ? 'bg-emerald-100' : 'bg-gray-100'}`}>
-                  <Image
-                    src={item.icon!}
-                    width={18} height={18}
-                    alt={item.label}
-                    className={isActive ? '' : 'opacity-60'}
-                  />
+                  {Icon && <Icon size={20} className={isActive ? 'text-emerald-700' : 'text-gray-500'} />}
                 </div>
               )}
               <span className={isGiornata ? 'text-emerald-700 font-bold' : isActive ? 'text-emerald-700' : 'text-gray-500'}>

@@ -4,12 +4,33 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import {
+  HardHat,
+  Users,
+  Package,
+  Receipt,
+  Tag,
+  Settings,
+  LayoutDashboard,
+  type LucideIcon,
+} from 'lucide-react'
 
-const MACRO = [
+type MacroEntry = {
+  label: string
+  Icon: LucideIcon
+  iconBg: string
+  iconCls: string
+  dot: string
+  prefixes: string[]
+  items: { label: string; href: string; desc: string }[]
+}
+
+const MACRO: MacroEntry[] = [
   {
     label: 'Cantieri',
-    icon: '/immagini/icona-cantieri.png',
+    Icon: HardHat,
     iconBg: 'bg-amber-100',
+    iconCls: 'text-amber-600',
     dot: 'bg-amber-400',
     prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/giornate', '/impresa/pianificazione', '/impresa/calendario', '/impresa/checklist', '/impresa/assenze', '/impresa/tipi-lavoro', '/impresa/rapportini'],
     items: [
@@ -27,8 +48,9 @@ const MACRO = [
   },
   {
     label: 'Persone',
-    icon: '/immagini/icona-presenza.png',
+    Icon: Users,
     iconBg: 'bg-violet-100',
+    iconCls: 'text-violet-600',
     dot: 'bg-violet-400',
     prefixes: ['/impresa/clienti', '/impresa/operai', '/impresa/fornitori', '/impresa/magazzinieri'],
     items: [
@@ -40,8 +62,9 @@ const MACRO = [
   },
   {
     label: 'Magazzino',
-    icon: '/immagini/icona-magazzino.png',
+    Icon: Package,
     iconBg: 'bg-cyan-100',
+    iconCls: 'text-cyan-600',
     dot: 'bg-cyan-500',
     prefixes: ['/impresa/materiali', '/impresa/ordini', '/impresa/magazzino', '/impresa/mezzi', '/impresa/attrezzature'],
     items: [
@@ -54,8 +77,9 @@ const MACRO = [
   },
   {
     label: 'Finanza',
-    icon: '/immagini/icona-finanza.png',
+    Icon: Receipt,
     iconBg: 'bg-emerald-100',
+    iconCls: 'text-emerald-600',
     dot: 'bg-emerald-500',
     prefixes: ['/impresa/fatture', '/impresa/fatture-passive', '/impresa/scadenzario', '/impresa/dico'],
     items: [
@@ -67,8 +91,9 @@ const MACRO = [
   },
   {
     label: 'Offerte',
-    icon: '/immagini/icona-offerte.png',
+    Icon: Tag,
     iconBg: 'bg-purple-100',
+    iconCls: 'text-purple-600',
     dot: 'bg-purple-500',
     prefixes: ['/impresa/catalogo', '/impresa/richieste-offerte'],
     items: [
@@ -78,8 +103,9 @@ const MACRO = [
   },
   {
     label: 'Impostazioni',
-    icon: '/immagini/icona-impostazioni.png',
+    Icon: Settings,
     iconBg: 'bg-slate-100',
+    iconCls: 'text-slate-500',
     dot: 'bg-slate-400',
     prefixes: ['/impresa/configurazione'],
     items: [
@@ -109,13 +135,14 @@ export function ImpresaNav() {
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Image src="/immagini/icona-dashboard.png" width={13} height={13} alt="" className="brightness-0 invert opacity-70" />
+            <LayoutDashboard size={13} className={isDashboard ? 'text-blue-400' : 'text-slate-500'} />
             Dashboard
           </Link>
 
           {/* Macro-categorie con dropdown */}
           {MACRO.map(macro => {
             const isActive = macro.prefixes.some(p => pathname.startsWith(p))
+            const { Icon } = macro
             return (
               <div key={macro.label} className="group relative flex items-stretch">
                 <button
@@ -138,7 +165,7 @@ export function ImpresaNav() {
                     {/* Dropdown header */}
                     <div className={`flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 ${macro.iconBg}`}>
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/70">
-                        <Image src={macro.icon} width={15} height={15} alt="" />
+                        <Icon size={16} className={macro.iconCls} />
                       </div>
                       <span className="text-xs font-bold uppercase tracking-wider text-gray-600">{macro.label}</span>
                     </div>
@@ -171,14 +198,17 @@ export function ImpresaNav() {
           <div className="flex items-center gap-2">
             {(() => {
               const activeMacro = MACRO.find(m => m.prefixes.some(p => pathname.startsWith(p)))
-              if (activeMacro) return (
-                <>
-                  <div className={`flex h-6 w-6 items-center justify-center rounded-md ${activeMacro.iconBg}`}>
-                    <Image src={activeMacro.icon} width={13} height={13} alt="" />
-                  </div>
-                  <span className="text-sm text-slate-300 font-medium">{activeMacro.label}</span>
-                </>
-              )
+              if (activeMacro) {
+                const { Icon } = activeMacro
+                return (
+                  <>
+                    <div className={`flex h-6 w-6 items-center justify-center rounded-md ${activeMacro.iconBg}`}>
+                      <Icon size={13} className={activeMacro.iconCls} />
+                    </div>
+                    <span className="text-sm text-slate-300 font-medium">{activeMacro.label}</span>
+                  </>
+                )
+              }
               return <span className="text-sm text-slate-300 font-medium">Dashboard</span>
             })()}
           </div>
@@ -231,7 +261,7 @@ export function ImpresaNav() {
                   }`}
                 >
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 shrink-0">
-                    <Image src="/immagini/icona-dashboard.png" width={16} height={16} alt="" />
+                    <LayoutDashboard size={16} className="text-blue-600" />
                   </div>
                   Dashboard
                 </Link>
@@ -243,12 +273,13 @@ export function ImpresaNav() {
               {/* Categorie */}
               {MACRO.map(macro => {
                 const macroActive = macro.prefixes.some(p => pathname.startsWith(p))
+                const { Icon } = macro
                 return (
                   <div key={macro.label} className="px-3 mb-3">
                     {/* Category header */}
                     <div className="flex items-center gap-2 px-3 mb-1.5">
                       <div className={`flex h-7 w-7 items-center justify-center rounded-lg shrink-0 ${macro.iconBg}`}>
-                        <Image src={macro.icon} width={14} height={14} alt="" />
+                        <Icon size={14} className={macro.iconCls} />
                       </div>
                       <p className={`text-[11px] font-bold uppercase tracking-wider ${macroActive ? 'text-blue-600' : 'text-gray-400'}`}>
                         {macro.label}

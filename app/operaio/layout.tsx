@@ -6,6 +6,7 @@ import { NotificheBell } from '@/components/NotificheBell'
 import { listaNotificheOperaio } from '@/lib/notifiche'
 import { OperaioBottomNav } from '@/components/OperaioBottomNav'
 import Image from 'next/image'
+import { AlertTriangle } from 'lucide-react'
 
 export default async function OperaioLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -60,7 +61,7 @@ export default async function OperaioLayout({ children }: { children: React.Reac
                   href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`}
                   className="flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white"
                 >
-                  <Image src="/immagini/icona-avviso.png" width={12} height={12} alt="" className="brightness-0 invert" />
+                  <AlertTriangle size={12} className="text-white shrink-0" />
                   Rapportino
                 </a>
               )}
@@ -79,7 +80,7 @@ export default async function OperaioLayout({ children }: { children: React.Reac
       {rapportinoPendente && (
         <div className="bg-red-600 text-white px-4 py-2.5 text-center text-sm">
           <span className="font-semibold inline-flex items-center gap-1">
-            <Image src="/immagini/icona-avviso.png" width={14} height={14} alt="" className="brightness-0 invert" />
+            <AlertTriangle size={14} className="text-white shrink-0" />
             Rapportino da compilare:
           </span>
           {' '}
