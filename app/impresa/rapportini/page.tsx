@@ -79,7 +79,7 @@ export default async function RapportiniPage() {
                   return (
                     <Link
                       key={g.id}
-                      href={`/impresa/giornate/${g.id}`}
+                      href={`/impresa/giornate/${g.id}/chat`}
                       className="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors group"
                     >
                       {/* Data */}

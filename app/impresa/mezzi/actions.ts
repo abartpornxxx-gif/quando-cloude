@@ -35,16 +35,18 @@ export async function salvaMezzo(formData: FormData) {
 
 export async function eliminaMezzo(id: string) {
   await requireImpresa()
-  const [nGiornate, nPianificazioni] = await Promise.all([
+  const [nGiornate, nPianificazioni, nUsi] = await Promise.all([
     prisma.giornata.count({ where: { mezzoId: id } }),
     prisma.pianificazione.count({ where: { mezzoId: id } }),
+    prisma.attrezzaturaUso.count({ where: { mezzoId: id } }),
   ])
-  const totale = nGiornate + nPianificazioni
+  const totale = nGiornate + nPianificazioni + nUsi
   if (totale > 0) {
     const parti: string[] = []
     if (nGiornate > 0) parti.push(`${nGiornate} giornat${nGiornate === 1 ? 'a' : 'e'}`)
     if (nPianificazioni > 0) parti.push(`${nPianificazioni} pianificazion${nPianificazioni === 1 ? 'e' : 'i'}`)
-    throw new Error(`Impossibile eliminare il mezzo: è associato a ${parti.join(' e ')}.`)
+    if (nUsi > 0) parti.push(`${nUsi} uso attrezzatura`)
+    throw new Error(`Impossibile eliminare il mezzo: è associato a ${parti.join(', ')}.`)
   }
   await prisma.mezzo.delete({ where: { id } })
   revalidatePath('/impresa/mezzi')
