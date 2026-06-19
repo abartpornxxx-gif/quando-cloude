@@ -34,7 +34,7 @@ export default async function MaterialiPage() {
 
       {materiali.length === 0 ? (
         <EmptyState
-          icon="🔩"
+          icon="/immagini/icona-materiale.png"
           title="Nessun materiale"
           description="Aggiungi articoli al listino uno per uno o importali da un file CSV."
           action={

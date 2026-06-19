@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import type { UserRole } from '@/lib/types'
 
@@ -40,11 +41,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center px-4 py-12">
+    <div className="flex min-h-full flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
+
+        {/* Illustrazione */}
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/immagini/illustrazione-login.png"
+            width={220}
+            height={180}
+            alt="QUADRO"
+            className="select-none"
+            priority
+          />
+        </div>
+
+        {/* Logo + titolo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600">
-            <span className="text-lg font-bold text-white">Q</span>
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 shadow-md">
+            <Image src="/immagini/logo-quadro.png" width={36} height={36} alt="QUADRO" priority />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">QUADRO</h1>
           <p className="mt-1 text-sm text-gray-500">Accedi al tuo account</p>

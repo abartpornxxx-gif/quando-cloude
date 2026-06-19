@@ -30,7 +30,7 @@ export default async function ChecklistPage() {
 
       {suggerimenti.length === 0 ? (
         <EmptyState
-          icon="✅"
+          icon="/immagini/successo.png"
           title="Nessun promemoria configurato"
           description="Aggiungi promemoria che gli operai spuntano durante la giornata (es. 'Pulire il cantiere', 'Controllare gli attrezzi')."
           action={

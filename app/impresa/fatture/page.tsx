@@ -76,7 +76,7 @@ export default async function FattureAttivePage() {
 
       {fatture.length === 0 ? (
         <EmptyState
-          icon="🧾"
+          icon="/immagini/icona-finanza.png"
           title="Nessuna fattura"
           description="Emetti la prima fattura da una commessa o da questa schermata."
           action={

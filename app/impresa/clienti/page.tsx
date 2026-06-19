@@ -39,7 +39,7 @@ export default async function ClientiPage() {
 
       {clienti.length === 0 ? (
         <EmptyState
-          icon="👤"
+          icon="/immagini/icona-persone.png"
           title="Nessun cliente"
           description="Aggiungi il primo cliente per creare preventivi e commesse."
           action={

@@ -40,7 +40,7 @@ export default async function OperaiPage() {
 
       {operai.length === 0 ? (
         <EmptyState
-          icon="👷"
+          icon="/immagini/icona-persone.png"
           title="Nessun operaio"
           description="Aggiungi il primo membro del team per assegnarli ai cantieri."
           action={

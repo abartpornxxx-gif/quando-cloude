@@ -1,6 +1,7 @@
 import { requireOperaio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatData } from '@/lib/format'
 import { Badge } from '@/components/ui/Badge'
 
@@ -99,8 +100,8 @@ export default async function OperaioDashboardPage() {
             href="/operaio/giornata/nuova"
             className="flex items-center gap-4 rounded-2xl bg-emerald-600 px-5 py-5 text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98] transition-all"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500 text-2xl shrink-0">
-              ➕
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500 shrink-0">
+              <Image src="/immagini/icona-cantieri.png" width={32} height={32} alt="" className="brightness-0 invert" />
             </div>
             <div>
               <p className="font-bold text-lg leading-tight">Inizia giornata</p>
@@ -113,7 +114,7 @@ export default async function OperaioDashboardPage() {
       {/* Cantieri assegnati */}
       {commesseAperte.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
-          <p className="text-2xl mb-2">🏗️</p>
+          <Image src="/immagini/vuoto-cantieri.png" width={80} height={80} alt="" className="mx-auto mb-3 opacity-80" />
           <p className="text-sm font-semibold text-gray-700">Nessun cantiere assegnato</p>
           <p className="text-xs text-gray-400 mt-1">Chiedi alla tua impresa</p>
         </div>

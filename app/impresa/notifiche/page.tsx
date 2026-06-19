@@ -89,7 +89,7 @@ export default async function NotificheImpresaPage() {
 
       {items.length === 0 && messaggiRecenti.length === 0 && (
         <EmptyState
-          icon="✅"
+          icon="/immagini/successo.png"
           title="Tutto in ordine"
           description="Nessun elemento richiede attenzione in questo momento"
         />

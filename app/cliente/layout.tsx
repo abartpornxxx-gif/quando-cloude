@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
 import { alertCliente } from '@/lib/notifiche'
 
@@ -42,7 +43,9 @@ export default async function ClienteLayout({ children }: { children: React.Reac
           <div className="flex h-14 items-center justify-between gap-3">
             {/* Logo */}
             <Link href="/cliente/dashboard" className="flex items-center gap-2.5 shrink-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500 text-white text-sm font-bold select-none shadow-sm">Q</div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500 shadow-sm shrink-0">
+                <Image src="/immagini/logo-quadro.png" width={28} height={28} alt="QUADRO" className="rounded-lg" priority />
+              </div>
               <div className="flex items-baseline gap-2">
                 <span className="font-bold text-white tracking-tight">QUADRO</span>
                 <span className="hidden sm:block text-xs font-medium text-violet-300">Portale</span>

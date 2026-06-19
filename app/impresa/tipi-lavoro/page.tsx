@@ -38,7 +38,7 @@ export default async function TipiLavoroPage() {
 
       {tipi.length === 0 ? (
         <EmptyState
-          icon="📋"
+          icon="/immagini/vuoto-documenti.png"
           title="Nessun tipo di lavoro"
           description="Crea il primo tipo di lavoro per definire le checklist di adempimenti da applicare alle commesse."
           action={

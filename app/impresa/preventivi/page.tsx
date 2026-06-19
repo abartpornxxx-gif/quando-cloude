@@ -50,7 +50,7 @@ export default async function PreventiviPage() {
 
       {preventivi.length === 0 ? (
         <EmptyState
-          icon="📋"
+          icon="/immagini/vuoto-documenti.png"
           title="Nessun preventivo"
           description="Crea il primo preventivo per un cliente."
           action={

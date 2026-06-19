@@ -66,7 +66,7 @@ export default async function CommessePage() {
 
       {commesse.length === 0 ? (
         <EmptyState
-          icon="🏗️"
+          icon="/immagini/vuoto-cantieri.png"
           title="Nessuna commessa"
           description="Crea la prima commessa o trasforma un preventivo accettato."
           action={

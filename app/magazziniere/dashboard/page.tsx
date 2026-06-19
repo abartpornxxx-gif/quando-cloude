@@ -1,5 +1,6 @@
 import { requireMagazziniere } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
 import { StatCard } from '@/components/ui/StatCard'
 import { Badge } from '@/components/ui/Badge'
 
@@ -57,7 +58,7 @@ export default async function MagazziniereDashboard() {
 
         {recenti.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
-            <p className="text-2xl mb-2">✅</p>
+            <Image src="/immagini/successo.png" width={80} height={80} alt="" className="mx-auto mb-3 opacity-80" />
             <p className="text-sm font-semibold text-gray-700">Tutto evaso</p>
             <p className="text-xs text-gray-400 mt-1">Nessuna richiesta in attesa</p>
           </div>

@@ -1,6 +1,7 @@
 import { requireCliente } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatEuro, formatData } from '@/lib/format'
 import { StatCard } from '@/components/ui/StatCard'
 import { Badge } from '@/components/ui/Badge'
@@ -43,7 +44,7 @@ export default async function ClienteDashboardPage() {
   const MENU = [
     {
       href: '/cliente/lavori',
-      icon: '🏗️',
+      icon: '/immagini/icona-cantieri.png',
       titolo: 'I miei lavori',
       desc: commesseAperte.length > 0
         ? `${commesseAperte.length} cantiere${commesseAperte.length > 1 ? 'i' : ''} in corso`
@@ -61,7 +62,7 @@ export default async function ClienteDashboardPage() {
     },
     {
       href: '/cliente/documenti',
-      icon: '📄',
+      icon: '/immagini/icona-dico.png',
       titolo: 'Documenti',
       desc: 'Fatture e Dichiarazioni di Conformità',
       badge: null,
@@ -78,14 +79,23 @@ export default async function ClienteDashboardPage() {
   return (
     <div className="space-y-7">
       {/* Welcome */}
-      <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-violet-700 text-white px-6 py-6 shadow-lg shadow-violet-200">
-        <p className="text-violet-200 text-sm font-medium">Portale personale</p>
-        <h1 className="text-2xl font-bold mt-1">Ciao, {nome.split(' ')[0]}!</h1>
-        <p className="text-violet-200 text-sm mt-1">
-          {commesseAperte.length > 0
-            ? `Hai ${commesseAperte.length} cantiere${commesseAperte.length > 1 ? 'i' : ''} in corso`
-            : 'Benvenuto nel tuo portale QUADRO'}
-        </p>
+      <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-violet-700 text-white px-6 py-6 shadow-lg shadow-violet-200 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-violet-200 text-sm font-medium">Portale personale</p>
+          <h1 className="text-2xl font-bold mt-1">Ciao, {nome.split(' ')[0]}!</h1>
+          <p className="text-violet-200 text-sm mt-1">
+            {commesseAperte.length > 0
+              ? `Hai ${commesseAperte.length} cantiere${commesseAperte.length > 1 ? 'i' : ''} in corso`
+              : 'Benvenuto nel tuo portale QUADRO'}
+          </p>
+        </div>
+        <Image
+          src="/immagini/illustrazione-cliente.png"
+          width={100}
+          height={90}
+          alt=""
+          className="shrink-0 hidden sm:block opacity-90 select-none"
+        />
       </div>
 
       {/* KPI */}
@@ -121,7 +131,11 @@ export default async function ClienteDashboardPage() {
             href={item.href}
             className="group flex items-center gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:border-violet-200 hover:shadow-md transition-all"
           >
-            <span className="text-2xl shrink-0">{item.icon}</span>
+            {item.icon.startsWith('/') ? (
+              <Image src={item.icon} width={28} height={28} alt="" className="shrink-0 opacity-80" />
+            ) : (
+              <span className="text-2xl shrink-0">{item.icon}</span>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 group-hover:text-violet-700">{item.titolo}</p>
               <p className="text-xs text-gray-500 mt-0.5 truncate">{item.desc}</p>

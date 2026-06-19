@@ -98,7 +98,7 @@ export default async function PianificazioneDomaniPage() {
         </p>
         {rapportiniConPiano.length === 0 ? (
           <EmptyState
-            icon="📋"
+            icon="/immagini/vuoto-documenti.png"
             title="Nessun rapportino con piano per domani"
             description="Quando gli operai compilano la sezione 'domani' nel rapportino serale, le informazioni appaiono qui."
           />

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
 import { alertMagazziniere } from '@/lib/notifiche'
 
@@ -32,7 +33,9 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
             {/* Logo + nav */}
             <div className="flex items-center gap-4">
               <a href="/magazziniere/dashboard" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-600 font-bold text-sm select-none">Q</div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-600 shrink-0">
+                  <Image src="/immagini/logo-quadro.png" width={28} height={28} alt="QUADRO" className="rounded-lg" priority />
+                </div>
                 <div className="hidden sm:block">
                   <p className="font-bold text-sm leading-tight">QUADRO</p>
                   <p className="text-amber-200 text-xs leading-tight">Magazzino</p>

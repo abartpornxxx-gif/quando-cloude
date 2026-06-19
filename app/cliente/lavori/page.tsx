@@ -44,7 +44,7 @@ export default async function ClienteLavoriPage() {
 
       {commesse.length === 0 ? (
         <EmptyState
-          icon="🏗️"
+          icon="/immagini/vuoto-cantieri.png"
           title="Nessun cantiere"
           description="Non ci sono ancora lavori associati al tuo account. Contatta l'impresa per informazioni."
         />

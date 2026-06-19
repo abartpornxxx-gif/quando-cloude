@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { NotificheBell } from '@/components/NotificheBell'
 import { alertOperaio } from '@/lib/notifiche'
+import Image from 'next/image'
 
 export default async function OperaioLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -44,7 +45,9 @@ export default async function OperaioLayout({ children }: { children: React.Reac
         <div className="mx-auto max-w-2xl px-4">
           <div className="flex h-14 items-center justify-between">
             <a href="/operaio/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 font-bold text-sm select-none">Q</div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 shrink-0">
+                <Image src="/immagini/logo-quadro.png" width={28} height={28} alt="QUADRO" className="rounded-lg" priority />
+              </div>
               <div>
                 <p className="font-bold text-sm leading-tight">QUADRO</p>
                 <p className="text-emerald-300 text-xs leading-tight">Cantiere</p>
@@ -91,10 +94,10 @@ export default async function OperaioLayout({ children }: { children: React.Reac
       <nav className="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 safe-area-pb">
         <div className="mx-auto grid max-w-2xl grid-cols-5">
           {[
-            { href: '/operaio/dashboard', icon: '🏗️', label: 'Cantieri' },
+            { href: '/operaio/dashboard', icon: '/immagini/icona-cantieri.png', label: 'Cantieri' },
             { href: '/operaio/giornata/nuova', icon: '➕', label: 'Giornata', accent: true },
-            { href: '/operaio/domani', icon: '📅', label: 'Domani' },
-            { href: '/operaio/calendario', icon: '🗓️', label: 'Calendario' },
+            { href: '/operaio/domani', icon: '/immagini/icona-calendario.png', label: 'Domani' },
+            { href: '/operaio/calendario', icon: '/immagini/icona-calendario.png', label: 'Calendario' },
             { href: '/operaio/notifiche', icon: null, label: 'Avvisi', isAlert: true },
           ].map(item => (
             <a
@@ -107,14 +110,16 @@ export default async function OperaioLayout({ children }: { children: React.Reac
               }`}
             >
               {item.isAlert ? (
-                <span className="relative text-lg">
-                  🔔
+                <span className="relative">
+                  <Image src="/immagini/icona-notifiche.png" width={24} height={24} alt="Avvisi" className="opacity-70" />
                   {alertCount > 0 && (
                     <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
                       {alertCount > 9 ? '9+' : alertCount}
                     </span>
                   )}
                 </span>
+              ) : item.icon?.startsWith('/') ? (
+                <Image src={item.icon} width={24} height={24} alt={item.label} className="opacity-70" />
               ) : (
                 <span className="text-lg">{item.icon}</span>
               )}

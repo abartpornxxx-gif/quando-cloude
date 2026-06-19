@@ -4,6 +4,7 @@ import { ImpresaNav } from '@/components/ImpresaNav'
 import { NotificheBell } from '@/components/NotificheBell'
 import { alertImpresa } from '@/lib/notifiche'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default async function ImpresaLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -34,8 +35,8 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
           <div className="flex h-14 items-center justify-between gap-4">
             {/* Logo + brand */}
             <Link href="/impresa/dashboard" className="flex items-center gap-3 shrink-0 hover:opacity-80 transition-opacity">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white text-sm font-bold select-none shadow-sm">
-                Q
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 shadow-sm shrink-0">
+                <Image src="/immagini/logo-quadro.png" width={28} height={28} alt="QUADRO" className="rounded-lg" priority />
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-base font-bold text-white tracking-tight">QUADRO</span>
