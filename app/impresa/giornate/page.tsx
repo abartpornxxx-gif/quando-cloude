@@ -2,68 +2,131 @@ import { requireImpresa } from '@/lib/auth'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import GiornateMonitor from './GiornateMonitor'
+import StoricoCentroOperativo from './StoricoCentroOperativo'
 
-export default async function GiornateImpresaPage() {
+export default async function CentroOperativoPage() {
   await requireImpresa()
 
-  const [giornate, config] = await Promise.all([
-    prisma.giornata.findMany({
-      include: {
-        operaio: { select: { nome: true } },
-        commessa: { select: { nome: true } },
-        rapportino: true,
-        ore: true,
-        foto: { select: { url: true }, take: 1 },
-      },
-      orderBy: { data: 'desc' },
-      take: 100,
-    }),
-    prisma.configurazioneOrari.findFirst(),
-  ])
+  const oggi = new Date()
+  oggi.setHours(0, 0, 0, 0)
 
-  const cfg = config ?? { durataMattinaMinuti: 240, durataPausaMinuti: 60, durataPomeriggioMinuti: 240 }
+  const giornate = await prisma.giornata.findMany({
+    include: {
+      operaio: { select: { id: true, nome: true } },
+      commessa: { select: { id: true, nome: true, indirizzoCantiere: true } },
+      rapportino: {
+        select: {
+          lavoroEseguito: true,
+          cosaFareDomani: true,
+          noteGiornoSuccessivo: true,
+          lavoriExtra: true,
+          urgenzaDomani: true,
+        },
+      },
+      ore: true,
+      foto: { select: { url: true }, take: 1 },
+    },
+    orderBy: { data: 'desc' },
+    take: 150,
+  })
 
   // ORDINE 1 — Giornate attive (non ancora chiuse): countdown visibile SOLO all'impresa
-  const giornateAttive = giornate
-    .filter(g => g.stato === 'bozza' && g.fase !== 'completata')
-    .map(g => ({
-      id: g.id,
-      operaioNome: g.operaio.nome,
-      commessaNome: g.commessa.nome,
-      fase: g.fase,
-      inizioMattina: g.inizioMattina?.toISOString() ?? null,
-      fineMattina: g.fineMattina?.toISOString() ?? null,
-      inizioPomeriggio: g.inizioPomeriggio?.toISOString() ?? null,
-    }))
+  const giornateAttiveRaw = giornate.filter(g => g.stato === 'bozza' && g.fase !== 'completata')
+  const giornateAttiveIds = giornateAttiveRaw.map(g => g.id)
+  const commesseAttive = [...new Set(giornateAttiveRaw.map(g => g.commessaId))]
+
+  // Badge problema: messaggi con prefisso "⚠️ PROBLEMA:" nelle giornate attive oggi
+  const messaggiProblema = giornateAttiveIds.length > 0
+    ? await prisma.chatMessaggio.findMany({
+        where: {
+          giornataId: { in: giornateAttiveIds },
+          testo: { startsWith: '⚠️ PROBLEMA:' },
+          createdAt: { gte: oggi },
+        },
+        select: { giornataId: true },
+      })
+    : []
+
+  const giornateConProblema = new Set(messaggiProblema.map(m => m.giornataId))
+
+  // Badge urgenza: ultimo rapportino per commessa con urgenzaDomani > 3
+  const ultimiRapportini = commesseAttive.length > 0
+    ? await prisma.rapportino.findMany({
+        where: { giornata: { commessaId: { in: commesseAttive } } },
+        orderBy: { giornata: { data: 'desc' } },
+        select: {
+          urgenzaDomani: true,
+          giornata: { select: { commessaId: true } },
+        },
+      })
+    : []
+
+  const urgenzaPerCommessa = new Map<string, number>()
+  for (const r of ultimiRapportini) {
+    const cId = r.giornata.commessaId
+    if (!urgenzaPerCommessa.has(cId) && r.urgenzaDomani != null) {
+      urgenzaPerCommessa.set(cId, r.urgenzaDomani)
+    }
+  }
+
+  const giornateConUrgenza = new Set(
+    giornateAttiveRaw
+      .filter(g => (urgenzaPerCommessa.get(g.commessaId) ?? 0) > 3)
+      .map(g => g.id),
+  )
+
+  const giornateAttivoData = giornateAttiveRaw.map(g => ({
+    id: g.id,
+    operaioNome: g.operaio.nome,
+    commessaNome: g.commessa.nome,
+    commessaIndirizzo: g.commessa.indirizzoCantiere ?? null,
+    fase: g.fase,
+    inizioMattina: g.inizioMattina?.toISOString() ?? null,
+    fineMattina: g.fineMattina?.toISOString() ?? null,
+    inizioPomeriggio: g.inizioPomeriggio?.toISOString() ?? null,
+    hasProblema: giornateConProblema.has(g.id),
+    hasUrgenza: giornateConUrgenza.has(g.id),
+  }))
 
   // ORDINE 4 — Rapportini mancanti: giornate in fase 'fine' senza rapportino
   const rapportiniMancanti = giornate.filter(g => g.fase === 'fine' && !g.rapportino)
 
-  function totaleOre(ore: { quantita: number; tipo: string }[]) {
-    const ord = ore.filter(o => o.tipo === 'ordinaria').reduce((s, o) => s + o.quantita, 0)
-    const str = ore.filter(o => o.tipo === 'straordinaria').reduce((s, o) => s + o.quantita, 0)
-    return { ord, str }
-  }
+  // Storico giornate chiuse
+  const giornateChiuse = giornate
+    .filter(g => g.stato === 'inviata' || g.fase === 'completata')
+    .map(g => ({
+      id: g.id,
+      operaioId: g.operaioId,
+      commessaId: g.commessaId,
+      operaioNome: g.operaio.nome,
+      commessaNome: g.commessa.nome,
+      data: g.data.toISOString(),
+      hasRapportino: !!g.rapportino,
+      lavoroEseguito: g.rapportino?.lavoroEseguito ?? null,
+      cosaFareDomani: g.rapportino?.cosaFareDomani ?? null,
+      ore: g.ore.filter(o => o.tipo === 'ordinaria').reduce((s, o) => s + o.quantita, 0),
+      oreStr: g.ore.filter(o => o.tipo === 'straordinaria').reduce((s, o) => s + o.quantita, 0),
+      fotoUrl: g.foto[0]?.url ?? null,
+    }))
 
-  // Solo giornate chiuse nella lista storica
-  const giornateChiuse = giornate.filter(g => g.stato === 'inviata' || g.fase === 'completata')
+  // Operai e commesse unici per i filtri dello storico
+  const operaiUnici = [...new Map(giornateChiuse.map(g => [g.operaioId, g.operaioNome])).entries()]
+    .map(([id, nome]) => ({ id, nome }))
+    .sort((a, b) => a.nome.localeCompare(b.nome))
 
-  const perData = giornateChiuse.reduce((acc, g) => {
-    const k = new Date(g.data).toLocaleDateString('it-IT')
-    if (!acc[k]) acc[k] = []
-    acc[k].push(g)
-    return acc
-  }, {} as Record<string, typeof giornateChiuse>)
+  const commesseUniche = [...new Map(giornateChiuse.map(g => [g.commessaId, g.commessaNome])).entries()]
+    .map(([id, nome]) => ({ id, nome }))
+    .sort((a, b) => a.nome.localeCompare(b.nome))
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Giornate lavorative</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Centro Operativo</h1>
           <p className="mt-1.5 text-sm text-gray-500">
-            {giornateAttive.length > 0
-              ? `${giornateAttive.length} in corso · ${giornateChiuse.length} completate`
-              : `${giornateChiuse.length} giornate completate`}
+            {giornateAttiveRaw.length > 0
+              ? `${giornateAttiveRaw.length} operaio${giornateAttiveRaw.length > 1 ? 'i' : ''} in cantiere · ${giornateChiuse.length} giornate archiviate`
+              : `${giornateChiuse.length} giornate archiviate`}
           </p>
         </div>
       </div>
@@ -85,88 +148,27 @@ export default async function GiornateImpresaPage() {
         </div>
       )}
 
-      {/* ORDINE 1 — Monitor countdown giornate in corso (visibile solo impresa) */}
-      <GiornateMonitor giornate={giornateAttive} config={cfg} />
+      {/* SEZIONE ADESSO — polling ogni 30s in GiornateMonitor */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+          Adesso
+        </p>
+        <GiornateMonitor
+          giornate={giornateAttivoData}
+          config={{ durataMattinaMinuti: 240, durataPausaMinuti: 60, durataPomeriggioMinuti: 240 }}
+        />
+      </div>
 
-      {/* Storico giornate */}
+      {/* SEZIONE STORICO con filtri */}
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
           Storico giornate
         </p>
-
-        {Object.entries(perData).length === 0 && (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-10 text-center">
-            <p className="text-sm text-gray-400">Nessuna giornata completata ancora.</p>
-          </div>
-        )}
-
-        {Object.entries(perData).map(([data, gs]) => (
-          <div key={data} className="mb-5">
-            <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
-              <Image src="/immagini/icona-calendario.png" width={12} height={12} alt="" className="opacity-60" />
-              {data}
-            </p>
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden divide-y divide-gray-100">
-              {gs.map(g => {
-                const { ord, str } = totaleOre(g.ore)
-                return (
-                  <div key={g.id} className="p-4 sm:p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm text-gray-900">{g.operaio.nome}</p>
-                          {!g.rapportino && (
-                            <span className="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                              Rapportino mancante
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-0.5">{g.commessa.nome}</p>
-                        {g.rapportino && (
-                          <p className="text-xs text-gray-600 mt-2 line-clamp-2 bg-gray-50 rounded-lg px-3 py-2">
-                            {g.rapportino.lavoroEseguito}
-                          </p>
-                        )}
-                        {g.rapportino?.noteGiornoSuccessivo && (
-                          <p className="text-xs text-blue-600 mt-1.5">
-                            📝 Domani: {g.rapportino.noteGiornoSuccessivo}
-                          </p>
-                        )}
-                        {g.rapportino?.lavoriExtra && (
-                          <p className="text-xs text-violet-600 mt-1">
-                            ⚡ Extra: {g.rapportino.lavoriExtra}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right shrink-0 space-y-1.5">
-                        {ord > 0 && (
-                          <p className="text-xs font-medium text-gray-700">{ord}h ord.</p>
-                        )}
-                        {str > 0 && (
-                          <p className="text-xs font-medium text-orange-600">{str}h str.</p>
-                        )}
-                        {g.foto[0] && (
-                          <img
-                            src={g.foto[0].url}
-                            alt="foto"
-                            className="w-12 h-12 object-cover rounded-xl border border-gray-200 mt-1 ml-auto"
-                          />
-                        )}
-                        <a
-                          href={`/impresa/giornate/${g.id}/chat`}
-                          className="inline-block text-xs font-medium text-blue-600 hover:text-blue-800"
-                        >
-                          <Image src="/immagini/icona-chat.png" width={12} height={12} alt="" className="inline-block mr-0.5 opacity-70" />
-                          Chat
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        ))}
+        <StoricoCentroOperativo
+          giornate={giornateChiuse}
+          operai={operaiUnici}
+          commesse={commesseUniche}
+        />
       </div>
     </div>
   )

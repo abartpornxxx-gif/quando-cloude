@@ -13,6 +13,8 @@ type GiornataAttiva = {
   inizioMattina: string | null
   fineMattina: string | null
   inizioPomeriggio: string | null
+  hasProblema?: boolean
+  hasUrgenza?: boolean
 }
 
 type Config = {
@@ -86,33 +88,52 @@ export default function GiornateMonitor({
           : { label: g.fase, cls: 'bg-gray-100 text-gray-600' }
 
         return (
-          <div key={g.id} className="flex items-center gap-4 px-5 py-4">
-            <div className={`shrink-0 h-10 w-10 rounded-full ${avatarColor(g.id)} text-white text-sm font-bold flex items-center justify-center select-none`}>
-              {initials(g.operaioNome)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-semibold text-gray-900 text-sm">{g.operaioNome}</p>
-                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${faseBadge.cls}`}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                  {faseBadge.label}
-                </span>
+          <div key={g.id} className="px-5 py-4">
+            <div className="flex items-center gap-4">
+              <div className={`shrink-0 h-10 w-10 rounded-full ${avatarColor(g.id)} text-white text-sm font-bold flex items-center justify-center select-none`}>
+                {initials(g.operaioNome)}
               </div>
-              <p className="text-sm text-gray-600 mt-0.5 truncate">{g.commessaNome}</p>
-              {g.commessaIndirizzo && (
-                <p className="text-xs text-gray-400 truncate">{g.commessaIndirizzo}</p>
-              )}
-            </div>
-            <div className="shrink-0 text-right space-y-1.5">
-              {totaleMs > 60_000 && (
-                <p className="text-sm font-bold text-gray-800">{formatMs(totaleMs)}</p>
-              )}
-              <a
-                href={`/impresa/giornate/${g.id}/chat`}
-                className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
-              >
-                💬 Chat
-              </a>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-gray-900 text-sm">{g.operaioNome}</p>
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${faseBadge.cls}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                    {faseBadge.label}
+                  </span>
+                  {g.hasProblema && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 text-red-700 px-2 py-0.5 text-xs font-semibold">
+                      ⚠️ Problema segnalato
+                    </span>
+                  )}
+                  {g.hasUrgenza && !g.hasProblema && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-xs font-semibold">
+                      🔴 Urgenza alta
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 mt-0.5 truncate">{g.commessaNome}</p>
+                {g.commessaIndirizzo && (
+                  <p className="text-xs text-gray-400 truncate">{g.commessaIndirizzo}</p>
+                )}
+              </div>
+              <div className="shrink-0 text-right space-y-1.5">
+                {totaleMs > 60_000 && (
+                  <p className="text-sm font-bold text-gray-800">{formatMs(totaleMs)}</p>
+                )}
+                <div className="flex items-center gap-3 justify-end">
+                  <a
+                    href={`/impresa/giornate/${g.id}/chat`}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+                  >
+                    💬 Chat
+                  </a>
+                  {g.fase === 'fine' && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-xs font-semibold">
+                      📋 In compilazione
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )
