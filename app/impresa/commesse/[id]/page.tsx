@@ -1,18 +1,17 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import Link from 'next/link'
+import { requireImpresa } from '@/lib/auth'
 import { formatEuro } from '@/lib/format'
 import { salvaCommessa, assegnaOperaio, rimuoviAssegnazione } from '../actions'
-import { CommessaForm } from '../CommessaForm'
-import { DeleteButton } from '@/components/DeleteButton'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
-import { AdempimentiSection } from './AdempimentiSection'
+import { CommessaTabs } from './CommessaTabs'
 
 export default async function CommessaDettPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireImpresa()
   const { id } = await params
-  const [c, tuttiOperai, tipiLavoro] = await Promise.all([
+
+  const [c, tuttiOperai, tipiLavoro, clienti, giornate, fatture, dico, piano] = await Promise.all([
     prisma.commessa.findUnique({
       where: { id },
       include: {
@@ -23,17 +22,128 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
         adempimenti: { orderBy: [{ ordine: 'asc' }, { createdAt: 'asc' }] },
       },
     }),
-    prisma.operaio.findMany({ orderBy: { nome: 'asc' }, select: { id: true, nome: true, ruolo: true } }),
-    prisma.tipoLavoro.findMany({ where: { attivo: true }, orderBy: [{ ordine: 'asc' }, { nome: 'asc' }], select: { id: true, nome: true } }),
+    prisma.operaio.findMany({
+      orderBy: { nome: 'asc' },
+      select: { id: true, nome: true, ruolo: true },
+    }),
+    prisma.tipoLavoro.findMany({
+      where: { attivo: true },
+      orderBy: [{ ordine: 'asc' }, { nome: 'asc' }],
+      select: { id: true, nome: true },
+    }),
+    prisma.cliente.findMany({
+      orderBy: { nome: 'asc' },
+      select: { id: true, nome: true },
+    }),
+    prisma.giornata.findMany({
+      where: { commessaId: id },
+      select: {
+        id: true,
+        data: true,
+        operaio: { select: { nome: true } },
+        ore: { select: { tipo: true, quantita: true } },
+        foto: { select: { id: true } },
+        rapportino: { select: { lavoroEseguito: true } },
+      },
+      orderBy: { data: 'desc' },
+    }),
+    prisma.fatturaAttiva.findMany({
+      where: { commessaId: id },
+      select: {
+        id: true,
+        numero: true,
+        anno: true,
+        stato: true,
+        data: true,
+        righe: { select: { quantita: true, prezzoUnitario: true } },
+      },
+      orderBy: { data: 'desc' },
+    }),
+    prisma.dichiarazioneConformita.findMany({
+      where: { commessaId: id },
+      select: { id: true, tipoImpianto: true, data: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.pianificazione.findMany({
+      where: { commessaId: id },
+      select: {
+        id: true,
+        data: true,
+        operaio: { select: { nome: true } },
+        mezzo: { select: { nome: true } },
+        lavoroDaFare: true,
+        confermata: true,
+      },
+      orderBy: { data: 'desc' },
+    }),
   ])
+
   if (!c) notFound()
 
-  const clienti = await prisma.cliente.findMany({
-    orderBy: { nome: 'asc' },
-    select: { id: true, nome: true },
-  })
+  // KPI finanziari
+  const costiTotali = c.costiMateriali + c.costiManodopera + c.costiMezzi
+  const margineEuro = c.preventivato - costiTotali
+  const marginePct = c.preventivato > 0 ? Math.round((margineEuro / c.preventivato) * 100) : null
+
+  // Adempimenti counter
+  const adem = c.adempimenti
+  const ademFatte = adem.filter(a => a.fatto).length
+
+  // Operai: chi è già assegnato, chi è disponibile
   const assegnatiIds = new Set(c.operai.map(a => a.operaioId))
-  const disponibili = tuttiOperai.filter(o => !assegnatiIds.has(o.id))
+  const operaiAssegnati = c.operai.map(a => ({
+    operaioId: a.operaioId,
+    nome: a.operaio.nome,
+    ruolo: a.operaio.ruolo,
+  }))
+  const operaiDisponibili = tuttiOperai.filter(o => !assegnatiIds.has(o.id))
+
+  // Serializza dati per il componente client (Date → ISO string)
+  const giornateRows = giornate.map(g => ({
+    id: g.id,
+    data: g.data.toISOString(),
+    operaioNome: g.operaio.nome,
+    oreOrdinarie: g.ore.filter(o => o.tipo === 'ordinaria').reduce((s, o) => s + o.quantita, 0),
+    oreStr: g.ore.filter(o => o.tipo === 'straordinaria').reduce((s, o) => s + o.quantita, 0),
+    fotoCount: g.foto.length,
+    lavoroEseguito: g.rapportino?.lavoroEseguito ?? null,
+  }))
+
+  const fattureRows = fatture.map(f => ({
+    id: f.id,
+    numero: f.numero,
+    anno: f.anno,
+    stato: f.stato,
+    data: f.data.toISOString(),
+    totale: f.righe.reduce((s, r) => s + Math.round(r.quantita * r.prezzoUnitario), 0),
+  }))
+
+  const dicoRows = dico.map(d => ({
+    id: d.id,
+    tipoImpianto: d.tipoImpianto,
+    data: d.data.toISOString(),
+  }))
+
+  const pianoRows = piano.map(p => ({
+    id: p.id,
+    data: p.data.toISOString(),
+    operaioNome: p.operaio.nome,
+    mezzoNome: p.mezzo?.nome ?? null,
+    lavoroDaFare: p.lavoroDaFare,
+    confermata: p.confermata,
+  }))
+
+  const adempimentiRows = adem.map(a => ({
+    id: a.id,
+    testo: a.testo,
+    note: a.note,
+    collegamento: a.collegamento,
+    fatto: a.fatto,
+    fattoDa: a.fattoDa,
+    fattoAt: a.fattoAt?.toISOString() ?? null,
+    notaSpunta: a.notaSpunta,
+    modelloId: a.modelloId,
+  }))
 
   const defaultValues = {
     id: c.id,
@@ -50,19 +160,9 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
     fatturato: c.fatturato,
   }
 
-  async function aggiungiOperaio(fd: FormData) {
-    'use server'
-    const opId = fd.get('operaioId') as string
-    if (opId) await assegnaOperaio(id, opId)
-  }
-
-  const costiTotali = c.costiMateriali + c.costiManodopera + c.costiMezzi
-  const margineEuro = c.preventivato - costiTotali
-  const marginePct =
-    c.preventivato > 0 ? Math.round((margineEuro / c.preventivato) * 100) : null
-
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-5">
+      {/* Intestazione fissa — sempre visibile sopra i tab */}
       <PageHeader
         backHref="/impresa/commesse"
         backLabel="Commesse"
@@ -75,17 +175,17 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
         }
         action={
           c.preventivo ? (
-            <Link
+            <a
               href={`/impresa/preventivi/${c.preventivo.id}`}
               className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 shadow-sm"
             >
               ← Preventivo
-            </Link>
+            </a>
           ) : undefined
         }
       />
 
-      {/* Mini stats finanziari */}
+      {/* KPI finanziari — sempre visibili, riservati all'impresa */}
       {c.preventivato > 0 && (
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
@@ -100,94 +200,48 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Margine</p>
-            <p
-              className={`text-lg font-bold mt-1 ${
-                margineEuro > 0 ? 'text-emerald-600' : 'text-red-600'
-              }`}
-            >
+            <p className={`text-lg font-bold mt-1 ${margineEuro >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {marginePct !== null
-                ? `${margineEuro > 0 ? '+' : ''}${marginePct}%`
+                ? `${margineEuro >= 0 ? '+' : ''}${marginePct}%`
                 : formatEuro(margineEuro)}
             </p>
           </div>
         </div>
       )}
 
-      {/* Azioni rapide cantiere */}
-      <Link
-        href={`/impresa/commesse/${c.id}/materiali`}
-        className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group"
-      >
-        <div className="flex items-center gap-3">
-          <Image src="/immagini/icona-materiale.png" width={22} height={22} alt="" className="shrink-0 opacity-80" />
-          <div>
-            <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">
-              Materiali &amp; Report
-            </p>
-            <p className="text-xs text-gray-400">Movimenti, richieste, report giornate</p>
+      {/* Contatore adempimenti — se esistono */}
+      {adem.length > 0 && (
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className={`font-semibold ${ademFatte === adem.length ? 'text-emerald-600' : 'text-amber-600'}`}>
+            {ademFatte}/{adem.length}
+          </span>
+          <span>adempimenti completati</span>
+          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-24">
+            <div
+              className={`h-full rounded-full ${ademFatte === adem.length ? 'bg-emerald-500' : 'bg-amber-400'}`}
+              style={{ width: `${Math.round((ademFatte / adem.length) * 100)}%` }}
+            />
           </div>
         </div>
-        <span className="text-gray-300 group-hover:text-blue-400 text-lg">›</span>
-      </Link>
+      )}
 
-      {/* Adempimenti cantiere */}
-      <AdempimentiSection
+      {/* Hub a TAB */}
+      <CommessaTabs
         commessaId={c.id}
+        preventivoId={c.preventivo?.id ?? null}
+        formAction={salvaCommessa}
+        clienti={clienti}
+        tipiLavoro={tipiLavoro}
+        defaultValues={defaultValues}
         tipoLavoro={c.tipoLavoro}
-        adempimenti={c.adempimenti}
+        adempimenti={adempimentiRows}
+        giornate={giornateRows}
+        fatture={fattureRows}
+        dico={dicoRows}
+        piano={pianoRows}
+        operaiAssegnati={operaiAssegnati}
+        operaiDisponibili={operaiDisponibili}
       />
-
-      {/* Form modifica */}
-      <CommessaForm action={salvaCommessa} clienti={clienti} tipiLavoro={tipiLavoro} defaultValues={defaultValues} />
-
-      {/* Operai assegnati */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-gray-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-gray-800">Operai assegnati al cantiere</h2>
-        </div>
-        <div className="p-5 space-y-2">
-          {c.operai.length === 0 && (
-            <p className="text-sm text-gray-400 py-2">Nessun operaio assegnato ancora.</p>
-          )}
-          {c.operai.map(a => (
-            <div
-              key={a.operaioId}
-              className="flex items-center justify-between rounded-xl bg-gray-50 border border-gray-100 px-4 py-2.5"
-            >
-              <div>
-                <p className="text-sm font-medium text-gray-900">{a.operaio.nome}</p>
-                {a.operaio.ruolo && (
-                  <p className="text-xs text-gray-500">{a.operaio.ruolo}</p>
-                )}
-              </div>
-              <DeleteButton action={rimuoviAssegnazione.bind(null, c.id, a.operaioId)} label="Rimuovi" />
-            </div>
-          ))}
-
-          {disponibili.length > 0 && (
-            <form action={aggiungiOperaio} className="flex gap-2 pt-2">
-              <select
-                name="operaioId"
-                className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">— Aggiungi operaio —</option>
-                {disponibili.map(o => (
-                  <option key={o.id} value={o.id}>
-                    {o.nome}
-                    {o.ruolo ? ` (${o.ruolo})` : ''}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
-              >
-                Assegna
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
     </div>
   )
 }

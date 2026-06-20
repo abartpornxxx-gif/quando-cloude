@@ -15,7 +15,7 @@ type Adempimento = {
   collegamento: string | null
   fatto: boolean
   fattoDa: string | null
-  fattoAt: Date | null
+  fattoAt: string | null
   notaSpunta: string | null
   modelloId: string | null
 }
@@ -26,7 +26,7 @@ type Props = {
   adempimenti: Adempimento[]
 }
 
-function formatDate(d: Date | null) {
+function formatDate(d: string | null) {
   if (!d) return ''
   return new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
