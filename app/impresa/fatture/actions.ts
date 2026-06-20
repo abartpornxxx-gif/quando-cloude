@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { requireImpresa } from '@/lib/auth'
+import { requireImpresaOUfficio } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -16,7 +16,7 @@ export async function creaFatturaAttiva(input: {
   note?: string
   righe: Array<{ descrizione: string; quantita: number; prezzoUnitario: number }>
 }): Promise<string> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
 
   const fattura = await prisma.fatturaAttiva.create({
     data: {
@@ -48,7 +48,7 @@ export async function registraIncasso(
   dataIncasso: string,
   importoIncassato: number
 ): Promise<void> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
 
   const fattura = await prisma.fatturaAttiva.findUnique({
     where: { id: fatturaId },
@@ -79,7 +79,7 @@ export async function registraIncasso(
 }
 
 export async function segnaScaduta(fatturaId: string): Promise<void> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
   await prisma.fatturaAttiva.update({
     where: { id: fatturaId },
     data: { stato: 'scaduta' },
@@ -89,7 +89,7 @@ export async function segnaScaduta(fatturaId: string): Promise<void> {
 }
 
 export async function eliminaFatturaAttiva(fatturaId: string): Promise<void> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
 
   const fattura = await prisma.fatturaAttiva.findUnique({ where: { id: fatturaId } })
   if (!fattura) throw new Error('Fattura non trovata')

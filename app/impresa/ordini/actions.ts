@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { requireImpresa } from '@/lib/auth'
+import { requireImpresaOUfficio } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -13,7 +13,7 @@ export async function creaOrdine(input: {
   note?: string
   righe: Array<{ materialeId?: string; descrizione: string; quantita: number; prezzoUnitario: number }>
 }): Promise<string> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
 
   const ordine = await prisma.ordineFornitore.create({
     data: {
@@ -41,7 +41,7 @@ export async function avanzaStatoOrdine(
   ordineId: string,
   nuovoStato: 'ordinato' | 'consegnato' | 'usato'
 ): Promise<void> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
 
   const ordine = await prisma.ordineFornitore.findUnique({
     where: { id: ordineId },
@@ -96,7 +96,7 @@ export async function avanzaStatoOrdine(
 // ─── Elimina ordine (solo se in stato richiesto) ──────────────────────────────
 
 export async function eliminaOrdine(ordineId: string): Promise<void> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
 
   const ordine = await prisma.ordineFornitore.findUnique({ where: { id: ordineId } })
   if (!ordine) throw new Error('Ordine non trovato')
@@ -116,7 +116,7 @@ export async function registraReso(input: {
   commessaId?: string
   note?: string
 }): Promise<void> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
 
   await prisma.movimentoMagazzino.create({
     data: {

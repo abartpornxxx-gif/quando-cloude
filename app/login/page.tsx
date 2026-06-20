@@ -12,6 +12,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   operaio: '/operaio/dashboard',
   cliente: '/cliente/dashboard',
   magazziniere: '/magazziniere/dashboard',
+  ufficio: '/ufficio/dashboard',
 }
 
 export default function LoginPage() {

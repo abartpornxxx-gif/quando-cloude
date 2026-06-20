@@ -16,6 +16,7 @@ enum UserRole {
   operaio
   cliente
   magazziniere
+  ufficio
 }
 
 model Profile {
@@ -106,6 +107,17 @@ model Magazziniere {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("magazzinieri")
+}
+
+model CollaboratoreUfficio {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome      String
+  email     String?  @unique
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("collaboratori_ufficio")
 }
 
 enum StatoMezzo {

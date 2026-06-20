@@ -52,12 +52,13 @@ const MACRO: MacroEntry[] = [
     iconBg: 'bg-violet-100',
     iconCls: 'text-violet-600',
     dot: 'bg-violet-400',
-    prefixes: ['/impresa/clienti', '/impresa/operai', '/impresa/fornitori', '/impresa/magazzinieri'],
+    prefixes: ['/impresa/clienti', '/impresa/operai', '/impresa/fornitori', '/impresa/magazzinieri', '/impresa/collaboratori-ufficio'],
     items: [
       { label: 'Clienti', href: '/impresa/clienti', desc: 'Anagrafica' },
       { label: 'Operai', href: '/impresa/operai', desc: 'Squadre e ore' },
       { label: 'Magazzinieri', href: '/impresa/magazzinieri', desc: 'Gestione accessi' },
       { label: 'Fornitori', href: '/impresa/fornitori', desc: 'Anagrafica' },
+      { label: 'Collaboratori ufficio', href: '/impresa/collaboratori-ufficio', desc: 'Area amministrativa' },
     ],
   },
   {

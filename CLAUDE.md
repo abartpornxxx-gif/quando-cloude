@@ -61,6 +61,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 - Operaio → `emerald-900` (header) + `emerald-600` (CTA)
 - Magazziniere → `amber-800` (header) + `amber-600` (CTA)
 - Cliente → `violet-700` (header) + `violet-600` (CTA)
+- Ufficio → `teal-700` (header) + `teal-600` (CTA)
 
 **Card standard** — invariabile: `rounded-2xl border border-gray-200 bg-white shadow-sm`
 **KPI numeri** — usare sempre `<StatCard>` da `components/ui/StatCard.tsx`
@@ -120,7 +121,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Fase 12 completata. In attesa di validazione.**
+- Fase corrente: **Fase 12 completata. Ruolo "ufficio" aggiunto (in attesa di validazione).**
 
 ### Decisioni architetturali recenti
 - **Countdown**: visibile SOLO all'impresa (in `/impresa/giornate`). L'operaio vede solo stato generico e pulsante bloccato/attivo.

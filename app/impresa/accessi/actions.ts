@@ -20,7 +20,7 @@ export async function creaAccesso({
 }: {
   email: string
   password: string
-  ruolo: 'operaio' | 'magazziniere' | 'cliente'
+  ruolo: 'operaio' | 'magazziniere' | 'cliente' | 'ufficio'
   nome: string
   revalidate?: string
 }): Promise<{ success: true }> {

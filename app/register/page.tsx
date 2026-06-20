@@ -11,6 +11,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   operaio: 'Operaio (app cantiere)',
   cliente: 'Cliente finale',
   magazziniere: 'Magazziniere',
+  ufficio: 'Ufficio (collaboratore amministrativo)',
 }
 
 const ROLE_HOME: Record<UserRole, string> = {
@@ -18,6 +19,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   operaio: '/operaio/dashboard',
   cliente: '/cliente/dashboard',
   magazziniere: '/magazziniere/dashboard',
+  ufficio: '/ufficio/dashboard',
 }
 
 export default function RegisterPage() {

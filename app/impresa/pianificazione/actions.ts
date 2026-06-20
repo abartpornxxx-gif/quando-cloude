@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { requireImpresa } from '@/lib/auth'
+import { requireImpresaOUfficio } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 
 export async function creaPianificazione(input: {
@@ -11,7 +11,7 @@ export async function creaPianificazione(input: {
   mezzoId?: string
   note?: string
 }): Promise<{ id: string }> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
 
   const pian = await prisma.pianificazione.upsert({
     where: {
@@ -41,7 +41,7 @@ export async function creaPianificazione(input: {
 }
 
 export async function eliminaPianificazione(id: string): Promise<void> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
   const giornata = await prisma.giornata.findFirst({ where: { pianificazioneId: id }, select: { id: true } })
   if (giornata) {
     throw new Error('Impossibile eliminare la pianificazione: è già stata avviata una giornata di lavoro collegata.')
@@ -52,7 +52,7 @@ export async function eliminaPianificazione(id: string): Promise<void> {
 }
 
 export async function sostituisciOperaio(pianificazioneId: string, nuovoOperaioId: string): Promise<void> {
-  await requireImpresa()
+  await requireImpresaOUfficio()
 
   const originale = await prisma.pianificazione.findUnique({ where: { id: pianificazioneId } })
   if (!originale) throw new Error('Pianificazione non trovata')

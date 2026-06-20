@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { creaAccesso, reimpostaPassword } from '@/app/impresa/accessi/actions'
 
-type Ruolo = 'operaio' | 'magazziniere' | 'cliente'
+type Ruolo = 'operaio' | 'magazziniere' | 'cliente' | 'ufficio'
 
 interface Props {
   email: string | null
@@ -21,7 +21,7 @@ export function GestioneAccesso({ email, ruolo, nome, hasAccess, revalidate }: P
   const [messaggio, setMessaggio] = useState<Messaggio | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const ruoloLabel = ruolo === 'operaio' ? "l'operaio" : ruolo === 'magazziniere' ? 'il magazziniere' : 'il cliente'
+  const ruoloLabel = ruolo === 'operaio' ? "l'operaio" : ruolo === 'magazziniere' ? 'il magazziniere' : ruolo === 'ufficio' ? 'il collaboratore ufficio' : 'il cliente'
 
   function handleCrea(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
