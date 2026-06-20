@@ -10,9 +10,9 @@
 // NON rimuovere questo commento senza aver completato la verifica con il consulente del lavoro/legale.
 
 import { useState, useEffect, useTransition, useRef } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { avanzaFase, annullaGiornata, uploadFotoAvanzamento, toggleSpunta } from './actions'
+import { avanzaFase, terminaGiornata, annullaGiornata, uploadFotoAvanzamento, toggleSpunta, segnalaProblema } from './actions'
+import { inviaRapportino } from '../rapportino/actions'
 
 type Fase = 'inizio' | 'mattina' | 'pausa' | 'pomeriggio' | 'fine' | 'completata'
 
@@ -23,62 +23,99 @@ interface Suggerimento {
   completato: boolean
 }
 
+interface Attrezzatura {
+  id: string
+  nome: string
+}
+
 interface Props {
   giornataId: string
   fase: Fase
   inizioMattina: string | null
   fineMattina: string | null
   inizioPomeriggio: string | null
-  finePomeriggio: string | null
-  config: {
-    durataMattinaMinuti: number
-    durataPausaMinuti: number
-    durataPomeriggioMinuti: number
-  }
   commessa: { id: string; nome: string; indirizzoCantiere?: string | null }
   pianificazione: { lavoroDaFare: string | null; noteMateriale: string | null } | null
   foto: { id: string; url: string }[]
   suggerimenti: Suggerimento[]
+  attrezzature: Attrezzatura[]
 }
 
-function calcolaFineMs(inizio: string | null, durataMinuti: number): number | null {
-  if (!inizio) return null
-  return new Date(inizio).getTime() + durataMinuti * 60_000
+function formatMs(ms: number): string {
+  if (ms < 60_000) return '< 1m'
+  const h = Math.floor(ms / 3_600_000)
+  const m = Math.floor((ms % 3_600_000) / 60_000)
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
-const FASI_ORDINE: Fase[] = ['inizio', 'mattina', 'pausa', 'pomeriggio', 'fine', 'completata']
-const FASE_SHORT: Record<Fase, string> = {
-  inizio: 'Inizio',
-  mattina: 'Mattina',
-  pausa: 'Pausa',
-  pomeriggio: 'Pomeriggio',
-  fine: 'Fine',
-  completata: 'Chiusa',
+function calcElapsedMs(
+  inizioMattina: string | null,
+  fineMattina: string | null,
+  inizioPomeriggio: string | null,
+  fase: Fase
+): number {
+  const now = Date.now()
+  const mattinaMs = inizioMattina
+    ? (fineMattina
+      ? new Date(fineMattina).getTime() - new Date(inizioMattina).getTime()
+      : fase === 'mattina' ? now - new Date(inizioMattina).getTime() : 0)
+    : 0
+  const pomMs = inizioPomeriggio && fase === 'pomeriggio'
+    ? now - new Date(inizioPomeriggio).getTime()
+    : 0
+  return mattinaMs + pomMs
 }
 
-const FASE_BG: Record<Fase, string> = {
-  inizio:     'from-slate-700 to-slate-800',
-  mattina:    'from-emerald-500 to-emerald-600',
-  pausa:      'from-amber-500 to-amber-600',
-  pomeriggio: 'from-blue-500 to-blue-600',
-  fine:       'from-green-500 to-green-600',
-  completata: 'from-gray-500 to-gray-600',
+const STATO_CARD: Record<string, { grad: string; emoji: string; label: string }> = {
+  inizio:     { grad: 'from-slate-700 to-slate-800',     emoji: '🌄', label: 'Pronto a iniziare' },
+  mattina:    { grad: 'from-emerald-500 to-emerald-700', emoji: '🔨', label: 'In lavoro' },
+  pausa:      { grad: 'from-amber-500 to-amber-600',     emoji: '☕', label: 'Pausa' },
+  pomeriggio: { grad: 'from-emerald-500 to-emerald-700', emoji: '🔨', label: 'In lavoro' },
+  fine:       { grad: 'from-green-600 to-green-700',     emoji: '✅', label: 'Lavori completati' },
+  completata: { grad: 'from-gray-500 to-gray-600',       emoji: '✅', label: 'Giornata chiusa' },
 }
 
 export default function FlussoGiornata({
   giornataId, fase,
-  inizioMattina, fineMattina, inizioPomeriggio, finePomeriggio,
-  config, commessa, pianificazione, foto, suggerimenti,
+  inizioMattina, fineMattina, inizioPomeriggio,
+  commessa, pianificazione, foto, suggerimenti, attrezzature,
 }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [errore, setErrore] = useState('')
   const [uploading, setUploading] = useState(false)
-  const [pronta, setPronta] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [, setTick] = useState(0)
+
+  // Suggerimenti
+  const [suggerimentiAperti, setSuggerimentiAperti] = useState(fase === 'fine')
   const [spunteLocali, setSpunteLocali] = useState<Record<string, boolean>>(
     Object.fromEntries(suggerimenti.map(s => [s.id, s.completato]))
   )
+
+  // Segnala problema
+  const [mostraProblema, setMostraProblema] = useState(false)
+  const [problemaNote, setProblemaNote] = useState('')
+  const problemaFileRef = useRef<HTMLInputElement>(null)
+  const [problemaPending, startProblemaTransition] = useTransition()
+
+  // Rapportino inline
+  const [lavoroEseguito, setLavoroEseguito] = useState('')
+  const [oreOrdinarie, setOreOrdinarie] = useState('8')
+  const [cosaFareDomani, setCosaFareDomani] = useState('')
+  const [urgenzaDomani, setUrgenzaDomani] = useState(3)
+  const [attrRiconsegnate, setAttrRiconsegnate] = useState<string[]>(attrezzature.map(a => a.id))
+  const [rapportinoPending, startRapportinoTransition] = useTransition()
+  const [rapportinoErrore, setRapportinoErrore] = useState('')
+
+  // Timer aggiorna ogni 60s
+  useEffect(() => {
+    const t = setInterval(() => setTick(n => n + 1), 60_000)
+    return () => clearInterval(t)
+  }, [])
+
+  const elapsedMs = calcElapsedMs(inizioMattina, fineMattina, inizioPomeriggio, fase)
+  const card = STATO_CARD[fase] ?? STATO_CARD.inizio
 
   function spuntaSuggerimento(id: string) {
     const nuovoStato = !spunteLocali[id]
@@ -88,30 +125,23 @@ export default function FlussoGiornata({
     })
   }
 
-  const fineMattinaMs    = calcolaFineMs(inizioMattina,    config.durataMattinaMinuti)
-  const finePausaMs      = calcolaFineMs(fineMattina,      config.durataPausaMinuti)
-  const finePomeriggioMs = calcolaFineMs(inizioPomeriggio, config.durataPomeriggioMinuti)
-
-  // Ogni 15 s verifica se il tempo di fase è scaduto — sblocca il pulsante senza mostrare countdown
-  useEffect(() => {
-    function check() {
-      const now = Date.now()
-      if (fase === 'inizio')     { setPronta(true); return }
-      if (fase === 'mattina')    { setPronta(fineMattinaMs !== null && now >= fineMattinaMs); return }
-      if (fase === 'pausa')      { setPronta(finePausaMs !== null && now >= finePausaMs); return }
-      if (fase === 'pomeriggio') { setPronta(finePomeriggioMs !== null && now >= finePomeriggioMs); return }
-      setPronta(true)
-    }
-    check()
-    const t = setInterval(check, 15_000)
-    return () => clearInterval(t)
-  }, [fase, fineMattinaMs, finePausaMs, finePomeriggioMs])
-
-  function avanza() {
+  function eseguiAvanza() {
     setErrore('')
     startTransition(async () => {
       try {
         await avanzaFase(giornataId, fase)
+        router.refresh()
+      } catch (err: unknown) {
+        setErrore(err instanceof Error ? err.message : 'Errore')
+      }
+    })
+  }
+
+  function eseguiTermina() {
+    setErrore('')
+    startTransition(async () => {
+      try {
+        await terminaGiornata(giornataId)
         router.refresh()
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')
@@ -147,92 +177,77 @@ export default function FlussoGiornata({
     }
   }
 
-  const labelFase: Record<Fase, string> = {
-    inizio:     'Pronto a iniziare',
-    mattina:    'Sessione mattutina in corso',
-    pausa:      'Pausa pranzo',
-    pomeriggio: 'Sessione pomeridiana in corso',
-    fine:       'Lavori completati',
-    completata: 'Giornata chiusa',
-  }
-  const emojiFase: Record<Fase, string> = {
-    inizio: '🌄', mattina: '🌅', pausa: '☕', pomeriggio: '🌆', fine: '✅', completata: '✅',
-  }
-
-  const labelPulsante: Partial<Record<Fase, string>> = {
-    inizio:     '▶ Inizia sessione mattutina',
-    mattina:    '⏸ Vai in pausa pranzo',
-    pausa:      '▶ Riprendi lavoro pomeridiano',
-    pomeriggio: '🏁 Termina giornata',
-  }
-  const colorePulsante: Partial<Record<Fase, string>> = {
-    inizio:     'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200',
-    mattina:    'bg-amber-500 hover:bg-amber-600 shadow-amber-200',
-    pausa:      'bg-blue-600 hover:bg-blue-700 shadow-blue-200',
-    pomeriggio: 'bg-orange-500 hover:bg-orange-600 shadow-orange-200',
+  async function handleProblema(e: React.FormEvent) {
+    e.preventDefault()
+    if (!problemaNote.trim()) return
+    startProblemaTransition(async () => {
+      try {
+        // Upload foto problema se presente
+        const fotoFile = problemaFileRef.current?.files?.[0]
+        if (fotoFile) {
+          const fd = new FormData()
+          fd.append('foto', fotoFile)
+          await uploadFotoAvanzamento(giornataId, fd)
+          router.refresh()
+        }
+        await segnalaProblema(giornataId, problemaNote.trim())
+        setProblemaNote('')
+        setMostraProblema(false)
+        if (problemaFileRef.current) problemaFileRef.current.value = ''
+      } catch (err: unknown) {
+        setErrore(err instanceof Error ? err.message : 'Errore')
+      }
+    })
   }
 
-  const faseIdx = FASI_ORDINE.indexOf(fase)
+  function handleRapportino(e: React.FormEvent) {
+    e.preventDefault()
+    if (!lavoroEseguito.trim()) { setRapportinoErrore('Descrivi il lavoro eseguito'); return }
+    const ore = parseFloat(oreOrdinarie) || 0
+    if (ore <= 0) { setRapportinoErrore('Inserisci le ore lavorate'); return }
+    setRapportinoErrore('')
+    startRapportinoTransition(async () => {
+      try {
+        await inviaRapportino(giornataId, {
+          lavoroEseguito: lavoroEseguito.trim(),
+          oreOrdinarie: ore,
+          oreStraordinarie: 0,
+          attrezzatureIds: attrRiconsegnate,
+          cosaFareDomani: cosaFareDomani.trim() || undefined,
+          urgenzaDomani: cosaFareDomani.trim() ? urgenzaDomani : undefined,
+        })
+      } catch (err: unknown) {
+        const msg = (err as Error)?.message ?? ''
+        // i redirect di Next.js propagano come errori: li lasciamo passare
+        if (msg.includes('NEXT_REDIRECT')) throw err
+        setRapportinoErrore(msg || 'Errore')
+      }
+    })
+  }
+
+  const inLavoro = fase === 'mattina' || fase === 'pomeriggio'
 
   return (
     <div className="space-y-4">
 
-      {/* Progress step bar */}
-      <div className="flex items-center justify-between px-1 py-2">
-        {FASI_ORDINE.map((f, i) => {
-          const done = faseIdx > i
-          const current = f === fase
-          const isLast = i === FASI_ORDINE.length - 1
-          return (
-            <div key={f} className="flex items-center flex-1 last:flex-none">
-              <div className="flex flex-col items-center gap-1">
-                <div
-                  className={[
-                    'w-2.5 h-2.5 rounded-full transition-all duration-300',
-                    current
-                      ? 'bg-emerald-500 ring-2 ring-emerald-200 scale-125'
-                      : done
-                      ? 'bg-emerald-400'
-                      : 'bg-gray-200',
-                  ].join(' ')}
-                />
-                <span
-                  className={`text-[10px] font-medium whitespace-nowrap transition-colors ${
-                    current ? 'text-emerald-700' : done ? 'text-emerald-400' : 'text-gray-300'
-                  }`}
-                >
-                  {FASE_SHORT[f]}
-                </span>
-              </div>
-              {!isLast && (
-                <div
-                  className={`h-0.5 flex-1 mx-1 mb-3.5 rounded-full transition-all duration-300 ${
-                    done ? 'bg-emerald-300' : 'bg-gray-200'
-                  }`}
-                />
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Nav */}
+      {/* Nav + timer */}
       <div className="flex items-center justify-between">
         <a href="/operaio/dashboard" className="text-sm font-medium text-emerald-700 hover:text-emerald-800">
           ‹ Dashboard
         </a>
-        <span className="text-xs text-gray-400">La giornata continua in background</span>
+        {elapsedMs > 60_000 && (
+          <span className="text-sm font-semibold text-gray-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1">
+            ⏱ {formatMs(elapsedMs)} in cantiere
+          </span>
+        )}
       </div>
 
-      {/* Commessa card */}
+      {/* Cantiere */}
       <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4">
         <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Cantiere</p>
         <p className="font-bold text-base text-gray-900">{commessa.nome}</p>
         {commessa.indirizzoCantiere && (
-          <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1">
-            <Image src="/immagini/icona-posizione.png" width={13} height={13} alt="" className="shrink-0 opacity-60" />
-            {commessa.indirizzoCantiere}
-          </p>
+          <p className="text-sm text-gray-500 mt-0.5">{commessa.indirizzoCantiere}</p>
         )}
       </div>
 
@@ -244,66 +259,79 @@ export default function FlussoGiornata({
         </div>
       )}
 
-      {/* STATO FASE — elemento dominante */}
-      <div className={`rounded-2xl bg-gradient-to-br ${FASE_BG[fase]} text-white p-6`}>
-        <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-2">Stato attuale</p>
+      {/* Stato card */}
+      <div className={`rounded-2xl bg-gradient-to-br ${card.grad} text-white p-5`}>
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{emojiFase[fase]}</span>
-          <p className="text-xl font-bold leading-tight">{labelFase[fase]}</p>
+          <span className="text-3xl">{card.emoji}</span>
+          <p className="text-xl font-bold">{card.label}</p>
         </div>
-
-        {!pronta && (fase === 'mattina' || fase === 'pausa' || fase === 'pomeriggio') && (
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <span className="inline-block w-2 h-2 rounded-full bg-white/50 animate-pulse" />
-              <span className="inline-block w-2 h-2 rounded-full bg-white/50 animate-pulse delay-150" />
-              <span className="inline-block w-2 h-2 rounded-full bg-white/50 animate-pulse delay-300" />
-            </div>
-            <p className="text-white/70 text-sm">In corso — il pulsante si attiverà al termine</p>
-          </div>
+        {fase === 'pausa' && (
+          <p className="mt-2 text-amber-200 text-sm">Premi Riprendi quando sei pronto.</p>
         )}
-
-        {pronta && (fase === 'mattina' || fase === 'pausa' || fase === 'pomeriggio') && (
-          <p className="mt-3 text-white/90 font-semibold text-sm">✓ Pronto per il passo successivo</p>
+        {fase === 'fine' && (
+          <p className="mt-2 text-green-200 text-sm">Compila il rapportino qui sotto per chiudere la giornata.</p>
         )}
       </div>
 
-      {/* Errore */}
+      {/* Errore generico */}
       {errore && (
         <div className="rounded-2xl bg-red-50 border border-red-200 p-4">
-          <p className="text-red-700 text-sm text-center font-medium">{errore}</p>
+          <p className="text-red-700 text-sm font-medium">{errore}</p>
         </div>
       )}
 
-      {/* PULSANTE AZIONE — full width, enorme */}
-      {fase !== 'fine' && fase !== 'completata' ? (
+      {/* ─── PULSANTI AZIONE per fase ─────────────────────────────────────────── */}
+
+      {fase === 'inizio' && (
         <button
-          onClick={avanza}
-          disabled={pending || !pronta}
-          className={[
-            'w-full font-bold py-5 rounded-2xl text-white text-lg transition-all shadow-lg active:scale-95',
-            pronta && !pending
-              ? (colorePulsante[fase] ?? 'bg-gray-600') + ' shadow-lg'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none',
-          ].join(' ')}
+          onClick={eseguiAvanza}
+          disabled={pending}
+          className="w-full font-bold py-5 rounded-2xl text-white text-lg bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 disabled:opacity-50 active:scale-95 transition-all"
         >
-          {pending
-            ? '…'
-            : pronta
-            ? (labelPulsante[fase] ?? 'Avanza')
-            : 'Sessione in corso — attendi…'}
+          {pending ? '…' : '▶ Inizia giornata'}
         </button>
-      ) : (
-        <a
-          href={`/operaio/giornata/${giornataId}/rapportino`}
-          className="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 rounded-2xl text-lg text-center shadow-lg shadow-green-200 transition-all active:scale-95"
-        >
-          <Image src="/immagini/icona-rapportino.png" width={20} height={20} alt="" className="brightness-0 invert shrink-0" />
-          Compila rapportino (obbligatorio)
-        </a>
       )}
 
-      {/* Foto avanzamento */}
+      {fase === 'mattina' && (
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={eseguiAvanza}
+            disabled={pending}
+            className="font-bold py-4 rounded-2xl text-white bg-amber-500 hover:bg-amber-600 shadow-sm disabled:opacity-50 active:scale-95 transition-all"
+          >
+            {pending ? '…' : '⏸ Pausa'}
+          </button>
+          <button
+            onClick={eseguiTermina}
+            disabled={pending}
+            className="font-bold py-4 rounded-2xl text-white bg-gray-700 hover:bg-gray-800 shadow-sm disabled:opacity-50 active:scale-95 transition-all"
+          >
+            {pending ? '…' : '🏁 Fine'}
+          </button>
+        </div>
+      )}
+
+      {fase === 'pausa' && (
+        <button
+          onClick={eseguiAvanza}
+          disabled={pending}
+          className="w-full font-bold py-5 rounded-2xl text-white text-lg bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 disabled:opacity-50 active:scale-95 transition-all"
+        >
+          {pending ? '…' : '▶ Riprendi lavoro'}
+        </button>
+      )}
+
+      {fase === 'pomeriggio' && (
+        <button
+          onClick={eseguiTermina}
+          disabled={pending}
+          className="w-full font-bold py-5 rounded-2xl text-white text-lg bg-gray-700 hover:bg-gray-800 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
+        >
+          {pending ? '…' : '🏁 Fine giornata'}
+        </button>
+      )}
+
+      {/* ─── FOTO (non in avvio/completata) ──────────────────────────────────── */}
       {fase !== 'inizio' && fase !== 'completata' && (
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4">
           <p className="text-sm font-semibold text-gray-900 mb-3">📸 Foto avanzamento</p>
@@ -336,50 +364,209 @@ export default function FlussoGiornata({
         </div>
       )}
 
-      {/* Promemoria interattivi — visibili in fase fine */}
-      {fase === 'fine' && suggerimenti.length > 0 && (
-        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
-          <div className="bg-emerald-50 px-5 py-3 border-b border-emerald-100">
-            <p className="text-sm font-bold text-emerald-800">
-              <Image src="/immagini/successo.png" width={14} height={14} alt="" className="inline-block mr-1 mb-0.5 opacity-80" />
-              Promemoria di fine giornata
-            </p>
-            <p className="text-xs text-emerald-600 mt-0.5">
-              {Object.values(spunteLocali).filter(Boolean).length}/{suggerimenti.length} completati
-            </p>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {suggerimenti.map(s => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => spuntaSuggerimento(s.id)}
-                className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-colors ${
-                  spunteLocali[s.id] ? 'bg-emerald-50/60' : 'hover:bg-gray-50'
-                }`}
-              >
-                <div className={`shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                  spunteLocali[s.id]
-                    ? 'bg-emerald-500 border-emerald-500'
-                    : 'border-gray-300 bg-white'
-                }`}>
-                  {spunteLocali[s.id] && (
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${spunteLocali[s.id] ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                    {s.testo}
-                  </p>
-                  {s.categoria && (
-                    <p className="text-xs text-gray-400 mt-0.5">{s.categoria}</p>
-                  )}
-                </div>
+      {/* ─── SEGNALA PROBLEMA (solo in lavoro) ───────────────────────────────── */}
+      {inLavoro && (
+        !mostraProblema ? (
+          <button
+            onClick={() => setMostraProblema(true)}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-red-200 bg-red-50 py-3 text-sm font-semibold text-red-600 hover:border-red-300 hover:bg-red-100 transition-colors"
+          >
+            ⚠️ Segnala problema
+          </button>
+        ) : (
+          <form onSubmit={handleProblema} className="rounded-2xl border-2 border-red-200 bg-red-50 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-red-700">⚠️ Segnala problema</p>
+              <button type="button" onClick={() => setMostraProblema(false)} className="text-red-400 text-lg leading-none">✕</button>
+            </div>
+            <textarea
+              value={problemaNote}
+              onChange={e => setProblemaNote(e.target.value)}
+              placeholder="Descrivi brevemente il problema trovato…"
+              className="w-full rounded-xl border border-red-200 bg-white px-3 py-2 text-sm focus:border-red-400 focus:outline-none"
+              rows={2}
+              required
+            />
+            <label className="flex items-center gap-2 text-xs text-red-600 cursor-pointer">
+              <input ref={problemaFileRef} type="file" accept="image/*" capture="environment" className="hidden" />
+              <span className="rounded-lg border border-red-300 bg-white px-3 py-1.5 font-medium hover:bg-red-50">📷 Allega foto (opzionale)</span>
+            </label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => { setMostraProblema(false); setProblemaNote('') }} className="flex-1 rounded-xl border border-red-200 py-2.5 text-sm text-red-600">Annulla</button>
+              <button type="submit" disabled={problemaPending || !problemaNote.trim()} className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50">
+                {problemaPending ? 'Invio…' : 'Segnala'}
               </button>
-            ))}
+            </div>
+          </form>
+        )
+      )}
+
+      {/* ─── RAPPORTINO INLINE (stato fine) ──────────────────────────────────── */}
+      {fase === 'fine' && (
+        <form onSubmit={handleRapportino} className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-5 space-y-4">
+          <div>
+            <p className="text-sm font-bold text-emerald-900">📋 Rapportino di fine giornata</p>
+            <p className="text-xs text-emerald-600 mt-0.5">Compila per chiudere la giornata — obbligatorio</p>
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">Cosa hai fatto oggi *</label>
+            <textarea
+              value={lavoroEseguito}
+              onChange={e => setLavoroEseguito(e.target.value)}
+              placeholder="Descrivi il lavoro eseguito…"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none"
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">Ore lavorate *</label>
+            <div className="flex gap-2 flex-wrap">
+              {['4', '6', '8', '10'].map(v => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setOreOrdinarie(v)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-colors ${
+                    oreOrdinarie === v
+                      ? 'bg-emerald-600 border-emerald-600 text-white'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  {v}h
+                </button>
+              ))}
+              <input
+                type="number"
+                min="0.5"
+                max="12"
+                step="0.5"
+                value={oreOrdinarie}
+                onChange={e => setOreOrdinarie(e.target.value)}
+                className="w-20 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                placeholder="Altro"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">Urgenze per domani (opzionale)</label>
+            <input
+              type="text"
+              value={cosaFareDomani}
+              onChange={e => setCosaFareDomani(e.target.value)}
+              placeholder="Es: finire il quadro al piano 2…"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none"
+            />
+            {cosaFareDomani.trim() && (
+              <div className="flex gap-2 mt-2">
+                {[1, 2, 3, 4, 5].map(v => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setUrgenzaDomani(v)}
+                    className={`flex-1 py-1.5 rounded-xl text-xs font-bold border-2 transition-colors ${
+                      urgenzaDomani === v
+                        ? v >= 4 ? 'bg-red-500 border-red-500 text-white'
+                          : v === 3 ? 'bg-amber-500 border-amber-500 text-white'
+                          : 'bg-emerald-500 border-emerald-500 text-white'
+                        : 'bg-white border-gray-200 text-gray-500'
+                    }`}
+                  >
+                    {v}{v === 1 ? '🟢' : v === 3 ? '🟡' : v === 5 ? '🔴' : ''}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {attrezzature.length > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">Attrezzatura riconsegnata</label>
+              <div className="space-y-1.5">
+                {attrezzature.map(a => (
+                  <label key={a.id} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={attrRiconsegnate.includes(a.id)}
+                      onChange={() => setAttrRiconsegnate(prev =>
+                        prev.includes(a.id) ? prev.filter(x => x !== a.id) : [...prev, a.id]
+                      )}
+                      className="w-4 h-4 accent-emerald-600"
+                    />
+                    <span className="text-sm font-medium text-gray-800">{a.nome}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {rapportinoErrore && <p className="text-red-600 text-sm font-medium">{rapportinoErrore}</p>}
+
+          <button
+            type="submit"
+            disabled={rapportinoPending}
+            className="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl text-base shadow-sm hover:bg-emerald-700 disabled:opacity-50 active:scale-95 transition-all"
+          >
+            {rapportinoPending ? 'Invio in corso…' : '✅ Invia rapportino e chiudi giornata'}
+          </button>
+
+          <a
+            href={`/operaio/giornata/${giornataId}/rapportino`}
+            className="block text-center text-xs text-emerald-700 hover:text-emerald-900 underline"
+          >
+            Vai al rapportino completo → (reso materiale, note extra, attrezzatura)
+          </a>
+        </form>
+      )}
+
+      {/* ─── SUGGERIMENTI (sempre visibili, collapsibili) ─────────────────────── */}
+      {suggerimenti.length > 0 && (
+        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setSuggerimentiAperti(v => !v)}
+            className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-sm font-bold text-emerald-800">
+              Promemoria cantiere
+              <span className="ml-2 text-xs font-normal text-emerald-600">
+                {Object.values(spunteLocali).filter(Boolean).length}/{suggerimenti.length} completati
+              </span>
+            </p>
+            <span className="text-gray-400 text-xs">{suggerimentiAperti ? '▲' : '▼'}</span>
+          </button>
+          {suggerimentiAperti && (
+            <div className="border-t border-emerald-100 divide-y divide-gray-100">
+              {suggerimenti.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => spuntaSuggerimento(s.id)}
+                  className={`w-full flex items-center gap-4 px-5 py-3.5 text-left transition-colors ${
+                    spunteLocali[s.id] ? 'bg-emerald-50/60' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                    spunteLocali[s.id] ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 bg-white'
+                  }`}>
+                    {spunteLocali[s.id] && (
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${spunteLocali[s.id] ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                      {s.testo}
+                    </p>
+                    {s.categoria && <p className="text-xs text-gray-400 mt-0.5">{s.categoria}</p>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -388,12 +575,12 @@ export default function FlussoGiornata({
         href={`/operaio/giornata/${giornataId}/chat`}
         className="flex items-center gap-3 w-full rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-semibold text-gray-700 hover:border-gray-300 transition-colors shadow-sm"
       >
-        <Image src="/immagini/icona-chat.png" width={18} height={18} alt="" className="shrink-0 opacity-70" />
+        <span className="text-lg">💬</span>
         <span className="flex-1">Chat con magazziniere / impresa</span>
         <span className="text-gray-300">›</span>
       </a>
 
-      {/* Annulla */}
+      {/* Annulla (solo se non in fine/completata) */}
       {fase !== 'fine' && fase !== 'completata' && (
         <button
           onClick={handleAnnulla}

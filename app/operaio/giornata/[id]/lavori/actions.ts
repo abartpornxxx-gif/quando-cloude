@@ -14,31 +14,11 @@ export async function avanzaFase(
 ): Promise<void> {
   const { operaio } = await requireOperaio()
 
-  const [giornata, config] = await Promise.all([
-    prisma.giornata.findUnique({ where: { id: giornataId } }),
-    prisma.configurazioneOrari.findFirst(),
-  ])
+  const giornata = await prisma.giornata.findUnique({ where: { id: giornataId } })
   if (!giornata || giornata.operaioId !== operaio.id) throw new Error('Non autorizzato')
 
-  const cfg = config ?? { durataMattinaMinuti: 240, durataPausaMinuti: 60, durataPomeriggioMinuti: 240 }
-  const adesso = Date.now()
-
-  // ORDINE 2 — Blocco temporale: la transizione è permessa solo se il tempo è davvero trascorso
-  if (faseCorrente === 'mattina') {
-    if (!giornata.inizioMattina) throw new Error('Sessione non avviata correttamente')
-    const fine = new Date(giornata.inizioMattina).getTime() + cfg.durataMattinaMinuti * 60_000
-    if (adesso < fine) throw new Error('Sessione mattutina non ancora completata')
-  }
-  if (faseCorrente === 'pausa') {
-    if (!giornata.fineMattina) throw new Error('Fine mattina non registrata')
-    const fine = new Date(giornata.fineMattina).getTime() + cfg.durataPausaMinuti * 60_000
-    if (adesso < fine) throw new Error('Pausa non ancora completata')
-  }
-  if (faseCorrente === 'pomeriggio') {
-    if (!giornata.inizioPomeriggio) throw new Error('Sessione pomeriggio non avviata')
-    const fine = new Date(giornata.inizioPomeriggio).getTime() + cfg.durataPomeriggioMinuti * 60_000
-    if (adesso < fine) throw new Error('Sessione pomeridiana non ancora completata')
-  }
+  // ORDINE 2 — Il time-lock è stato rimosso: l'operaio avanza quando ha finito.
+  // Il controllo a tempo per l'impresa viene gestito nel Centro Operativo lato impresa.
 
   const transizioni: Record<string, { fase: string; campo?: string }> = {
     inizio:     { fase: 'mattina',    campo: 'inizioMattina'    },
@@ -70,6 +50,57 @@ export async function avanzaFase(
   }
 }
 
+// Termina la giornata direttamente da mattina o pomeriggio, senza passare per le fasi intermedie
+export async function terminaGiornata(giornataId: string): Promise<void> {
+  const { operaio } = await requireOperaio()
+
+  const giornata = await prisma.giornata.findUnique({ where: { id: giornataId } })
+  if (!giornata || giornata.operaioId !== operaio.id) throw new Error('Non autorizzato')
+  if (!['mattina', 'pomeriggio'].includes(giornata.fase)) {
+    throw new Error('Non puoi terminare la giornata dalla fase corrente')
+  }
+
+  await prisma.giornata.update({
+    where: { id: giornataId },
+    data: {
+      fase: 'fine',
+      // Se si termina da mattina senza aver fatto pausa, chiudi anche fineMattina
+      ...(giornata.fase === 'mattina' ? { fineMattina: new Date() } : {}),
+      finePomeriggio: new Date(),
+    },
+  })
+
+  revalidatePath(`/operaio/giornata/${giornataId}/lavori`)
+
+  Promise.all([
+    inviaPushRapportino(operaio.id, giornataId).catch(() => {}),
+    operaio.email
+      ? inviaEmailRapportino(operaio.email, operaio.nome, giornata.commessaId, giornataId).catch(() => {})
+      : Promise.resolve(),
+  ])
+}
+
+// Segnala un problema in tempo reale: crea un messaggio in chat taggato come problema
+export async function segnalaProblema(giornataId: string, nota: string): Promise<void> {
+  const { operaio } = await requireOperaio()
+
+  const giornata = await prisma.giornata.findUnique({ where: { id: giornataId } })
+  if (!giornata || giornata.operaioId !== operaio.id) throw new Error('Non autorizzato')
+
+  await prisma.chatMessaggio.create({
+    data: {
+      giornataId,
+      commessaId: giornata.commessaId,
+      autoreNome: operaio.nome,
+      ruolo: 'operaio',
+      testo: `⚠️ PROBLEMA: ${nota.trim()}`,
+    },
+  })
+
+  revalidatePath(`/operaio/giornata/${giornataId}/chat`)
+  revalidatePath(`/impresa/giornate/${giornataId}/chat`)
+}
+
 export async function annullaGiornata(giornataId: string): Promise<void> {
   const { operaio } = await requireOperaio()
 
@@ -98,7 +129,6 @@ export async function annullaGiornata(giornataId: string): Promise<void> {
         }
       }
     }
-    // Elimina spunte promemoria orfane (giornataId non ha FK constraint verso giornate)
     await tx.suggerimentoSpunta.deleteMany({ where: { giornataId } })
     await tx.giornata.delete({ where: { id: giornataId } })
   })
