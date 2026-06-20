@@ -1,6 +1,7 @@
 import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
+import Link from 'next/link'
 import { PianificazioneBoard } from './PianificazioneBoard'
 
 const GIORNI_ITA = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
@@ -68,20 +69,28 @@ export default async function PianificazionePage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Pianificazione settimanale</h1>
           <p className="mt-0.5 text-sm text-gray-500">
             Trascina un operaio dal pannello sinistro sul cantiere desiderato
           </p>
         </div>
-        <a
-          href="/impresa/pianificazione/domani"
-          className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
-        >
-          <Image src="/immagini/icona-calendario.png" width={14} height={14} alt="" className="brightness-0 invert shrink-0" />
-          Pianifica domani
-        </a>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href="/impresa/pianificazione/giorno"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 text-sm font-medium shadow-sm transition-colors"
+          >
+            Vista giorno (nuova)
+          </Link>
+          <a
+            href="/impresa/pianificazione/domani"
+            className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+          >
+            <Image src="/immagini/icona-calendario.png" width={14} height={14} alt="" className="brightness-0 invert shrink-0" />
+            Pianifica domani
+          </a>
+        </div>
       </div>
       <PianificazioneBoard
         weekDays={weekDays}
