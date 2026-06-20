@@ -3,12 +3,12 @@
 // ORDINE 1 — Il countdown è INTERNO, visibile solo all'impresa (non all'operaio)
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 
 type GiornataAttiva = {
   id: string
   operaioNome: string
   commessaNome: string
+  commessaIndirizzo?: string | null
   fase: string
   inizioMattina: string | null
   fineMattina: string | null
@@ -21,87 +21,105 @@ type Config = {
   durataPomeriggioMinuti: number
 }
 
-interface Props {
+function formatMs(ms: number): string {
+  if (ms <= 0) return '0m'
+  const h = Math.floor(ms / 3_600_000)
+  const m = Math.floor((ms % 3_600_000) / 60_000)
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
+}
+
+function initials(nome: string): string {
+  return nome.split(' ').map(p => p[0] ?? '').join('').slice(0, 2).toUpperCase()
+}
+
+const AVATAR_COLORS = [
+  'bg-blue-600', 'bg-purple-600', 'bg-rose-600', 'bg-amber-600',
+  'bg-teal-600', 'bg-indigo-600', 'bg-pink-600', 'bg-orange-600',
+]
+function avatarColor(id: string): string {
+  return AVATAR_COLORS[parseInt(id.slice(-2), 16) % AVATAR_COLORS.length]
+}
+
+export default function GiornateMonitor({
+  giornate,
+}: {
   giornate: GiornataAttiva[]
   config: Config
-}
+}) {
+  const [, setTick] = useState(0)
 
-function calcolaFineMs(inizio: string | null, durataMin: number): number | null {
-  if (!inizio) return null
-  return new Date(inizio).getTime() + durataMin * 60_000
-}
-
-function formatDurata(ms: number): string {
-  if (ms <= 0) return '—'
-  const sec = Math.ceil(ms / 1000)
-  const h = Math.floor(sec / 3600)
-  const m = Math.floor((sec % 3600) / 60)
-  const s = sec % 60
-  return h > 0
-    ? `${h}h ${String(m).padStart(2, '0')}m`
-    : `${m}:${String(s).padStart(2, '0')}`
-}
-
-export default function GiornateMonitor({ giornate, config }: Props) {
-  const [tick, setTick] = useState(0)
-
-  // Aggiorna ogni 30 secondi per mantenere i countdown precisi
   useEffect(() => {
     const t = setInterval(() => setTick(n => n + 1), 30_000)
     return () => clearInterval(t)
   }, [])
 
-  if (giornate.length === 0) return null
+  if (giornate.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-white py-10 text-center">
+        <p className="text-2xl mb-2">😴</p>
+        <p className="text-sm font-medium text-gray-500">Nessun operaio in cantiere adesso</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="mb-6">
-      <h2 className="text-base font-semibold text-gray-700 mb-2">🟢 Giornate in corso ({giornate.length})</h2>
-      <div className="bg-white rounded-xl border divide-y">
-        {giornate.map(g => {
-          const now = Date.now()
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden divide-y divide-gray-100">
+      {giornate.map(g => {
+        const now = Date.now()
 
-          const fineMattinaMs    = calcolaFineMs(g.inizioMattina,   config.durataMattinaMinuti)
-          const finePausaMs      = calcolaFineMs(g.fineMattina,      config.durataPausaMinuti)
-          const finePomeriggioMs = calcolaFineMs(g.inizioPomeriggio, config.durataPomeriggioMinuti)
+        const mattinaMs = g.inizioMattina
+          ? (g.fineMattina
+            ? new Date(g.fineMattina).getTime() - new Date(g.inizioMattina).getTime()
+            : g.fase === 'mattina' ? now - new Date(g.inizioMattina).getTime() : 0)
+          : 0
+        const pomeriggioMs = g.inizioPomeriggio && g.fase === 'pomeriggio'
+          ? now - new Date(g.inizioPomeriggio).getTime()
+          : 0
+        const totaleMs = mattinaMs + pomeriggioMs
 
-          let rimanentiMs: number | null = null
-          let faseTesto = ''
+        const faseBadge =
+          g.fase === 'inizio'     ? { label: 'Attesa avvio',  cls: 'bg-gray-100 text-gray-600' }
+          : g.fase === 'mattina'    ? { label: 'In lavoro',     cls: 'bg-emerald-100 text-emerald-700' }
+          : g.fase === 'pausa'      ? { label: 'Pausa',         cls: 'bg-amber-100 text-amber-700' }
+          : g.fase === 'pomeriggio' ? { label: 'In lavoro',     cls: 'bg-emerald-100 text-emerald-700' }
+          : g.fase === 'fine'       ? { label: 'Rapportino',    cls: 'bg-orange-100 text-orange-700' }
+          : { label: g.fase, cls: 'bg-gray-100 text-gray-600' }
 
-          if (g.fase === 'inizio') {
-            faseTesto = 'In attesa di iniziare'
-          } else if (g.fase === 'mattina' && fineMattinaMs) {
-            rimanentiMs = Math.max(0, fineMattinaMs - now)
-            faseTesto = rimanentiMs > 0 ? `Mattina — rimanenti ${formatDurata(rimanentiMs)}` : 'Mattina completata'
-          } else if (g.fase === 'pausa' && finePausaMs) {
-            rimanentiMs = Math.max(0, finePausaMs - now)
-            faseTesto = rimanentiMs > 0 ? `Pausa — rimanenti ${formatDurata(rimanentiMs)}` : 'Pausa terminata'
-          } else if (g.fase === 'pomeriggio' && finePomeriggioMs) {
-            rimanentiMs = Math.max(0, finePomeriggioMs - now)
-            faseTesto = rimanentiMs > 0 ? `Pomeriggio — rimanenti ${formatDurata(rimanentiMs)}` : 'Pomeriggio completato'
-          } else if (g.fase === 'fine') {
-            faseTesto = 'In attesa rapportino'
-          }
-
-          const badgeColor =
-            g.fase === 'fine'       ? 'bg-amber-100 text-amber-700' :
-            g.fase === 'inizio'     ? 'bg-gray-100 text-gray-600'   :
-            rimanentiMs === 0       ? 'bg-green-100 text-green-700' :
-                                      'bg-blue-100 text-blue-700'
-
-          return (
-            <div key={g.id} className="p-4 flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{g.operaioNome}</p>
-                <p className="text-xs text-gray-500">{g.commessaNome}</p>
-              </div>
-              <span className={`text-xs px-2 py-1 rounded-full shrink-0 font-medium ${badgeColor}`}>
-                {faseTesto}
-              </span>
+        return (
+          <div key={g.id} className="flex items-center gap-4 px-5 py-4">
+            <div className={`shrink-0 h-10 w-10 rounded-full ${avatarColor(g.id)} text-white text-sm font-bold flex items-center justify-center select-none`}>
+              {initials(g.operaioNome)}
             </div>
-          )
-        })}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-semibold text-gray-900 text-sm">{g.operaioNome}</p>
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${faseBadge.cls}`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                  {faseBadge.label}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mt-0.5 truncate">{g.commessaNome}</p>
+              {g.commessaIndirizzo && (
+                <p className="text-xs text-gray-400 truncate">{g.commessaIndirizzo}</p>
+              )}
+            </div>
+            <div className="shrink-0 text-right space-y-1.5">
+              {totaleMs > 60_000 && (
+                <p className="text-sm font-bold text-gray-800">{formatMs(totaleMs)}</p>
+              )}
+              <a
+                href={`/impresa/giornate/${g.id}/chat`}
+                className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+              >
+                💬 Chat
+              </a>
+            </div>
+          </div>
+        )
+      })}
+      <div className="bg-gray-50 px-5 py-2 text-xs text-gray-400">
+        Aggiornamento automatico ogni 30 secondi
       </div>
-      <p className="text-xs text-gray-400 mt-1">Aggiornamento automatico ogni 30 secondi</p>
     </div>
   )
 }
