@@ -73,7 +73,7 @@ export default async function PianificazionePage({
         <div>
           <h1 className="text-xl font-bold text-gray-900">Pianificazione settimanale</h1>
           <p className="mt-0.5 text-sm text-gray-500">
-            Trascina un operaio dal pannello sinistro sul cantiere desiderato
+            Clicca + per assegnare un operaio · alterna vista per cantiere o per operaio
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

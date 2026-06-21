@@ -26,6 +26,8 @@ function opColor(id: string): string {
   return COLORS[parseInt(id.slice(-2), 16) % COLORS.length]
 }
 
+// ─── Modal dettagli pianificazione ───────────────────────────────────────────
+
 function DettagliModal({ plan, onClose }: { plan: PianMini; onClose: () => void }) {
   const [lavoro, setLavoro] = useState(plan.lavoroDaFare ?? '')
   const [note, setNote] = useState(plan.noteMateriale ?? '')
@@ -89,13 +91,10 @@ function DettagliModal({ plan, onClose }: { plan: PianMini; onClose: () => void 
   )
 }
 
-function CellaGiorno({
-  cellId,
-  pians,
-  operai,
-  onAssegna,
-  onRemove,
-  saving,
+// ─── Vista CANTIERI: riga=commessa, colonna=giorno ────────────────────────────
+
+function CellaCantiere({
+  cellId, pians, operai, onAssegna, onRemove, saving,
 }: {
   cellId: string
   pians: PianMini[]
@@ -121,7 +120,6 @@ function CellaGiorno({
         <DettagliModal plan={planDettagli} onClose={() => setDettagliId(null)} />
       )}
 
-      {/* Chips operai */}
       {pians.map(p => (
         <div key={p.id} className="mb-1">
           <div
@@ -149,17 +147,13 @@ function CellaGiorno({
             </button>
           </div>
           {p.lavoroDaFare && !p.sostituito && (
-            <p
-              className="mt-0.5 truncate px-0.5 text-[9px] text-gray-500"
-              title={p.lavoroDaFare}
-            >
+            <p className="mt-0.5 truncate px-0.5 text-[9px] text-gray-500" title={p.lavoroDaFare}>
               {p.lavoroDaFare}
             </p>
           )}
         </div>
       ))}
 
-      {/* Bottone + assegna */}
       <div className="relative">
         <button
           onClick={() => setDropdownAperto(v => !v)}
@@ -168,7 +162,6 @@ function CellaGiorno({
         >
           +
         </button>
-
         {dropdownAperto && (
           <div className="absolute left-0 top-6 z-30 min-w-[130px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
             {operaiLiberi.length === 0 ? (
@@ -178,10 +171,7 @@ function CellaGiorno({
                 {operaiLiberi.map(o => (
                   <li key={o.id}>
                     <button
-                      onClick={() => {
-                        setDropdownAperto(false)
-                        onAssegna(commessaId, date, o.id)
-                      }}
+                      onClick={() => { setDropdownAperto(false); onAssegna(commessaId, date, o.id) }}
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-blue-50"
                     >
                       <span className={`h-2 w-2 shrink-0 rounded-full ${opColor(o.id)}`} />
@@ -198,12 +188,97 @@ function CellaGiorno({
   )
 }
 
+// ─── Vista OPERAI: riga=operaio, colonna=giorno ───────────────────────────────
+
+function CellaOperaio({
+  operaioId, date, pians, commesse, onAssegna, onRemove, saving,
+}: {
+  operaioId: string
+  date: string
+  pians: PianMini[]
+  commesse: CommessaMini[]
+  onAssegna: (commessaId: string, date: string, operaioId: string) => void
+  onRemove: (id: string) => void
+  saving: boolean
+}) {
+  const [dropdownAperto, setDropdownAperto] = useState(false)
+
+  const attivi = pians.filter(p => !p.sostituito)
+  const commesseAssegnate = attivi.map(p => p.commessaId)
+  const commesseLibere = commesse.filter(c => !commesseAssegnate.includes(c.id))
+
+  return (
+    <td
+      className="relative border-b border-r border-gray-200 p-1.5 align-top last:border-r-0"
+      style={{ minWidth: 100, minHeight: 52 }}
+    >
+      {attivi.map(p => {
+        const commessa = commesse.find(c => c.id === p.commessaId)
+        const nomeBreve = commessa?.nome.split(' ').slice(0, 2).join(' ') ?? '—'
+        return (
+          <div key={p.id} className="mb-1">
+            <div
+              className={`flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs text-white ${opColor(p.commessaId)}`}
+            >
+              <span className="flex-1 truncate" style={{ maxWidth: 60 }} title={commessa?.nome}>
+                {nomeBreve}
+              </span>
+              <button
+                onClick={() => onRemove(p.id)}
+                disabled={saving}
+                className="shrink-0 px-0.5 leading-none text-white/80 hover:text-white"
+                title="Rimuovi"
+              >
+                ×
+              </button>
+            </div>
+            {p.lavoroDaFare && (
+              <p className="mt-0.5 truncate px-0.5 text-[9px] text-gray-500" title={p.lavoroDaFare}>
+                {p.lavoroDaFare}
+              </p>
+            )}
+          </div>
+        )
+      })}
+
+      <div className="relative">
+        <button
+          onClick={() => setDropdownAperto(v => !v)}
+          className="mt-0.5 flex h-5 w-5 items-center justify-center rounded border border-dashed border-gray-300 text-xs text-gray-400 hover:border-blue-400 hover:text-blue-500"
+          title="Assegna a cantiere"
+        >
+          +
+        </button>
+        {dropdownAperto && (
+          <div className="absolute left-0 top-6 z-30 min-w-[160px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+            {commesseLibere.length === 0 ? (
+              <p className="px-3 py-2 text-[11px] text-gray-400">Nessun cantiere libero</p>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {commesseLibere.map(c => (
+                  <li key={c.id}>
+                    <button
+                      onClick={() => { setDropdownAperto(false); onAssegna(c.id, date, operaioId) }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] hover:bg-blue-50"
+                    >
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${opColor(c.id)}`} />
+                      <span className="truncate">{c.nome}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+    </td>
+  )
+}
+
+// ─── Componente principale ────────────────────────────────────────────────────
+
 export function PianificazioneBoard({
-  weekDays,
-  commesse,
-  operai,
-  pianificazioni: initialPians,
-  weekStart,
+  weekDays, commesse, operai, pianificazioni: initialPians, weekStart,
 }: {
   weekDays: { date: string; label: string }[]
   commesse: CommessaMini[]
@@ -214,6 +289,7 @@ export function PianificazioneBoard({
   const router = useRouter()
   const [pians, setPians] = useState(initialPians)
   const [saving, setSaving] = useState(false)
+  const [vista, setVista] = useState<'cantieri' | 'operai'>('cantieri')
 
   async function handleAssegna(commessaId: string, date: string, operaioId: string) {
     const operaio = operai.find(o => o.id === operaioId)
@@ -225,7 +301,6 @@ export function PianificazioneBoard({
       ...prev,
       { id: tempId, commessaId, operaioId, data: date, operaio, sostituito: false, lavoroDaFare: null, noteMateriale: null },
     ])
-
     try {
       const result = await creaPianificazione({ commessaId, operaioId, data: date })
       setPians(prev => prev.map(p => (p.id === tempId ? { ...p, id: result.id } : p)))
@@ -260,7 +335,7 @@ export function PianificazioneBoard({
 
   return (
     <div>
-      {/* Navigazione settimana */}
+      {/* Navigazione + toggle vista */}
       <div className="mb-4 flex items-center gap-3 flex-wrap">
         <button
           onClick={() => navigate('prev')}
@@ -277,29 +352,49 @@ export function PianificazioneBoard({
         >
           Succ. →
         </button>
+
         {saving && <span className="text-xs text-blue-500 animate-pulse">Salvataggio…</span>}
+
+        {/* Toggle */}
+        <div className="ml-auto flex rounded-xl border border-gray-200 bg-gray-50 p-0.5">
+          <button
+            onClick={() => setVista('cantieri')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              vista === 'cantieri'
+                ? 'bg-white text-blue-700 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Per cantiere
+          </button>
+          <button
+            onClick={() => setVista('operai')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              vista === 'operai'
+                ? 'bg-white text-blue-700 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Per operaio
+          </button>
+        </div>
       </div>
 
       {commesse.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 p-12 text-center text-sm text-gray-400">
           Nessuna commessa aperta da pianificare.
         </div>
-      ) : (
+      ) : vista === 'cantieri' ? (
+        /* ── VISTA CANTIERI ── */
         <div className="overflow-x-auto rounded-xl border border-gray-200">
           <table className="w-full border-collapse text-sm" style={{ minWidth: 600 }}>
             <thead>
               <tr>
-                <th
-                  className="border-b border-r border-gray-200 bg-gray-50 px-3 py-2.5 text-left text-xs font-semibold text-gray-600"
-                  style={{ width: 160 }}
-                >
+                <th className="border-b border-r border-gray-200 bg-gray-50 px-3 py-2.5 text-left text-xs font-semibold text-gray-600" style={{ width: 160 }}>
                   Cantiere
                 </th>
                 {weekDays.map(d => (
-                  <th
-                    key={d.date}
-                    className="border-b border-r border-gray-200 bg-gray-50 px-2 py-2.5 text-center text-xs font-semibold text-gray-600 last:border-r-0"
-                  >
+                  <th key={d.date} className="border-b border-r border-gray-200 bg-gray-50 px-2 py-2.5 text-center text-xs font-semibold text-gray-600 last:border-r-0">
                     {d.label}
                   </th>
                 ))}
@@ -308,16 +403,14 @@ export function PianificazioneBoard({
             <tbody>
               {commesse.map((c, ci) => (
                 <tr key={c.id} className={ci % 2 === 1 ? 'bg-gray-50/40' : ''}>
-                  <td className="border-b border-r border-gray-200 px-3 py-2 align-top last:border-b-0">
+                  <td className="border-b border-r border-gray-200 px-3 py-2 align-top">
                     <div className="text-xs font-semibold leading-snug text-gray-800">{c.nome}</div>
                     {c.indirizzoCantiere && (
-                      <div className="max-w-[140px] truncate text-[10px] text-gray-400">
-                        {c.indirizzoCantiere}
-                      </div>
+                      <div className="max-w-[140px] truncate text-[10px] text-gray-400">{c.indirizzoCantiere}</div>
                     )}
                   </td>
                   {weekDays.map(d => (
-                    <CellaGiorno
+                    <CellaCantiere
                       key={d.date}
                       cellId={`${c.id}|${d.date}`}
                       pians={pians.filter(p => p.commessaId === c.id && p.data === d.date)}
@@ -331,6 +424,52 @@ export function PianificazioneBoard({
               ))}
             </tbody>
           </table>
+        </div>
+      ) : (
+        /* ── VISTA OPERAI ── */
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          {operai.length === 0 ? (
+            <p className="p-8 text-center text-sm text-gray-400">Nessun operaio in anagrafica.</p>
+          ) : (
+            <table className="w-full border-collapse text-sm" style={{ minWidth: 600 }}>
+              <thead>
+                <tr>
+                  <th className="border-b border-r border-gray-200 bg-gray-50 px-3 py-2.5 text-left text-xs font-semibold text-gray-600" style={{ width: 140 }}>
+                    Operaio
+                  </th>
+                  {weekDays.map(d => (
+                    <th key={d.date} className="border-b border-r border-gray-200 bg-gray-50 px-2 py-2.5 text-center text-xs font-semibold text-gray-600 last:border-r-0">
+                      {d.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {operai.map((o, oi) => (
+                  <tr key={o.id} className={oi % 2 === 1 ? 'bg-gray-50/40' : ''}>
+                    <td className="border-b border-r border-gray-200 px-3 py-2 align-middle">
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${opColor(o.id)}`} />
+                        <span className="text-xs font-semibold text-gray-800">{o.nome}</span>
+                      </div>
+                    </td>
+                    {weekDays.map(d => (
+                      <CellaOperaio
+                        key={d.date}
+                        operaioId={o.id}
+                        date={d.date}
+                        pians={pians.filter(p => p.operaioId === o.id && p.data === d.date)}
+                        commesse={commesse}
+                        onAssegna={handleAssegna}
+                        onRemove={handleRemove}
+                        saving={saving}
+                      />
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
     </div>
