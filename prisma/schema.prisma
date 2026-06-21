@@ -804,6 +804,18 @@ model SuggerimentoSpunta {
   @@map("suggerimenti_spunte")
 }
 
+// ─── Libreria task riutilizzabili ────────────────────────────────────────────
+
+model TaskLibreria {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  titolo    String
+  ordine    Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("task_libreria")
+}
+
 // ─── Stato lettura notifiche ─────────────────────────────────────────────────
 // Traccia quali notifiche calcolate (tipo + refId) sono state lette per utente.
 // Le notifiche stesse restano calcolate dallo stato DB (nessuna tabella separata).
