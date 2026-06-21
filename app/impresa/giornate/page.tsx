@@ -32,6 +32,11 @@ export default async function CentroOperativoPage() {
 
   // ORDINE 1 — Giornate attive (non ancora chiuse): countdown visibile SOLO all'impresa
   const giornateAttiveRaw = giornate.filter(g => g.stato === 'bozza' && g.fase !== 'completata')
+  // Solo le giornate di OGGI vanno in ADESSO con timer live
+  const domani = new Date(oggi)
+  domani.setDate(domani.getDate() + 1)
+  const giornateAdesso = giornateAttiveRaw.filter(g => g.data >= oggi && g.data < domani)
+  const giornateNonChiuse = giornateAttiveRaw.filter(g => g.data < oggi)
   const giornateAttiveIds = giornateAttiveRaw.map(g => g.id)
   const commesseAttive = [...new Set(giornateAttiveRaw.map(g => g.commessaId))]
 
@@ -75,7 +80,7 @@ export default async function CentroOperativoPage() {
       .map(g => g.id),
   )
 
-  const giornateAttivoData = giornateAttiveRaw.map(g => ({
+  const giornateAttivoData = giornateAdesso.map(g => ({
     id: g.id,
     operaioNome: g.operaio.nome,
     commessaNome: g.commessa.nome,
@@ -124,9 +129,11 @@ export default async function CentroOperativoPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Centro Operativo</h1>
           <p className="mt-1.5 text-sm text-gray-500">
-            {giornateAttiveRaw.length > 0
-              ? `${giornateAttiveRaw.length} operaio${giornateAttiveRaw.length > 1 ? 'i' : ''} in cantiere · ${giornateChiuse.length} giornate archiviate`
-              : `${giornateChiuse.length} giornate archiviate`}
+            {giornateAdesso.length > 0
+              ? `${giornateAdesso.length} operaio${giornateAdesso.length > 1 ? 'i' : ''} in cantiere${giornateNonChiuse.length > 0 ? ` · ${giornateNonChiuse.length} giornata${giornateNonChiuse.length > 1 ? 'e' : ''} non chiusa${giornateNonChiuse.length > 1 ? 'e' : ''}` : ''} · ${giornateChiuse.length} archiviate`
+              : giornateNonChiuse.length > 0
+                ? `${giornateNonChiuse.length} giornata${giornateNonChiuse.length > 1 ? 'e' : ''} non chiusa${giornateNonChiuse.length > 1 ? 'e' : ''} · ${giornateChiuse.length} archiviate`
+                : `${giornateChiuse.length} giornate archiviate`}
           </p>
         </div>
       </div>
@@ -158,6 +165,42 @@ export default async function CentroOperativoPage() {
           config={{ durataMattinaMinuti: 240, durataPausaMinuti: 60, durataPomeriggioMinuti: 240 }}
         />
       </div>
+
+      {/* SEZIONE NON CHIUSE — giornate di giorni precedenti mai terminate */}
+      {giornateNonChiuse.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            Giornate non chiuse
+          </p>
+          <div className="rounded-2xl border border-red-200 bg-white shadow-sm overflow-hidden divide-y divide-red-100">
+            {giornateNonChiuse.map(g => (
+              <div key={g.id} className="px-5 py-4 flex items-center gap-4">
+                <div className="shrink-0 h-10 w-10 rounded-full bg-red-100 text-red-700 text-sm font-bold flex items-center justify-center select-none">
+                  {g.operaio.nome.split(' ').map((p: string) => p[0] ?? '').join('').slice(0, 2).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-gray-900 text-sm">{g.operaio.nome}</p>
+                    <span className="inline-flex items-center rounded-full bg-red-100 text-red-700 px-2 py-0.5 text-xs font-semibold">
+                      Non chiusa
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-0.5 truncate">{g.commessa.nome}</p>
+                  <p className="text-xs text-gray-400">
+                    {g.data.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })} · fase: {g.fase}
+                  </p>
+                </div>
+                <a
+                  href={`/impresa/giornate/${g.id}/chat`}
+                  className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+                >
+                  💬 Chat
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* SEZIONE STORICO con filtri */}
       <div>

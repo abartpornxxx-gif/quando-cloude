@@ -21,6 +21,17 @@ export async function iniziaGiornata(input: {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  // Guard: blocca se esiste già una giornata aperta (qualsiasi data)
+  const giornataAperta = await prisma.giornata.findFirst({
+    where: {
+      operaioId: operaio.id,
+      stato: 'bozza',
+      fase: { not: 'completata' },
+    },
+    orderBy: { data: 'desc' },
+  })
+  if (giornataAperta) redirect(`/operaio/giornata/${giornataAperta.id}/lavori`)
+
   const g = await prisma.giornata.create({
     data: {
       commessaId: input.commessaId,
