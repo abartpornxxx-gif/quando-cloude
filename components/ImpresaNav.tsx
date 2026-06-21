@@ -237,7 +237,7 @@ export function ImpresaNav() {
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={chiudiMenu} aria-hidden="true" />
 
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col overflow-hidden">
+          <div className="absolute inset-y-0 right-0 w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col overflow-hidden">
             {/* Header pannello */}
             <div className="flex items-center justify-between px-4 py-3.5 bg-slate-900 shrink-0">
               <div className="flex items-center gap-2.5">
