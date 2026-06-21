@@ -4,7 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { NotificheBell } from '@/components/NotificheBell'
 import { listaNotificheOperaio } from '@/lib/notifiche'
+
 import { OperaioBottomNav } from '@/components/OperaioBottomNav'
+import { LogoutButton } from '@/components/LogoutButton'
 import Image from 'next/image'
 import { AlertTriangle } from 'lucide-react'
 
@@ -33,13 +35,6 @@ export default async function OperaioLayout({ children }: { children: React.Reac
     }
   }
 
-  async function signOut() {
-    'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/login')
-  }
-
   return (
     <div className="min-h-full bg-gray-50">
       {/* Header */}
@@ -66,11 +61,7 @@ export default async function OperaioLayout({ children }: { children: React.Reac
                 </a>
               )}
               <NotificheBell count={alertCount} href="/operaio/notifiche" colore="emerald" />
-              <form action={signOut}>
-                <button type="submit" className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-200 hover:bg-emerald-800">
-                  Esci
-                </button>
-              </form>
+              <LogoutButton className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-200 hover:bg-emerald-800" />
             </div>
           </div>
         </div>

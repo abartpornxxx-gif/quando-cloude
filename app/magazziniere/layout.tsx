@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
+import { LogoutButton } from '@/components/LogoutButton'
 import { listaNotificheMagazziniere } from '@/lib/notifiche'
 import { LayoutDashboard, Inbox, Warehouse, type LucideIcon } from 'lucide-react'
 
@@ -13,13 +14,6 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
 
   const notifiche = await listaNotificheMagazziniere(user.id)
   const alertCount = notifiche.filter(n => !n.letta).length
-
-  async function signOut() {
-    'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/login')
-  }
 
   const NAV_ITEMS: { label: string; href: string; Icon: LucideIcon }[] = [
     { label: 'Dashboard', href: '/magazziniere/dashboard', Icon: LayoutDashboard },
@@ -60,11 +54,7 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
             {/* Actions */}
             <div className="flex items-center gap-2">
               <NotificheBell count={alertCount} href="/magazziniere/notifiche" colore="yellow" />
-              <form action={signOut}>
-                <button type="submit" className="rounded-lg px-3 py-1.5 text-sm font-medium text-amber-100 hover:bg-amber-700">
-                  Esci
-                </button>
-              </form>
+              <LogoutButton className="rounded-lg px-3 py-1.5 text-sm font-medium text-amber-100 hover:bg-amber-700" />
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
 import Link from 'next/link'
+import { LogoutButton } from '@/components/LogoutButton'
 import {
   LayoutDashboard,
   Users,
@@ -12,13 +13,6 @@ import {
   Receipt,
   ChevronDown,
 } from 'lucide-react'
-
-async function signOut() {
-  'use server'
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  redirect('/login')
-}
 
 const NAV = [
   { label: 'Dashboard', href: '/ufficio/dashboard', Icon: LayoutDashboard },
@@ -92,11 +86,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="hidden lg:block text-sm text-teal-200 truncate max-w-32">{nome.split(' ')[0]}</span>
               <NotificheBell count={0} href="#" colore="emerald" />
-              <form action={signOut}>
-                <button type="submit" className="rounded-lg px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-600 hover:text-white">
-                  Esci
-                </button>
-              </form>
+              <LogoutButton className="rounded-lg px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-600 hover:text-white" />
             </div>
           </div>
         </div>

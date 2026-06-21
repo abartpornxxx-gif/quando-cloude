@@ -4,14 +4,8 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
+import { LogoutButton } from '@/components/LogoutButton'
 import { listaNotificheCliente } from '@/lib/notifiche'
-
-async function signOut() {
-  'use server'
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  redirect('/login')
-}
 
 export default async function ClienteLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -69,11 +63,7 @@ export default async function ClienteLayout({ children }: { children: React.Reac
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="hidden lg:block text-sm text-violet-300 truncate max-w-32">{nome.split(' ')[0]}</span>
               <NotificheBell count={alertCount} href="/cliente/notifiche" colore="violet" />
-              <form action={signOut}>
-                <button type="submit" className="rounded-lg px-3 py-1.5 text-sm font-medium text-violet-200 hover:bg-violet-600 hover:text-white">
-                  Esci
-                </button>
-              </form>
+              <LogoutButton className="rounded-lg px-3 py-1.5 text-sm font-medium text-violet-200 hover:bg-violet-600 hover:text-white" />
             </div>
           </div>
         </div>
