@@ -2,7 +2,7 @@ import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
-import { AlertCircle, Phone, Mail, Receipt } from 'lucide-react'
+import { AlertCircle, Phone, Mail, Receipt, MessageCircle } from 'lucide-react'
 
 function eur(cents: number) {
   return (cents / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })
@@ -15,6 +15,16 @@ function totaleFattura(righe: { quantita: number; prezzoUnitario: number }[]) {
 function formatData(d: Date | null) {
   if (!d) return null
   return new Date(d).toLocaleDateString('it-IT')
+}
+
+function whatsappUrl(telefono: string): string | null {
+  // Pulisce il numero: rimuove tutto tranne le cifre
+  const digits = telefono.replace(/\D/g, '')
+  if (!digits) return null
+  // Se inizia con 39 (prefisso IT già presente) usa così; se inizia con 0 aggiunge 39; altrimenti aggiunge 39
+  const normalized = digits.startsWith('39') ? digits : `39${digits.replace(/^0+/, '')}`
+  if (normalized.length < 10) return null
+  return `https://wa.me/${normalized}`
 }
 
 export default async function SaldiPendentiPage() {
@@ -103,6 +113,17 @@ export default async function SaldiPendentiPage() {
                         >
                           <Phone size={12} />
                           {c.cliente.telefono}
+                        </a>
+                      )}
+                      {c.cliente?.telefono && whatsappUrl(c.cliente.telefono) && (
+                        <a
+                          href={whatsappUrl(c.cliente.telefono)!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-800"
+                        >
+                          <MessageCircle size={12} />
+                          WhatsApp
                         </a>
                       )}
                       {c.cliente?.email && (
@@ -206,7 +227,7 @@ export default async function SaldiPendentiPage() {
                 )}
 
                 {/* Footer azioni */}
-                <div className="flex items-center gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
+                <div className="flex flex-wrap items-center gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
                   <Link
                     href={`/ufficio/fatture?commessaId=${c.id}`}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700"
@@ -220,7 +241,18 @@ export default async function SaldiPendentiPage() {
                       className="inline-flex items-center gap-1.5 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
                     >
                       <Mail size={14} />
-                      Scrivi al cliente
+                      Email
+                    </a>
+                  )}
+                  {c.cliente?.telefono && whatsappUrl(c.cliente.telefono) && (
+                    <a
+                      href={`${whatsappUrl(c.cliente.telefono)}?text=${encodeURIComponent(`Gentile cliente, la contatto riguardo al saldo del cantiere "${c.nome}".`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-white border border-emerald-200 px-4 py-2.5 text-sm font-medium text-emerald-700 shadow-sm hover:bg-emerald-50"
+                    >
+                      <MessageCircle size={14} />
+                      WhatsApp
                     </a>
                   )}
                 </div>

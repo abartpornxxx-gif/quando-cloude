@@ -566,3 +566,72 @@ export async function listaNotificheCliente(clienteId: string, userId?: string):
 
   return items
 }
+
+// ─── UFFICIO ──────────────────────────────────────────────────────────────────
+
+export async function alertUfficio(): Promise<number> {
+  const commesse = await prisma.commessa.findMany({
+    where: { stato: 'finita', archiviata: false },
+    select: {
+      preventivato: true,
+      fatturato: true,
+      _count: { select: { fattureAttive: { where: { stato: { in: ['da_incassare', 'scaduta'] } } } } },
+    },
+  })
+  return commesse.filter(
+    c => c._count.fattureAttive > 0 || (c.preventivato > 0 && c.fatturato < c.preventivato)
+  ).length
+}
+
+export async function listaNotificheUfficio(): Promise<ItemNotifica[]> {
+  const now = new Date()
+  const commesse = await prisma.commessa.findMany({
+    where: { stato: 'finita', archiviata: false },
+    include: {
+      cliente: { select: { nome: true } },
+      fattureAttive: {
+        where: { stato: { in: ['da_incassare', 'scaduta'] } },
+        select: {
+          id: true,
+          numero: true,
+          anno: true,
+          stato: true,
+          dataScadenza: true,
+          righe: { select: { quantita: true, prezzoUnitario: true } },
+        },
+      },
+    },
+    orderBy: { updatedAt: 'desc' },
+    take: 30,
+  })
+
+  const items: ItemNotifica[] = []
+
+  for (const c of commesse) {
+    const hasFattureAperte = c.fattureAttive.length > 0
+    const nonSaldato = c.preventivato > 0 && c.fatturato < c.preventivato
+    if (!hasFattureAperte && !nonSaldato) continue
+
+    const delta = c.preventivato - c.fatturato
+    const scadute = c.fattureAttive.filter(
+      f => f.stato === 'scaduta' || (f.dataScadenza && new Date(f.dataScadenza) < now)
+    )
+    const urgente = scadute.length > 0
+    const deltaStr =
+      delta > 0
+        ? ` · residuo ${(delta / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}`
+        : ''
+
+    items.push({
+      id: c.id,
+      tipo: 'saldo_pendente',
+      titolo: urgente ? `Fatture scadute: ${c.nome}` : `Saldo pendente: ${c.nome}`,
+      sottotitolo: `${c.cliente?.nome ?? '—'}${deltaStr}`,
+      href: `/ufficio/saldi-pendenti`,
+      urgente,
+      data: c.updatedAt,
+    })
+  }
+
+  return items
+}

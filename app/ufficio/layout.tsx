@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
 import Link from 'next/link'
 import { LogoutButton } from '@/components/LogoutButton'
+import { alertUfficio } from '@/lib/notifiche'
 import {
   LayoutDashboard,
   Users,
@@ -37,6 +38,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
   if (!user || user.user_metadata?.role !== 'ufficio') redirect('/login')
 
   const nome = user.user_metadata?.full_name ?? user.email ?? 'Ufficio'
+  const alertCount = await alertUfficio()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -87,7 +89,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
             {/* Actions */}
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="hidden lg:block text-sm text-teal-200 truncate max-w-32">{nome.split(' ')[0]}</span>
-              <NotificheBell count={0} href="#" colore="emerald" />
+              <NotificheBell count={alertCount} href="/ufficio/notifiche" colore="emerald" />
               <LogoutButton className="rounded-lg px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-600 hover:text-white" />
             </div>
           </div>

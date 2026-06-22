@@ -76,6 +76,11 @@ export async function registraIncasso(
   revalidatePath('/impresa/fatture')
   revalidatePath(`/impresa/fatture/${fatturaId}`)
   if (fattura.commessaId) revalidatePath(`/impresa/commesse/${fattura.commessaId}`)
+  // Invalida anche i path ufficio: incasso può essere registrato da entrambi i ruoli
+  revalidatePath('/ufficio/fatture')
+  revalidatePath(`/ufficio/fatture/${fatturaId}`)
+  revalidatePath('/ufficio/saldi-pendenti')
+  revalidatePath('/ufficio/dashboard')
 }
 
 export async function segnaScaduta(fatturaId: string): Promise<void> {

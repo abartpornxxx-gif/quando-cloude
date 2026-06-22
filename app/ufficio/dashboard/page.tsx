@@ -34,9 +34,18 @@ export default async function UfficioDashboard() {
     }),
   ])
 
-  const saldiPendenti = commessefiniteRaw.filter(
+  const pendentiList = commessefiniteRaw.filter(
     c => c._count.fattureAttive > 0 || (c.preventivato > 0 && c.fatturato < c.preventivato)
-  ).length
+  )
+  const saldiPendenti = pendentiList.length
+  const totaleResiduoCents = pendentiList.reduce(
+    (acc, c) => acc + Math.max(0, c.preventivato - c.fatturato),
+    0
+  )
+  const totaleResiduoStr =
+    totaleResiduoCents > 0
+      ? (totaleResiduoCents / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })
+      : null
 
   const SEZIONI = [
     {
@@ -98,7 +107,7 @@ export default async function UfficioDashboard() {
       Icon: AlertCircle,
       label: 'Saldi pendenti',
       desc: saldiPendenti > 0
-        ? `${saldiPendenti} ${saldiPendenti === 1 ? 'cantiere da saldare' : 'cantieri da saldare'}`
+        ? `${saldiPendenti} ${saldiPendenti === 1 ? 'cantiere' : 'cantieri'} · ${totaleResiduoStr ?? 'residuo'}`
         : 'Tutto saldato',
       alert: saldiPendenti > 0,
       color: saldiPendenti > 0
