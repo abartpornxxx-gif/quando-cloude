@@ -1,6 +1,7 @@
 import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { GiornoView } from './GiornoView'
+import { PianificazioneSubNav } from '../PianificazioneSubNav'
 
 export default async function PianificazioneGiornoPage({
   searchParams,
@@ -41,11 +42,14 @@ export default async function PianificazioneGiornoPage({
   }))
 
   return (
-    <GiornoView
-      data={dataStr}
-      commesse={commesse}
-      operai={operai}
-      pianificazioni={pianificazioni}
-    />
+    <div className="space-y-5">
+      <PianificazioneSubNav />
+      <GiornoView
+        data={dataStr}
+        commesse={commesse}
+        operai={operai}
+        pianificazioni={pianificazioni}
+      />
+    </div>
   )
 }

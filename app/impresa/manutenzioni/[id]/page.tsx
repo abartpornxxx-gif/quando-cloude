@@ -9,8 +9,10 @@ import { ProposteSection, type PropostaProp } from '../ProposteSection'
 import { salvaManutenzione, eliminaManutenzione } from '../actions'
 
 function statoScadenza(data: Date): 'scaduta' | 'imminente' | 'ok' {
-  const oggi = new Date(); oggi.setHours(0, 0, 0, 0)
-  const diffGiorni = Math.floor((data.getTime() - oggi.getTime()) / 86_400_000)
+  const now = new Date()
+  const oggiUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  const dataUtc = Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), data.getUTCDate())
+  const diffGiorni = Math.floor((dataUtc - oggiUtc) / 86_400_000)
   if (diffGiorni < 0) return 'scaduta'
   if (diffGiorni <= 30) return 'imminente'
   return 'ok'

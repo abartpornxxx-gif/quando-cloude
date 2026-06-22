@@ -117,7 +117,7 @@ export function GiornoView({
           </p>
         </div>
         <a
-          href="/impresa/pianificazione"
+          href="/impresa/pianificazione/board"
           className="shrink-0 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 text-sm font-medium shadow-sm"
         >
           Vista settimanale

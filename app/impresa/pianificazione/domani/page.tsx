@@ -1,6 +1,7 @@
 import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { DomaniPlannerView } from './DomaniPlannerView'
+import { PianificazioneSubNav } from '../PianificazioneSubNav'
 
 export default async function PianificazioneDomaniPage() {
   await requireImpresa()
@@ -73,6 +74,8 @@ export default async function PianificazioneDomaniPage() {
   }))
 
   return (
+    <div className="space-y-5">
+    <PianificazioneSubNav />
     <DomaniPlannerView
       data={dataStr}
       dataLabel={dataLabel}
@@ -81,5 +84,6 @@ export default async function PianificazioneDomaniPage() {
       pianificazioni={pianificazioni}
       suggerimenti={suggerimenti}
     />
+    </div>
   )
 }

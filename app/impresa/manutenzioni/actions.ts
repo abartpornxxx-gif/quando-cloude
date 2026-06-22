@@ -55,8 +55,20 @@ export async function salvaManutenzione(fd: FormData): Promise<void> {
 
 export async function eliminaManutenzione(id: string): Promise<void> {
   await requireImpresa()
+
+  const proposteAttive = await prisma.propostaIntervento.count({
+    where: {
+      manutenzioneId: id,
+      stato: { in: ['Inviata', 'VistaDalCliente', 'Accettata', 'ConfermataManuale', 'CommessaCreata'] },
+    },
+  })
+  if (proposteAttive > 0) {
+    throw new Error('Impossibile eliminare: esistono proposte o commesse attive collegate a questa manutenzione. Annullale prima di procedere.')
+  }
+
   await prisma.manutenzioneProgrammata.delete({ where: { id } })
   revalidatePath('/impresa/manutenzioni')
+  redirect('/impresa/manutenzioni')
 }
 
 // ─── Proposte di intervento ───────────────────────────────────────────────────

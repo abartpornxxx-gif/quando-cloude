@@ -1,16 +1,7 @@
 import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
-import { CalendarDays, CalendarClock, CalendarRange, MonitorCheck, LayoutList } from 'lucide-react'
+import { PianificazioneSubNav } from './PianificazioneSubNav'
 import PianificazioneGiornaliera from './PianificazioneGiornaliera'
-
-const VISTE_RAPIDE = [
-  { href: '/impresa/pianificazione/domani', label: 'Pianifica domani', Icon: CalendarDays },
-  { href: '/impresa/pianificazione/giorno',  label: 'Vista giorno',    Icon: CalendarClock },
-  { href: '/impresa/calendario',             label: 'Calendario',      Icon: CalendarRange },
-  { href: '/impresa/giornate',               label: 'Centro Op.',      Icon: MonitorCheck },
-  { href: '/impresa/pianificazione/board',   label: 'Vista settimana', Icon: LayoutList },
-] as const
 
 export default async function PianificazionePage({
   searchParams,
@@ -57,19 +48,8 @@ export default async function PianificazionePage({
         <p className="text-sm text-gray-500 mt-0.5">Assegna gli operai ai cantieri giorno per giorno.</p>
       </div>
 
-      {/* Viste rapide */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {VISTE_RAPIDE.map(({ href, label, Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="flex-none flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 shadow-sm hover:border-blue-200 hover:text-blue-700 transition-colors whitespace-nowrap"
-          >
-            <Icon size={14} />
-            {label}
-          </Link>
-        ))}
-      </div>
+      {/* Navigazione tra viste */}
+      <PianificazioneSubNav />
 
       {/* Vista principale */}
       <PianificazioneGiornaliera

@@ -1,8 +1,7 @@
 import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { PianificazioneBoard } from '../PianificazioneBoard'
+import { PianificazioneSubNav } from '../PianificazioneSubNav'
 
 const GIORNI_ITA = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
 
@@ -69,15 +68,7 @@ export default async function BoardPage({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/impresa/pianificazione"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700"
-        >
-          <ArrowLeft size={16} />
-          Torna alla vista giornaliera
-        </Link>
-      </div>
+      <PianificazioneSubNav />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Vista settimanale</h1>
         <p className="text-sm text-gray-500 mt-0.5">Board drag-and-drop per settimana.</p>
