@@ -879,6 +879,7 @@ model PropostaIntervento {
   confermataDaImpresa Boolean                  @default(false) @map("confermata_da_impresa")
   commessaId          String?                  @map("commessa_id") @db.Uuid
   commessa            Commessa?                @relation(fields: [commessaId], references: [id], onDelete: SetNull)
+  dataEsecuzione      DateTime?                @map("data_esecuzione") @db.Date
   createdAt           DateTime                 @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime                 @updatedAt @map("updated_at") @db.Timestamptz
 

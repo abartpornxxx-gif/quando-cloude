@@ -66,6 +66,7 @@ export default async function ManutenzioneDettPage({ params }: { params: Promise
     messaggioImpresa: p.messaggioImpresa,
     rispostaCliente: p.rispostaCliente,
     confermataDaImpresa: p.confermataDaImpresa,
+    dataEsecuzione: p.dataEsecuzione?.toISOString() ?? null,
     commessa: p.commessa,
     createdAt: p.createdAt.toISOString(),
   }))

@@ -8,6 +8,7 @@ import {
   confermaPropostaManualmente,
   annullaPropostaIntervento,
   creaCommessaDaProposta,
+  segnaInterventoEseguito,
   type PropostaState,
 } from './actions'
 
@@ -27,6 +28,7 @@ export interface PropostaProp {
   messaggioImpresa: string | null
   rispostaCliente: string | null
   confermataDaImpresa: boolean
+  dataEsecuzione: string | null  // ISO — null se intervento non ancora eseguito
   commessa: { id: string; nome: string } | null
   createdAt: string
 }
@@ -157,6 +159,33 @@ export function ProposteSection({
                     {p.commessa.nome}
                   </Link>
                 </p>
+              )}
+
+              {/* CommessaCreata: segna intervento eseguito */}
+              {p.stato === 'CommessaCreata' && !p.dataEsecuzione && (
+                <form action={segnaInterventoEseguito.bind(null, p.id)} className="pt-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input
+                      type="date"
+                      name="dataEsecuzione"
+                      defaultValue={new Date().toLocaleDateString('sv')}
+                      className="rounded-lg border border-gray-200 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
+                    >
+                      Segna intervento eseguito
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* CommessaCreata: intervento già eseguito */}
+              {p.stato === 'CommessaCreata' && p.dataEsecuzione && (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700 font-medium">
+                  ✓ Intervento eseguito il {formatDataIT(p.dataEsecuzione)} — prossima scadenza aggiornata
+                </div>
               )}
 
               {/* Azioni: proposta aperta */}

@@ -132,6 +132,58 @@ export async function annullaPropostaIntervento(propostaId: string): Promise<voi
   revalidatePath('/impresa/manutenzioni')
 }
 
+export async function segnaInterventoEseguito(propostaId: string, fd: FormData): Promise<void> {
+  await requireImpresa()
+
+  const dataStr = (fd.get('dataEsecuzione') as string) || new Date().toISOString().slice(0, 10)
+  const dataEsecuzione = new Date(dataStr)
+
+  const proposta = await prisma.propostaIntervento.findUnique({
+    where: { id: propostaId },
+    include: {
+      manutenzione: { select: { id: true, intervalloValore: true, intervalloUnita: true } },
+    },
+  })
+
+  if (!proposta) throw new Error('Proposta non trovata.')
+  if (proposta.stato !== 'CommessaCreata') {
+    throw new Error(`Proposta in stato "${proposta.stato}": operazione non consentita.`)
+  }
+  if (!proposta.commessaId) throw new Error('Proposta senza commessa collegata.')
+
+  // Idempotente: già eseguita → non aggiornare di nuovo
+  if (proposta.dataEsecuzione) {
+    revalidatePath(`/impresa/manutenzioni/${proposta.manutenzioneId}`)
+    return
+  }
+
+  // Calcola dataProssimoIntervento
+  const prossima = new Date(dataEsecuzione)
+  if (proposta.manutenzione.intervalloUnita === 'Mesi') {
+    prossima.setUTCMonth(prossima.getUTCMonth() + proposta.manutenzione.intervalloValore)
+  } else {
+    prossima.setUTCDate(prossima.getUTCDate() + proposta.manutenzione.intervalloValore)
+  }
+
+  await prisma.$transaction([
+    prisma.propostaIntervento.update({
+      where: { id: propostaId },
+      data: { dataEsecuzione },
+    }),
+    prisma.manutenzioneProgrammata.update({
+      where: { id: proposta.manutenzioneId },
+      data: {
+        dataUltimoIntervento: dataEsecuzione,
+        dataProssimoIntervento: prossima,
+      },
+    }),
+  ])
+
+  revalidatePath(`/impresa/manutenzioni/${proposta.manutenzioneId}`)
+  revalidatePath('/impresa/manutenzioni')
+  revalidatePath('/impresa/notifiche')
+}
+
 export async function creaCommessaDaProposta(propostaId: string): Promise<void> {
   await requireImpresa()
 
