@@ -1,0 +1,75 @@
+import { requireImpresa } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { notFound } from 'next/navigation'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Badge } from '@/components/ui/Badge'
+import { DeleteButton } from '@/components/DeleteButton'
+import { ManutenzioneForm } from '../ManutenzioneForm'
+import { salvaManutenzione, eliminaManutenzione } from '../actions'
+
+function statoScadenza(data: Date): 'scaduta' | 'imminente' | 'ok' {
+  const oggi = new Date(); oggi.setHours(0, 0, 0, 0)
+  const diffGiorni = Math.floor((data.getTime() - oggi.getTime()) / 86_400_000)
+  if (diffGiorni < 0) return 'scaduta'
+  if (diffGiorni <= 30) return 'imminente'
+  return 'ok'
+}
+
+export default async function ManutenzioneDettPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireImpresa()
+  const { id } = await params
+
+  const m = await prisma.manutenzioneProgrammata.findUnique({
+    where: { id },
+    include: { cliente: { select: { id: true, nome: true } } },
+  })
+  if (!m) notFound()
+
+  const clienti = await prisma.cliente.findMany({
+    select: { id: true, nome: true },
+    orderBy: { nome: 'asc' },
+  })
+
+  const stato = statoScadenza(m.dataProssimoIntervento)
+  const badgeVariant = stato === 'scaduta' ? 'danger' : stato === 'imminente' ? 'warning' : 'success'
+  const badgeLabel = stato === 'scaduta' ? 'Scaduta' : stato === 'imminente' ? 'In scadenza' : 'Nei tempi'
+
+  const defaultValues = {
+    id: m.id,
+    clienteId: m.clienteId,
+    titolo: m.titolo,
+    tipoImpianto: m.tipoImpianto,
+    tipoImpiantoAltro: m.tipoImpiantoAltro ?? '',
+    intervalloValore: m.intervalloValore,
+    intervalloUnita: m.intervalloUnita,
+    dataUltimoIntervento: m.dataUltimoIntervento?.toISOString().slice(0, 10) ?? '',
+    dataProssimoIntervento: m.dataProssimoIntervento.toISOString().slice(0, 10),
+    note: m.note ?? '',
+    attiva: m.attiva,
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <PageHeader
+        backHref="/impresa/manutenzioni"
+        backLabel="Manutenzioni"
+        title={m.titolo}
+        subtitle={m.cliente.nome}
+        badge={
+          <Badge variant={badgeVariant}>
+            {badgeLabel}
+          </Badge>
+        }
+        action={
+          <DeleteButton action={eliminaManutenzione.bind(null, m.id)} />
+        }
+      />
+
+      <ManutenzioneForm
+        action={salvaManutenzione}
+        clienti={clienti}
+        defaultValues={defaultValues}
+      />
+    </div>
+  )
+}

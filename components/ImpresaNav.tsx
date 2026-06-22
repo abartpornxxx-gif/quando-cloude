@@ -12,6 +12,7 @@ import {
   Tag,
   Settings,
   LayoutDashboard,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -32,12 +33,13 @@ const MACRO: MacroEntry[] = [
     iconBg: 'bg-amber-100',
     iconCls: 'text-amber-600',
     dot: 'bg-amber-400',
-    prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/rapportini', '/impresa/pianificazione', '/impresa/tipi-lavoro', '/impresa/giornate', '/impresa/calendario'],
+    prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/rapportini', '/impresa/pianificazione', '/impresa/tipi-lavoro', '/impresa/giornate', '/impresa/calendario', '/impresa/manutenzioni'],
     items: [
       { label: 'Commesse', href: '/impresa/commesse', desc: 'Cantieri aperti' },
       { label: 'Preventivi', href: '/impresa/preventivi', desc: 'Offerte ai clienti' },
       { label: 'Rapportini', href: '/impresa/rapportini', desc: 'Per commessa' },
       { label: 'Pianificazione', href: '/impresa/pianificazione', desc: 'Chi lavora e quando' },
+      { label: 'Manutenzioni', href: '/impresa/manutenzioni', desc: 'Controlli periodici' },
       { label: 'Tipi lavoro', href: '/impresa/tipi-lavoro', desc: 'Checklist adempimenti' },
     ],
   },
