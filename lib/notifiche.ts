@@ -30,13 +30,14 @@ export type AlertImpresa = {
   richiesteMateriale: number
   scadenzeMezzi: number
   manutenzioniScadenti: number
+  proposteAccettate: number
   totale: number
 }
 
 export async function alertImpresa(): Promise<AlertImpresa> {
   const tra30 = TRA_30_GIORNI()
 
-  const [rapportiniMancanti, scadenzeFatture, richiesteOfferte, richiesteMateriale, scadenzeMezzi, manutenzioniScadenti] =
+  const [rapportiniMancanti, scadenzeFatture, richiesteOfferte, richiesteMateriale, scadenzeMezzi, manutenzioniScadenti, proposteAccettate] =
     await Promise.all([
       prisma.giornata.count({ where: { fase: 'fine', stato: 'bozza', rapportino: null } }),
 
@@ -61,6 +62,11 @@ export async function alertImpresa(): Promise<AlertImpresa> {
       prisma.manutenzioneProgrammata.count({
         where: { attiva: true, dataProssimoIntervento: { lte: tra30 } },
       }),
+
+      // Proposte di intervento accettate/confermate in attesa di commessa
+      prisma.propostaIntervento.count({
+        where: { stato: { in: ['Accettata', 'ConfermataManuale'] }, commessaId: null },
+      }),
     ])
 
   return {
@@ -70,7 +76,8 @@ export async function alertImpresa(): Promise<AlertImpresa> {
     richiesteMateriale,
     scadenzeMezzi,
     manutenzioniScadenti,
-    totale: rapportiniMancanti + scadenzeFatture + richiesteOfferte + richiesteMateriale + scadenzeMezzi + manutenzioniScadenti,
+    proposteAccettate,
+    totale: rapportiniMancanti + scadenzeFatture + richiesteOfferte + richiesteMateriale + scadenzeMezzi + manutenzioniScadenti + proposteAccettate,
   }
 }
 
@@ -89,7 +96,7 @@ export async function listaNotificheImpresa(userId?: string): Promise<ItemNotifi
   const tra30 = TRA_30_GIORNI()
   const items: ItemNotifica[] = []
 
-  const [rapportini, fatture, offerte, richiesteMat, mezzi, manutenzioni, lette] = await Promise.all([
+  const [rapportini, fatture, offerte, richiesteMat, mezzi, manutenzioni, proposteAccettate, lette] = await Promise.all([
     prisma.giornata.findMany({
       where: { fase: 'fine', stato: 'bozza', rapportino: null },
       include: {
@@ -135,6 +142,16 @@ export async function listaNotificheImpresa(userId?: string): Promise<ItemNotifi
       where: { attiva: true, dataProssimoIntervento: { lte: tra30 } },
       include: { cliente: { select: { nome: true } } },
       orderBy: { dataProssimoIntervento: 'asc' },
+      take: 10,
+    }),
+    // Proposte accettate/confermate senza commessa → impresa deve creare la commessa
+    prisma.propostaIntervento.findMany({
+      where: { stato: { in: ['Accettata', 'ConfermataManuale'] }, commessaId: null },
+      include: {
+        manutenzione: { select: { id: true, titolo: true } },
+        cliente: { select: { nome: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
       take: 10,
     }),
     userId ? getNotificheLette(userId) : Promise.resolve(new Set<string>()),
@@ -219,6 +236,19 @@ export async function listaNotificheImpresa(userId?: string): Promise<ItemNotifi
       urgente: scaduta,
       data: man.dataProssimoIntervento,
       letta: lette.has(`manutenzione:${man.id}`),
+    })
+  }
+
+  for (const p of proposteAccettate) {
+    items.push({
+      id: p.id,
+      tipo: 'proposta_accettata',
+      titolo: `Proposta accettata: crea la commessa`,
+      sottotitolo: `${p.manutenzione.titolo} — ${p.cliente.nome}`,
+      href: `/impresa/manutenzioni/${p.manutenzioneId}`,
+      urgente: false,
+      data: p.updatedAt,
+      letta: lette.has(`proposta_accettata:${p.id}`),
     })
   }
 
@@ -358,7 +388,7 @@ export async function alertCliente(clienteId: string): Promise<number> {
   const tra14 = TRA_14_GIORNI()
   const settimanafa = SETTIMANA_FA()
 
-  const [fatture, commesseChiuse] = await Promise.all([
+  const [fatture, commesseChiuse, proposteAttive] = await Promise.all([
     prisma.fatturaAttiva.count({
       where: {
         clienteId,
@@ -369,9 +399,13 @@ export async function alertCliente(clienteId: string): Promise<number> {
     prisma.commessa.count({
       where: { clienteId, stato: 'chiusa', updatedAt: { gte: settimanafa } },
     }),
+    // Proposte di intervento in attesa di risposta dal cliente
+    prisma.propostaIntervento.count({
+      where: { clienteId, stato: { in: ['Inviata', 'VistaDalCliente'] } },
+    }),
   ])
 
-  return fatture + commesseChiuse
+  return fatture + commesseChiuse + proposteAttive
 }
 
 export async function listaNotificheCliente(clienteId: string, userId?: string): Promise<ItemNotifica[]> {
@@ -379,7 +413,7 @@ export async function listaNotificheCliente(clienteId: string, userId?: string):
   const settimanafa = SETTIMANA_FA()
   const items: ItemNotifica[] = []
 
-  const [fatture, commesseChiuse, dicoRecenti, pianificazioni, lette] = await Promise.all([
+  const [fatture, commesseChiuse, dicoRecenti, pianificazioni, proposteAttive, lette] = await Promise.all([
     prisma.fatturaAttiva.findMany({
       where: {
         clienteId,
@@ -411,6 +445,13 @@ export async function listaNotificheCliente(clienteId: string, userId?: string):
       },
       include: { commessa: { select: { nome: true } }, operaio: { select: { nome: true } } },
       orderBy: { data: 'asc' },
+      take: 5,
+    }),
+    // Proposte di intervento in attesa di risposta
+    prisma.propostaIntervento.findMany({
+      where: { clienteId, stato: { in: ['Inviata', 'VistaDalCliente'] } },
+      include: { manutenzione: { select: { titolo: true } } },
+      orderBy: { createdAt: 'desc' },
       take: 5,
     }),
     userId ? getNotificheLette(userId) : Promise.resolve(new Set<string>()),
@@ -463,6 +504,19 @@ export async function listaNotificheCliente(clienteId: string, userId?: string):
       href: `/cliente/lavori/${p.commessaId}`,
       data: p.data,
       letta: lette.has(`appuntamento:${p.id}`),
+    })
+  }
+
+  for (const prop of proposteAttive) {
+    items.push({
+      id: prop.id,
+      tipo: 'proposta',
+      titolo: 'Nuova proposta di intervento da confermare',
+      sottotitolo: prop.manutenzione.titolo,
+      href: '/cliente/manutenzioni',
+      urgente: false,
+      data: prop.dataPropostaPrevista,
+      letta: lette.has(`proposta:${prop.id}`),
     })
   }
 

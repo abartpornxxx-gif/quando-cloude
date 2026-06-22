@@ -31,6 +31,7 @@ export default async function ClienteLayout({ children }: { children: React.Reac
     { label: 'Pagamenti', href: '/cliente/pagamenti' },
     { label: 'Documenti', href: '/cliente/documenti' },
     { label: 'Servizi', href: '/cliente/servizi' },
+    { label: 'Manutenzioni', href: '/cliente/manutenzioni' },
   ]
 
   return (
