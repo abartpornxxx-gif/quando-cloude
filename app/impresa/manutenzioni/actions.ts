@@ -56,16 +56,27 @@ export async function salvaManutenzione(fd: FormData): Promise<void> {
 export async function eliminaManutenzione(id: string): Promise<void> {
   await requireImpresa()
 
-  const proposteAttive = await prisma.propostaIntervento.count({
-    where: {
-      manutenzioneId: id,
-      stato: { in: ['Inviata', 'VistaDalCliente', 'Accettata', 'ConfermataManuale', 'CommessaCreata'] },
-    },
+  // Conta qualsiasi proposta collegata (storico incluso: Annullata, CommessaCreata, ecc.)
+  const tutteLeProposte = await prisma.propostaIntervento.count({
+    where: { manutenzioneId: id },
   })
-  if (proposteAttive > 0) {
-    throw new Error('Impossibile eliminare: esistono proposte o commesse attive collegate a questa manutenzione. Annullale prima di procedere.')
+
+  if (tutteLeProposte > 0) {
+    // Ha storico → disattivazione logica invece di delete fisica
+    await prisma.manutenzioneProgrammata.update({
+      where: { id },
+      data: { attiva: false },
+    })
+    revalidatePath('/impresa/manutenzioni')
+    revalidatePath(`/impresa/manutenzioni/${id}`)
+    // Lancia un messaggio informativo (non un errore bloccante):
+    // DeleteButton lo mostra con alert() — l'utente vede la manutenzione come "Sospesa"
+    throw new Error(
+      'La manutenzione ha proposte o commesse collegate e non può essere eliminata fisicamente. È stata disattivata (Sospesa) e puoi vederla nella lista. Per eliminarla definitivamente annulla prima tutte le proposte.'
+    )
   }
 
+  // Nessuno storico → delete fisica sicura
   await prisma.manutenzioneProgrammata.delete({ where: { id } })
   revalidatePath('/impresa/manutenzioni')
   redirect('/impresa/manutenzioni')
