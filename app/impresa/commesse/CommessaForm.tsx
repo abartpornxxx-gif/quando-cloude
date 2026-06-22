@@ -24,6 +24,7 @@ interface Props {
   defaultValues?: {
     id?: string; nome?: string; clienteId?: string; indirizzoCantiere?: string
     stato?: string; note?: string; tipoLavoroId?: string
+    istruzioniCantiere?: string; attrezzatureNecessarie?: string
   } & Partial<Importi>
 }
 
@@ -89,9 +90,40 @@ export function CommessaForm({ action, clienti, tipiLavoro = [], defaultValues }
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Note</label>
+          <label className="block text-sm font-medium text-gray-700">Note interne</label>
           <textarea name="note" rows={2} defaultValue={defaultValues?.note}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            placeholder="Note riservate all'impresa (non visibili all'operaio)" />
+        </div>
+      </div>
+
+      {/* Istruzioni operative — visibili all'operaio */}
+      <div className="space-y-4 rounded-xl border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
+        <div>
+          <h2 className="text-sm font-semibold text-emerald-900">Istruzioni operative cantiere</h2>
+          <p className="mt-0.5 text-xs text-emerald-700">
+            Queste informazioni sono visibili all&apos;operaio durante tutta la giornata di lavoro.
+          </p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-emerald-900">Istruzioni fisse del cantiere</label>
+          <textarea
+            name="istruzioniCantiere"
+            rows={4}
+            defaultValue={defaultValues?.istruzioniCantiere}
+            className="mt-1 block w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+            placeholder="Es: il cliente apre alle 8, si entra dalla porta laterale, il quadro è nel locale tecnico al piano interrato…"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-emerald-900">Attrezzature / materiale da portare sempre</label>
+          <textarea
+            name="attrezzatureNecessarie"
+            rows={3}
+            defaultValue={defaultValues?.attrezzatureNecessarie}
+            className="mt-1 block w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+            placeholder="Es: porta sempre il tester digitale, cavo 4mm², fascette colorate, DPI livello 2…"
+          />
         </div>
       </div>
 

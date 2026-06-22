@@ -152,6 +152,8 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
     indirizzoCantiere: c.indirizzoCantiere ?? '',
     stato: c.stato,
     note: c.note ?? '',
+    istruzioniCantiere: c.istruzioniCantiere ?? '',
+    attrezzatureNecessarie: c.attrezzatureNecessarie ?? '',
     tipoLavoroId: c.tipoLavoroId ?? '',
     preventivato: c.preventivato,
     costiMateriali: c.costiMateriali,

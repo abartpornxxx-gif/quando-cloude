@@ -23,6 +23,8 @@ export async function salvaCommessa(formData: FormData) {
     costiMezzi: euroToCents(formData.get('costiMezzi') as string),
     fatturato: euroToCents(formData.get('fatturato') as string),
     note: (formData.get('note') as string) || null,
+    istruzioniCantiere: (formData.get('istruzioniCantiere') as string) || null,
+    attrezzatureNecessarie: (formData.get('attrezzatureNecessarie') as string) || null,
     tipoLavoroId,
   }
 

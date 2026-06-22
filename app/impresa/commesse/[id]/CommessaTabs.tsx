@@ -61,6 +61,8 @@ type DefaultValues = {
   indirizzoCantiere: string
   stato: string
   note: string
+  istruzioniCantiere: string
+  attrezzatureNecessarie: string
   tipoLavoroId: string
   preventivato: number
   costiMateriali: number
