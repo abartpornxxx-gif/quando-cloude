@@ -85,8 +85,8 @@ export default async function DomaniPage() {
                     <Row label="Con te" value={altriOperai.join(', ')} />
                   )}
 
-                  {/* Note */}
-                  {p.note && <Row label="Note" value={p.note} />}
+                  {/* Lavoro assegnato e note cantiere */}
+                  {p.lavoroDaFare && <Row label="Lavoro" value={p.lavoroDaFare} />}
                   {p.commessa.note && <Row label="Note cantiere" value={p.commessa.note} />}
                 </div>
 

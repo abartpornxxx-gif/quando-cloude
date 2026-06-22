@@ -9,7 +9,6 @@ export async function creaPianificazione(input: {
   operaioId: string
   data: string
   mezzoId?: string
-  note?: string
 }): Promise<{ id: string }> {
   await requireImpresaOUfficio()
 
@@ -23,14 +22,12 @@ export async function creaPianificazione(input: {
     },
     update: {
       mezzoId: input.mezzoId || null,
-      note: input.note || null,
     },
     create: {
       commessaId: input.commessaId,
       operaioId: input.operaioId,
       data: new Date(input.data),
       mezzoId: input.mezzoId || null,
-      note: input.note || null,
     },
   })
 
@@ -70,12 +67,11 @@ export async function sostituisciOperaio(pianificazioneId: string, nuovoOperaioI
           data: originale.data,
         },
       },
-      update: { note: 'Sostituzione' },
+      update: {},
       create: {
         commessaId: originale.commessaId,
         operaioId: nuovoOperaioId,
         data: originale.data,
-        note: 'Sostituzione',
       },
     }),
   ])
