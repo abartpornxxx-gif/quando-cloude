@@ -1,10 +1,12 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { requireImpresa } from '@/lib/auth'
 import { salvaCliente } from '../actions'
 import { GestioneAccesso } from '@/components/ui/GestioneAccesso'
 
 export default async function ModificaClientePage({ params }: { params: Promise<{ id: string }> }) {
+  await requireImpresa()
   const { id } = await params
   const cliente = await prisma.cliente.findUnique({ where: { id } })
   if (!cliente) notFound()
@@ -37,6 +39,16 @@ export default async function ModificaClientePage({ params }: { params: Promise<
         </Link>
         <span className="text-gray-300">/</span>
         <h1 className="text-xl font-bold text-gray-900">{cliente.nome}</h1>
+      </div>
+
+      {/* Link rapidi */}
+      <div className="flex flex-wrap gap-2">
+        <Link
+          href={`/impresa/fatture?clienteId=${id}`}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 shadow-sm"
+        >
+          Fatture emesse →
+        </Link>
       </div>
 
       <GestioneAccesso

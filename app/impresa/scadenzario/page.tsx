@@ -1,5 +1,4 @@
 import { requireImpresa } from '@/lib/auth'
-import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
@@ -7,9 +6,13 @@ import { formatEuro, formatData } from '@/lib/format'
 export default async function ScadenzarioPage() {
   await requireImpresa()
 
-  const oggi = new Date()
-  const tra30 = new Date(oggi)
-  tra30.setDate(tra30.getDate() + 30)
+  const now = new Date()
+  const oggiUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  const tra30Utc = oggiUtc + 30 * 86_400_000
+
+  function dataUtcMs(d: Date): number {
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  }
 
   const [attive, passive] = await Promise.all([
     prisma.fatturaAttiva.findMany({
@@ -42,91 +45,113 @@ export default async function ScadenzarioPage() {
     scadenza: Date
     importo: number
     scaduta: boolean
+    oggi: boolean
     inScadenza: boolean
     href: string
   }
 
-  function totaleAttiva(righe: { quantita: number; prezzoUnitario: number; }[], iva: number) {
+  function totaleAttiva(righe: { quantita: number; prezzoUnitario: number }[], iva: number) {
     const imp = righe.reduce((acc, r) => acc + Math.round(r.quantita * r.prezzoUnitario), 0)
     return imp + Math.round(imp * iva / 100)
+  }
+
+  function classificaData(d: Date): { scaduta: boolean; oggi: boolean; inScadenza: boolean } {
+    const dUtc = dataUtcMs(d)
+    return {
+      scaduta:    dUtc < oggiUtc,
+      oggi:       dUtc === oggiUtc,
+      inScadenza: dUtc > oggiUtc && dUtc <= tra30Utc,
+    }
   }
 
   const voci: Voce[] = [
     ...attive
       .filter(f => f.dataScadenza)
-      .map(f => ({
-        id: f.id,
-        tipo: 'attiva' as const,
-        descrizione: `Da incassare: ${f.cliente?.nome ?? '?'} — n. ${f.numero}/${f.anno}`,
-        scadenza: new Date(f.dataScadenza!),
-        importo: totaleAttiva(f.righe, f.aliquotaIva),
-        scaduta: new Date(f.dataScadenza!) < oggi,
-        inScadenza: new Date(f.dataScadenza!) >= oggi && new Date(f.dataScadenza!) <= tra30,
-        href: `/impresa/fatture/${f.id}`,
-      })),
+      .map(f => {
+        const cl = classificaData(f.dataScadenza!)
+        return {
+          id: f.id,
+          tipo: 'attiva' as const,
+          descrizione: `Da incassare: ${f.cliente?.nome ?? '?'} — n. ${f.numero}/${f.anno}`,
+          scadenza: f.dataScadenza!,
+          importo: totaleAttiva(f.righe, f.aliquotaIva),
+          ...cl,
+          href: `/impresa/fatture/${f.id}`,
+        }
+      }),
     ...passive
       .filter(f => f.dataScadenza)
-      .map(f => ({
-        id: f.id,
-        tipo: 'passiva' as const,
-        descrizione: `Da pagare: ${f.fornitore?.nome ?? '?'}${f.numero ? ` — n. ${f.numero}` : ''}`,
-        scadenza: new Date(f.dataScadenza!),
-        importo: f.importo,
-        scaduta: new Date(f.dataScadenza!) < oggi,
-        inScadenza: new Date(f.dataScadenza!) >= oggi && new Date(f.dataScadenza!) <= tra30,
-        href: `/impresa/fatture-passive/${f.id}`,
-      })),
-  ].sort((a, b) => a.scadenza.getTime() - b.scadenza.getTime())
+      .map(f => {
+        const cl = classificaData(f.dataScadenza!)
+        return {
+          id: f.id,
+          tipo: 'passiva' as const,
+          descrizione: `Da pagare: ${f.fornitore?.nome ?? '?'}${f.numero ? ` — n. ${f.numero}` : ''}`,
+          scadenza: f.dataScadenza!,
+          importo: f.importo,
+          ...cl,
+          href: `/impresa/fatture-passive/${f.id}`,
+        }
+      }),
+  ].sort((a, b) => dataUtcMs(a.scadenza) - dataUtcMs(b.scadenza))
 
-  const scadute = voci.filter(v => v.scaduta)
-  const inScadenza = voci.filter(v => !v.scaduta && v.inScadenza)
-  const future = voci.filter(v => !v.scaduta && !v.inScadenza)
+  const scadute    = voci.filter(v => v.scaduta)
+  const oggiVoci   = voci.filter(v => v.oggi)
+  const inScadenza = voci.filter(v => v.inScadenza)
+  const future     = voci.filter(v => !v.scaduta && !v.oggi && !v.inScadenza)
+
+  function VoceRow({ v }: { v: Voce }) {
+    return (
+      <Link href={v.href} className="flex items-center justify-between p-4 hover:bg-gray-50">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${v.tipo === 'attiva' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}`}>
+              {v.tipo === 'attiva' ? '▲ Attiva' : '▼ Passiva'}
+            </span>
+            <p className="text-sm font-medium truncate">{v.descrizione}</p>
+          </div>
+          <p className={`text-xs mt-0.5 ${v.scaduta ? 'text-red-500 font-medium' : v.oggi ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
+            Scadenza: {formatData(v.scadenza)}
+            {v.scaduta ? ' — SCADUTA' : v.oggi ? ' — OGGI' : ''}
+          </p>
+        </div>
+        <p className={`text-sm font-semibold ml-4 shrink-0 ${v.tipo === 'attiva' ? 'text-green-700' : 'text-orange-700'}`}>
+          {v.tipo === 'attiva' ? '+' : '−'} {formatEuro(v.importo)}
+        </p>
+      </Link>
+    )
+  }
 
   function Sezione({ titolo, items, colore }: { titolo: string; items: Voce[]; colore: string }) {
     if (items.length === 0) return null
     return (
       <div className="mb-6">
         <h2 className={`text-sm font-semibold mb-2 ${colore}`}>{titolo} ({items.length})</h2>
-        <div className="bg-white rounded-xl border divide-y">
-          {items.map(v => (
-            <Link key={v.id} href={v.href} className="flex items-center justify-between p-4 hover:bg-gray-50">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${v.tipo === 'attiva' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}`}>
-                    {v.tipo === 'attiva' ? '▲ Attiva' : '▼ Passiva'}
-                  </span>
-                  <p className="text-sm font-medium truncate">{v.descrizione}</p>
-                </div>
-                <p className={`text-xs mt-0.5 ${v.scaduta ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
-                  Scadenza: {formatData(v.scadenza)}
-                  {v.scaduta ? ' — SCADUTA' : ''}
-                </p>
-              </div>
-              <p className={`text-sm font-semibold ml-4 shrink-0 ${v.tipo === 'attiva' ? 'text-green-700' : 'text-orange-700'}`}>
-                {v.tipo === 'attiva' ? '+' : '−'} {formatEuro(v.importo)}
-              </p>
-            </Link>
-          ))}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+          {items.map(v => <VoceRow key={v.id} v={v} />)}
         </div>
       </div>
     )
   }
 
   const totDaIncassare = attive.reduce((acc, f) => acc + totaleAttiva(f.righe, f.aliquotaIva), 0)
-  const totDaPagare = passive.reduce((acc, f) => acc + f.importo, 0)
+  const totDaPagare    = passive.reduce((acc, f) => acc + f.importo, 0)
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Scadenzario</h1>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Scadenzario</h1>
+        <p className="mt-1 text-sm text-gray-500">Fatture attive da incassare e passive da pagare con scadenza</p>
+      </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="rounded-xl bg-green-50 border border-green-200 p-4">
-          <p className="text-xs text-green-600 font-medium">Totale da incassare</p>
-          <p className="text-xl font-bold text-green-800">{formatEuro(totDaIncassare)}</p>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+          <p className="text-xs font-semibold text-green-700 uppercase tracking-wide">Da incassare</p>
+          <p className="text-xl font-bold text-green-800 mt-1">{formatEuro(totDaIncassare)}</p>
         </div>
-        <div className="rounded-xl bg-orange-50 border border-orange-200 p-4">
-          <p className="text-xs text-orange-600 font-medium">Totale da pagare</p>
-          <p className="text-xl font-bold text-orange-800">{formatEuro(totDaPagare)}</p>
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
+          <p className="text-xs font-semibold text-orange-700 uppercase tracking-wide">Da pagare</p>
+          <p className="text-xl font-bold text-orange-800 mt-1">{formatEuro(totDaPagare)}</p>
         </div>
       </div>
 
@@ -135,8 +160,9 @@ export default async function ScadenzarioPage() {
       )}
 
       <Sezione titolo="Scadute" items={scadute} colore="text-red-700" />
-      <Sezione titolo="In scadenza (prossimi 30 giorni)" items={inScadenza} colore="text-orange-700" />
-      <Sezione titolo="Future" items={future} colore="text-gray-700" />
+      <Sezione titolo="In scadenza oggi" items={oggiVoci} colore="text-orange-600" />
+      <Sezione titolo="Entro 30 giorni" items={inScadenza} colore="text-amber-700" />
+      <Sezione titolo="Oltre 30 giorni" items={future} colore="text-gray-600" />
     </div>
   )
 }

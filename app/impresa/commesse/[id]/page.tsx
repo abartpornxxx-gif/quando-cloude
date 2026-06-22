@@ -7,9 +7,16 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { CommessaTabs } from './CommessaTabs'
 
-export default async function CommessaDettPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CommessaDettPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ errore?: string }>
+}) {
   await requireImpresa()
   const { id } = await params
+  const { errore } = await searchParams
 
   const [c, tuttiOperai, tipiLavoro, clienti, giornate, fatture, dico, piano] = await Promise.all([
     prisma.commessa.findUnique({
@@ -186,6 +193,18 @@ export default async function CommessaDettPage({ params }: { params: Promise<{ i
           ) : undefined
         }
       />
+
+      {/* Banner errore chiusura */}
+      {errore === 'non_saldato' && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+          <p className="text-sm font-semibold text-red-800">
+            Impossibile chiudere: il cliente non ha ancora saldato.
+          </p>
+          <p className="text-xs text-red-600 mt-1">
+            Registra l&apos;incasso delle fatture aperte oppure verifica che il fatturato raggiunga il preventivato, poi riprova.
+          </p>
+        </div>
+      )}
 
       {/* KPI finanziari — sempre visibili, riservati all'impresa */}
       {c.preventivato > 0 && (

@@ -29,6 +29,19 @@ export async function salvaCommessa(formData: FormData) {
   }
 
   if (id) {
+    // Guard: blocca chiusura se la commessa non è saldata
+    if (data.stato === 'chiusa') {
+      const fatturePendenti = await prisma.fatturaAttiva.count({
+        where: { commessaId: id, stato: { in: ['da_incassare', 'scaduta'] } },
+      })
+      const nonSaldato =
+        fatturePendenti > 0 ||
+        (data.preventivato > 0 && data.fatturato < data.preventivato)
+      if (nonSaldato) {
+        redirect(`/impresa/commesse/${id}?errore=non_saldato`)
+      }
+    }
+
     await prisma.commessa.update({ where: { id }, data })
     revalidatePath(`/impresa/commesse/${id}`)
     redirect('/impresa/commesse')

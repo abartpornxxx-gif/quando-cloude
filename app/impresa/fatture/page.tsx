@@ -19,10 +19,37 @@ const LABEL: Record<string, string> = {
   scaduta: 'Scaduta',
 }
 
-export default async function FattureAttivePage() {
+export default async function FattureAttivePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ commessaId?: string; clienteId?: string }>
+}) {
   await requireImpresa()
+  const { commessaId, clienteId } = await searchParams
+
+  const where: Record<string, unknown> = {}
+  if (commessaId) where.commessaId = commessaId
+  if (clienteId) where.clienteId = clienteId
+
+  // Risolvi label del filtro attivo
+  let filtroLabel: string | null = null
+  let filtroHref: string | null = null
+  if (commessaId) {
+    const c = await prisma.commessa.findUnique({ where: { id: commessaId }, select: { id: true, nome: true } })
+    if (c) {
+      filtroLabel = `Commessa: ${c.nome}`
+      filtroHref = `/impresa/commesse/${c.id}`
+    }
+  } else if (clienteId) {
+    const cl = await prisma.cliente.findUnique({ where: { id: clienteId }, select: { id: true, nome: true } })
+    if (cl) {
+      filtroLabel = `Cliente: ${cl.nome}`
+      filtroHref = `/impresa/clienti/${cl.id}`
+    }
+  }
 
   const fatture = await prisma.fatturaAttiva.findMany({
+    where,
     include: {
       cliente: { select: { nome: true } },
       commessa: { select: { nome: true } },
@@ -56,6 +83,23 @@ export default async function FattureAttivePage() {
         }
       />
 
+      {/* Breadcrumb filtro attivo */}
+      {filtroLabel && (
+        <div className="mb-4 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+            {filtroLabel}
+          </span>
+          <Link href="/impresa/fatture" className="text-xs text-gray-400 hover:text-gray-600">
+            × Rimuovi filtro
+          </Link>
+          {filtroHref && (
+            <Link href={filtroHref} className="text-xs text-blue-500 hover:text-blue-700">
+              ← Torna alla scheda
+            </Link>
+          )}
+        </div>
+      )}
+
       {totaleDaIncassare > 0 && (
         <div className="mb-6 flex items-center justify-between rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4">
           <div>
@@ -77,8 +121,8 @@ export default async function FattureAttivePage() {
       {fatture.length === 0 ? (
         <EmptyState
           icon="/immagini/icona-finanza.png"
-          title="Nessuna fattura"
-          description="Emetti la prima fattura da una commessa o da questa schermata."
+          title={filtroLabel ? 'Nessuna fattura per questo filtro' : 'Nessuna fattura'}
+          description={filtroLabel ? 'Non ci sono fatture associate.' : 'Emetti la prima fattura da una commessa o da questa schermata.'}
           action={
             <Link
               href="/impresa/fatture/nuova"

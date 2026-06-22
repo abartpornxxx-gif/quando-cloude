@@ -225,12 +225,20 @@ export function CommessaTabs({
             <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
               <div className="border-b border-gray-100 px-5 py-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-800">Fatture attive</h2>
-                <a
-                  href="/impresa/fatture/nuova"
-                  className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                >
-                  + Nuova
-                </a>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={`/impresa/fatture?commessaId=${commessaId}`}
+                    className="text-xs font-medium text-gray-500 hover:text-gray-700"
+                  >
+                    Lista completa →
+                  </a>
+                  <a
+                    href="/impresa/fatture/nuova"
+                    className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                  >
+                    + Nuova
+                  </a>
+                </div>
               </div>
               {fatture.length === 0 ? (
                 <p className="px-5 py-6 text-sm text-gray-400">Nessuna fattura per questa commessa.</p>
