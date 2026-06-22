@@ -44,7 +44,7 @@ export default async function SaldiPendentiPage() {
           dataScadenza: true,
           righe: { select: { quantita: true, prezzoUnitario: true } },
         },
-        orderBy: { anno: 'desc' },
+        orderBy: [{ anno: 'desc' }, { numero: 'desc' }],
       },
     },
     orderBy: { updatedAt: 'desc' },
@@ -68,7 +68,9 @@ export default async function SaldiPendentiPage() {
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Saldi pendenti</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Cantieri finiti con pagamenti ancora aperti o non saldati.
+          {pendenti.length > 0
+            ? `${pendenti.length} ${pendenti.length === 1 ? 'cantiere' : 'cantieri'} con pagamenti aperti o non saldati.`
+            : 'Cantieri finiti con pagamenti ancora aperti o non saldati.'}
         </p>
       </div>
 

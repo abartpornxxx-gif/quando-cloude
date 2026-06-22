@@ -22,7 +22,7 @@ const NAV = [
   { label: 'Ordini', href: '/ufficio/ordini', Icon: Package },
   { label: 'Pianificazione', href: '/ufficio/pianificazione', Icon: CalendarDays },
   { label: 'Fatture', href: '/ufficio/fatture', Icon: Receipt },
-  { label: 'Saldi pendenti', href: '/ufficio/saldi-pendenti', Icon: AlertCircle },
+  { label: 'Saldi', href: '/ufficio/saldi-pendenti', Icon: AlertCircle },
 ]
 
 const ANAGRAFICHE = [
