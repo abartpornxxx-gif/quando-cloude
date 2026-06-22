@@ -54,6 +54,8 @@ export async function registraIncasso(
     where: { id: fatturaId },
   })
   if (!fattura) throw new Error('Fattura non trovata')
+  // Guard idempotenza: impedisce doppio incremento se chiamata due volte
+  if (fattura.stato === 'incassata') throw new Error('Fattura già registrata come incassata')
 
   await prisma.$transaction(async tx => {
     await tx.fatturaAttiva.update({
@@ -91,6 +93,11 @@ export async function segnaScaduta(fatturaId: string): Promise<void> {
   })
   revalidatePath('/impresa/fatture')
   revalidatePath(`/impresa/fatture/${fatturaId}`)
+  revalidatePath('/ufficio/fatture')
+  revalidatePath(`/ufficio/fatture/${fatturaId}`)
+  revalidatePath('/ufficio/saldi-pendenti')
+  revalidatePath('/ufficio/dashboard')
+  revalidatePath('/ufficio/notifiche')
 }
 
 export async function eliminaFatturaAttiva(fatturaId: string): Promise<void> {

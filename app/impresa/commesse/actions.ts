@@ -86,6 +86,9 @@ export async function segnaCantierefinito(id: string) {
   })
   revalidatePath(`/impresa/commesse/${id}`)
   revalidatePath('/impresa/commesse')
+  revalidatePath('/ufficio/saldi-pendenti')
+  revalidatePath('/ufficio/dashboard')
+  revalidatePath('/ufficio/notifiche')
 }
 
 export async function archiviaCommessa(id: string) {
@@ -93,6 +96,8 @@ export async function archiviaCommessa(id: string) {
   await prisma.commessa.update({ where: { id }, data: { archiviata: true } })
   revalidatePath('/impresa/commesse')
   revalidatePath('/impresa/commesse/archiviate')
+  revalidatePath('/ufficio/saldi-pendenti')
+  revalidatePath('/ufficio/dashboard')
 }
 
 export async function ripristinaCommessa(id: string) {
@@ -100,6 +105,8 @@ export async function ripristinaCommessa(id: string) {
   await prisma.commessa.update({ where: { id }, data: { archiviata: false } })
   revalidatePath('/impresa/commesse')
   revalidatePath('/impresa/commesse/archiviate')
+  revalidatePath('/ufficio/saldi-pendenti')
+  revalidatePath('/ufficio/dashboard')
 }
 
 export async function assegnaOperaio(commessaId: string, operaioId: string) {
