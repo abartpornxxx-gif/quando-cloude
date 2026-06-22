@@ -53,6 +53,7 @@ model Cliente {
   fattureAttive      FatturaAttiva[]
   richiesteOfferte   RichiestaOfferta[]
   manutenzioni       ManutenzioneProgrammata[]
+  proposteIntervento PropostaIntervento[]
 
   @@map("clienti")
 }
@@ -258,6 +259,7 @@ model Commessa {
   dichiarazioniConformita DichiarazioneConformita[]
   richiesteOfferte        RichiestaOfferta[]
   adempimenti             AdempimentoCommessa[]
+  proposteIntervento      PropostaIntervento[]
 
   @@map("commesse")
 }
@@ -847,8 +849,40 @@ model ManutenzioneProgrammata {
   attiva                 Boolean                  @default(true)
   createdAt              DateTime                 @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime                 @updatedAt @map("updated_at") @db.Timestamptz
+  proposte               PropostaIntervento[]
 
   @@map("manutenzioni_programmate")
+}
+
+// ─── Proposte di intervento (consenso cliente per manutenzioni) ───────────────
+
+enum StatoPropostaIntervento {
+  Inviata
+  VistaDalCliente
+  Accettata
+  RifiutataCliente
+  ConfermataManuale
+  CommessaCreata
+  Annullata
+}
+
+model PropostaIntervento {
+  id                  String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  manutenzioneId      String                   @map("manutenzione_id") @db.Uuid
+  manutenzione        ManutenzioneProgrammata  @relation(fields: [manutenzioneId], references: [id], onDelete: Cascade)
+  clienteId           String                   @map("cliente_id") @db.Uuid
+  cliente             Cliente                  @relation(fields: [clienteId], references: [id])
+  stato               StatoPropostaIntervento  @default(Inviata)
+  messaggioImpresa    String?                  @map("messaggio_impresa")
+  dataPropostaPrevista DateTime                @map("data_proposta_prevista") @db.Date
+  rispostaCliente     String?                  @map("risposta_cliente")
+  confermataDaImpresa Boolean                  @default(false) @map("confermata_da_impresa")
+  commessaId          String?                  @map("commessa_id") @db.Uuid
+  commessa            Commessa?                @relation(fields: [commessaId], references: [id], onDelete: SetNull)
+  createdAt           DateTime                 @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime                 @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("proposte_intervento")
 }
 
 // ─── Stato lettura notifiche ─────────────────────────────────────────────────
