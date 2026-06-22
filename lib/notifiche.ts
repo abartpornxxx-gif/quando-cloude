@@ -29,13 +29,14 @@ export type AlertImpresa = {
   richiesteOfferte: number
   richiesteMateriale: number
   scadenzeMezzi: number
+  manutenzioniScadenti: number
   totale: number
 }
 
 export async function alertImpresa(): Promise<AlertImpresa> {
   const tra30 = TRA_30_GIORNI()
 
-  const [rapportiniMancanti, scadenzeFatture, richiesteOfferte, richiesteMateriale, scadenzeMezzi] =
+  const [rapportiniMancanti, scadenzeFatture, richiesteOfferte, richiesteMateriale, scadenzeMezzi, manutenzioniScadenti] =
     await Promise.all([
       prisma.giornata.count({ where: { fase: 'fine', stato: 'bozza', rapportino: null } }),
 
@@ -56,6 +57,10 @@ export async function alertImpresa(): Promise<AlertImpresa> {
           ],
         },
       }),
+
+      prisma.manutenzioneProgrammata.count({
+        where: { attiva: true, dataProssimoIntervento: { lte: tra30 } },
+      }),
     ])
 
   return {
@@ -64,7 +69,8 @@ export async function alertImpresa(): Promise<AlertImpresa> {
     richiesteOfferte,
     richiesteMateriale,
     scadenzeMezzi,
-    totale: rapportiniMancanti + scadenzeFatture + richiesteOfferte + richiesteMateriale + scadenzeMezzi,
+    manutenzioniScadenti,
+    totale: rapportiniMancanti + scadenzeFatture + richiesteOfferte + richiesteMateriale + scadenzeMezzi + manutenzioniScadenti,
   }
 }
 
@@ -83,7 +89,7 @@ export async function listaNotificheImpresa(userId?: string): Promise<ItemNotifi
   const tra30 = TRA_30_GIORNI()
   const items: ItemNotifica[] = []
 
-  const [rapportini, fatture, offerte, richiesteMat, mezzi, lette] = await Promise.all([
+  const [rapportini, fatture, offerte, richiesteMat, mezzi, manutenzioni, lette] = await Promise.all([
     prisma.giornata.findMany({
       where: { fase: 'fine', stato: 'bozza', rapportino: null },
       include: {
@@ -123,6 +129,12 @@ export async function listaNotificheImpresa(userId?: string): Promise<ItemNotifi
         ],
       },
       orderBy: { scadenzaBollo: 'asc' },
+      take: 10,
+    }),
+    prisma.manutenzioneProgrammata.findMany({
+      where: { attiva: true, dataProssimoIntervento: { lte: tra30 } },
+      include: { cliente: { select: { nome: true } } },
+      orderBy: { dataProssimoIntervento: 'asc' },
       take: 10,
     }),
     userId ? getNotificheLette(userId) : Promise.resolve(new Set<string>()),
@@ -193,6 +205,20 @@ export async function listaNotificheImpresa(userId?: string): Promise<ItemNotifi
       urgente: prossima ? new Date(prossima) < new Date() : false,
       data: prossima,
       letta: lette.has(`mezzo:${m.id}`),
+    })
+  }
+
+  for (const man of manutenzioni) {
+    const scaduta = man.dataProssimoIntervento < new Date()
+    items.push({
+      id: man.id,
+      tipo: 'manutenzione',
+      titolo: `Manutenzione ${scaduta ? 'SCADUTA' : 'in scadenza'}: ${man.titolo}`,
+      sottotitolo: man.cliente.nome,
+      href: `/impresa/manutenzioni/${man.id}`,
+      urgente: scaduta,
+      data: man.dataProssimoIntervento,
+      letta: lette.has(`manutenzione:${man.id}`),
     })
   }
 

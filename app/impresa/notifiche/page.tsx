@@ -15,12 +15,13 @@ import { segnaTutteLetteImpresa } from './actions'
 // Prima di attivare tracciamento posizione: accordo sindacale o autorizzazione ispettorato + informativa GDPR.
 
 const TIPO_ICON: Record<string, string> = {
-  rapportino: '/immagini/icona-rapportino.png',
-  fattura:    '/immagini/icona-finanza.png',
-  offerta:    '/immagini/icona-offerte.png',
-  materiale:  '/immagini/icona-materiale.png',
-  mezzo:      '🚐',
-  chat:       '/immagini/icona-chat.png',
+  rapportino:   '/immagini/icona-rapportino.png',
+  fattura:      '/immagini/icona-finanza.png',
+  offerta:      '/immagini/icona-offerte.png',
+  materiale:    '/immagini/icona-materiale.png',
+  mezzo:        '🚐',
+  chat:         '/immagini/icona-chat.png',
+  manutenzione: '🔧',
 }
 
 function NotificaIcon({ tipo }: { tipo: string }) {
