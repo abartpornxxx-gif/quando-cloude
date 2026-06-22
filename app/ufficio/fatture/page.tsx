@@ -11,10 +11,30 @@ type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral'
 const BADGE_VARIANT: Record<string, BadgeVariant> = { da_incassare: 'warning', incassata: 'success', scaduta: 'danger' }
 const LABEL: Record<string, string> = { da_incassare: 'Da incassare', incassata: 'Incassata', scaduta: 'Scaduta' }
 
-export default async function UfficioFatturePage() {
+export default async function UfficioFatturePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ commessaId?: string; clienteId?: string }>
+}) {
   await requireUfficio()
+  const { commessaId, clienteId } = await searchParams
+
+  const where: Record<string, unknown> = {}
+  if (commessaId) where.commessaId = commessaId
+  if (clienteId) where.clienteId = clienteId
+
+  // Risolvi label del filtro attivo
+  let filtroLabel: string | null = null
+  if (commessaId) {
+    const c = await prisma.commessa.findUnique({ where: { id: commessaId }, select: { nome: true } })
+    if (c) filtroLabel = `Commessa: ${c.nome}`
+  } else if (clienteId) {
+    const cl = await prisma.cliente.findUnique({ where: { id: clienteId }, select: { nome: true } })
+    if (cl) filtroLabel = `Cliente: ${cl.nome}`
+  }
 
   const fatture = await prisma.fatturaAttiva.findMany({
+    where,
     include: { cliente: { select: { nome: true } }, commessa: { select: { nome: true } }, righe: true },
     orderBy: [{ anno: 'desc' }, { numero: 'desc' }],
   })
@@ -32,9 +52,26 @@ export default async function UfficioFatturePage() {
     <div>
       <PageHeader
         title="Fatture attive"
-        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'} emesse${scadute > 0 ? ` · ${scadute} scadute` : ''}`}
+        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'}${filtroLabel ? ` · ${filtroLabel}` : ''}${scadute > 0 ? ` · ${scadute} scadute` : ''}`}
         action={<Link href="/ufficio/fatture/nuova" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">+ Nuova</Link>}
       />
+
+      {/* Breadcrumb filtro attivo */}
+      {filtroLabel && (
+        <div className="mb-4 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700">
+            {filtroLabel}
+          </span>
+          <Link href="/ufficio/fatture" className="text-xs text-gray-400 hover:text-gray-600">
+            × Rimuovi filtro
+          </Link>
+          {commessaId && (
+            <Link href="/ufficio/saldi-pendenti" className="text-xs text-teal-500 hover:text-teal-700">
+              ← Saldi pendenti
+            </Link>
+          )}
+        </div>
+      )}
 
       {totaleDaIncassare > 0 && (
         <div className="mb-6 flex items-center justify-between rounded-2xl bg-amber-50 border border-amber-200 px-5 py-4">
@@ -47,8 +84,11 @@ export default async function UfficioFatturePage() {
       )}
 
       {fatture.length === 0 ? (
-        <EmptyState title="Nessuna fattura" description="Emetti la prima fattura."
-          action={<Link href="/ufficio/fatture/nuova" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">+ Nuova fattura</Link>} />
+        <EmptyState
+          title={filtroLabel ? 'Nessuna fattura per questo filtro' : 'Nessuna fattura'}
+          description={filtroLabel ? 'Non ci sono fatture associate a questa commessa.' : 'Emetti la prima fattura.'}
+          action={<Link href="/ufficio/fatture/nuova" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">+ Nuova fattura</Link>}
+        />
       ) : (
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-100">
