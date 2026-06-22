@@ -78,6 +78,16 @@ export async function salvaCommessa(formData: FormData) {
   }
 }
 
+export async function segnaCantierefinito(id: string) {
+  await requireImpresa()
+  await prisma.commessa.update({
+    where: { id },
+    data: { stato: 'finita' },
+  })
+  revalidatePath(`/impresa/commesse/${id}`)
+  revalidatePath('/impresa/commesse')
+}
+
 export async function archiviaCommessa(id: string) {
   await requireImpresa()
   await prisma.commessa.update({ where: { id }, data: { archiviata: true } })

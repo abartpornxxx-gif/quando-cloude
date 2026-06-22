@@ -49,8 +49,8 @@ export default async function CommesseArchiviateePage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-gray-700">{c.nome}</span>
                         <Badge variant="neutral">Archiviata</Badge>
-                        <Badge variant={c.stato === 'aperta' ? 'success' : 'neutral'}>
-                          {c.stato === 'aperta' ? 'Aperta' : 'Chiusa'}
+                        <Badge variant={c.stato === 'aperta' ? 'success' : c.stato === 'finita' ? 'warning' : 'neutral'}>
+                          {c.stato === 'aperta' ? 'Aperta' : c.stato === 'finita' ? 'Finita' : 'Chiusa'}
                         </Badge>
                       </div>
                       <p className="mt-0.5 text-sm text-gray-500">{c.cliente?.nome ?? 'Senza cliente'}</p>

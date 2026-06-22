@@ -8,7 +8,7 @@ export default async function NuovaFatturaUfficioPage() {
 
   const [clienti, commesse] = await Promise.all([
     prisma.cliente.findMany({ select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
-    prisma.commessa.findMany({ where: { stato: 'aperta' }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
+    prisma.commessa.findMany({ where: { stato: { in: ['aperta', 'finita'] } }, select: { id: true, nome: true }, orderBy: { nome: 'asc' } }),
   ])
 
   return (

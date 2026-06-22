@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { requireImpresa } from '@/lib/auth'
 import { formatEuro } from '@/lib/format'
-import { salvaCommessa, assegnaOperaio, rimuoviAssegnazione } from '../actions'
+import { salvaCommessa, assegnaOperaio, rimuoviAssegnazione, segnaCantierefinito } from '../actions'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { CommessaTabs } from './CommessaTabs'
@@ -178,8 +178,11 @@ export default async function CommessaDettPage({
         title={c.nome}
         subtitle={c.cliente?.nome ?? undefined}
         badge={
-          <Badge variant={c.stato === 'aperta' ? 'success' : 'neutral'} dot={c.stato === 'aperta'}>
-            {c.stato === 'aperta' ? 'Aperta' : 'Chiusa'}
+          <Badge
+            variant={c.stato === 'aperta' ? 'success' : c.stato === 'finita' ? 'warning' : 'neutral'}
+            dot={c.stato === 'aperta'}
+          >
+            {c.stato === 'aperta' ? 'Aperta' : c.stato === 'finita' ? 'Finita — da saldare' : 'Chiusa'}
           </Badge>
         }
         action={
@@ -198,17 +201,35 @@ export default async function CommessaDettPage({
       {errore === 'non_saldato' && (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 space-y-2">
           <p className="text-sm font-semibold text-red-800">
-            Impossibile chiudere: il cliente non ha ancora saldato.
+            Il cliente non ha ancora saldato. Prima di chiudere il cantiere devi gestire il pagamento.
           </p>
           <p className="text-xs text-red-600">
-            Esistono fatture non incassate o il fatturato è inferiore al preventivato. Registra l&apos;incasso delle fatture aperte, poi riprova.
+            Esistono fatture non incassate o il fatturato è inferiore al preventivato.
           </p>
           <a
             href={`/impresa/fatture?commessaId=${id}`}
             className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 underline underline-offset-2 hover:text-red-900"
           >
-            Vai alle fatture di questa commessa →
+            Gestisci pagamento — vai alle fatture →
           </a>
+        </div>
+      )}
+
+      {/* Comando rapido: segna cantiere finito (visibile solo se aperta) */}
+      {c.stato === 'aperta' && (
+        <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3">
+          <div>
+            <p className="text-sm font-medium text-amber-900">Lavori completati?</p>
+            <p className="text-xs text-amber-700">Segna il cantiere come finito. Potrai chiuderlo definitivamente dopo il pagamento.</p>
+          </div>
+          <form action={segnaCantierefinito.bind(null, c.id)}>
+            <button
+              type="submit"
+              className="ml-4 shrink-0 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 shadow-sm"
+            >
+              Segna finito
+            </button>
+          </form>
         </div>
       )}
 

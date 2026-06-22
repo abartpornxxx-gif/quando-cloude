@@ -37,13 +37,14 @@ export default async function CommessePage() {
 
   const archiviate = await prisma.commessa.count({ where: { archiviata: true } })
   const aperte = commesse.filter(c => c.stato === 'aperta').length
+  const finite = commesse.filter(c => c.stato === 'finita').length
   const chiuse = commesse.filter(c => c.stato === 'chiusa').length
 
   return (
     <div>
       <PageHeader
         title="Commesse"
-        subtitle={`${aperte} aperte · ${chiuse} chiuse`}
+        subtitle={`${aperte} aperte${finite > 0 ? ` · ${finite} finite` : ''} · ${chiuse} chiuse`}
         action={
           <div className="flex items-center gap-2">
             {archiviate > 0 && (
@@ -95,7 +96,7 @@ export default async function CommessePage() {
                 className="flex items-stretch rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all overflow-hidden"
               >
                 {/* Accent border sinistra per stato */}
-                <div className={`w-1 shrink-0 ${c.stato === 'aperta' ? 'bg-emerald-400' : 'bg-gray-200'}`} />
+                <div className={`w-1 shrink-0 ${c.stato === 'aperta' ? 'bg-emerald-400' : c.stato === 'finita' ? 'bg-amber-400' : 'bg-gray-200'}`} />
                 <Link
                   href={`/impresa/commesse/${c.id}`}
                   className="flex-1 min-w-0 p-4 sm:p-5"
@@ -105,10 +106,10 @@ export default async function CommessePage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-gray-900">{c.nome}</span>
                         <Badge
-                          variant={c.stato === 'aperta' ? 'success' : 'neutral'}
+                          variant={c.stato === 'aperta' ? 'success' : c.stato === 'finita' ? 'warning' : 'neutral'}
                           dot={c.stato === 'aperta'}
                         >
-                          {c.stato === 'aperta' ? 'Aperta' : 'Chiusa'}
+                          {c.stato === 'aperta' ? 'Aperta' : c.stato === 'finita' ? 'Finita' : 'Chiusa'}
                         </Badge>
                         {totAdempimenti > 0 && (
                           <span

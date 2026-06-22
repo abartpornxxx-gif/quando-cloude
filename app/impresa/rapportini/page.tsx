@@ -63,8 +63,8 @@ export default async function RapportiniPage() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
                   <h2 className="text-base font-bold text-gray-900">{commessa.nome}</h2>
-                  <Badge variant={commessa.stato === 'aperta' ? 'success' : 'neutral'}>
-                    {commessa.stato === 'aperta' ? 'Aperta' : 'Chiusa'}
+                  <Badge variant={commessa.stato === 'aperta' ? 'success' : commessa.stato === 'finita' ? 'warning' : 'neutral'}>
+                    {commessa.stato === 'aperta' ? 'Aperta' : commessa.stato === 'finita' ? 'Finita' : 'Chiusa'}
                   </Badge>
                 </div>
                 <span className="text-xs text-gray-400">{commessa.giornate.length} rapportini</span>

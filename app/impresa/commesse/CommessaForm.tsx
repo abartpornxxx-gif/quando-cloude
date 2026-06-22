@@ -69,7 +69,8 @@ export function CommessaForm({ action, clienti, tipiLavoro = [], defaultValues }
             <select name="stato" defaultValue={defaultValues?.stato ?? 'aperta'}
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
               <option value="aperta">Aperta</option>
-              <option value="chiusa">Chiusa</option>
+              <option value="finita">Finita (lavori completati)</option>
+              <option value="chiusa">Chiusa (saldata)</option>
             </select>
           </div>
         </div>
