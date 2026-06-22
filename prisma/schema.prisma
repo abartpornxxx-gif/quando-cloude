@@ -237,7 +237,9 @@ model Commessa {
   fatturato         Int               @default(0)
   preventivoId      String?           @unique @map("preventivo_id") @db.Uuid
   preventivo        Preventivo?       @relation(fields: [preventivoId], references: [id])
-  note              String?
+  note                   String?
+  istruzioniCantiere     String?   @map("istruzioni_cantiere")
+  attrezzatureNecessarie String?   @map("attrezzature_necessarie")
   tipoLavoroId      String?           @map("tipo_lavoro_id") @db.Uuid
   tipoLavoro        TipoLavoro?       @relation(fields: [tipoLavoroId], references: [id], onDelete: SetNull)
   createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
@@ -411,7 +413,6 @@ model Pianificazione {
   mezzo           Mezzo?    @relation(fields: [mezzoId], references: [id])
   lavoroDaFare    String?   @map("lavoro_da_fare")
   noteMateriale   String?   @map("note_materiale")
-  note            String?
   stimaImpresaOre Float?    @map("stima_impresa_ore")
   confermata      Boolean   @default(false)
   sostituito      Boolean   @default(false)

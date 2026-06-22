@@ -18,7 +18,6 @@ type Pianificazione = {
   mezzo: Mezzo | null
   lavoroDaFare: string | null
   noteMateriale: string | null
-  note: string | null
 }
 
 interface Props {
@@ -98,9 +97,6 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
               <p className="text-xs font-semibold text-emerald-300 mb-1">Note materiale</p>
               <p className="text-sm text-white">{pianificazione.noteMateriale}</p>
             </div>
-          )}
-          {pianificazione.note && (
-            <p className="text-sm text-emerald-200 italic">{pianificazione.note}</p>
           )}
         </div>
       ) : (

@@ -108,7 +108,6 @@ export default async function NuovaGiornataPage() {
           mezzo: pianificazione.mezzo,
           lavoroDaFare: pianificazione.lavoroDaFare,
           noteMateriale: pianificazione.noteMateriale,
-          note: pianificazione.note,
         } : null}
       />
     </div>
