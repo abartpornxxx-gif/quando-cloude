@@ -1,7 +1,7 @@
 import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { FileText, Package, CalendarDays, Receipt, Users, Building2 } from 'lucide-react'
+import { FileText, Package, CalendarDays, Receipt, Users, AlertCircle } from 'lucide-react'
 
 export default async function UfficioDashboard() {
   const { collaboratore } = await requireUfficio()
@@ -14,6 +14,7 @@ export default async function UfficioDashboard() {
     fatturePassiveDaPagare,
     clientiTotali,
     commesseAperte,
+    commessefiniteRaw,
   ] = await Promise.all([
     prisma.preventivo.count({ where: { stato: 'bozza' } }),
     prisma.ordineFornitore.count({ where: { stato: { in: ['richiesto', 'ordinato'] } } }),
@@ -22,7 +23,20 @@ export default async function UfficioDashboard() {
     prisma.cliente.count(),
     // Solo nome/stato — nessun costo o margine selezionato
     prisma.commessa.count({ where: { stato: 'aperta', archiviata: false } }),
+    // Commesse finite: contare quelle non saldate
+    prisma.commessa.findMany({
+      where: { stato: 'finita', archiviata: false },
+      select: {
+        preventivato: true,
+        fatturato: true,
+        _count: { select: { fattureAttive: { where: { stato: { in: ['da_incassare', 'scaduta'] } } } } },
+      },
+    }),
   ])
+
+  const saldiPendenti = commessefiniteRaw.filter(
+    c => c._count.fattureAttive > 0 || (c.preventivato > 0 && c.fatturato < c.preventivato)
+  ).length
 
   const SEZIONI = [
     {
@@ -78,6 +92,19 @@ export default async function UfficioDashboard() {
       alert: false,
       color: 'bg-slate-50 border-slate-200 text-slate-700',
       iconCls: 'text-slate-600',
+    },
+    {
+      href: '/ufficio/saldi-pendenti',
+      Icon: AlertCircle,
+      label: 'Saldi pendenti',
+      desc: saldiPendenti > 0
+        ? `${saldiPendenti} ${saldiPendenti === 1 ? 'cantiere da saldare' : 'cantieri da saldare'}`
+        : 'Tutto saldato',
+      alert: saldiPendenti > 0,
+      color: saldiPendenti > 0
+        ? 'bg-red-50 border-red-200 text-red-700'
+        : 'bg-gray-50 border-gray-200 text-gray-700',
+      iconCls: saldiPendenti > 0 ? 'text-red-600' : 'text-gray-400',
     },
   ]
 
