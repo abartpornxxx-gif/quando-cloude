@@ -196,13 +196,19 @@ export default async function CommessaDettPage({
 
       {/* Banner errore chiusura */}
       {errore === 'non_saldato' && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 space-y-2">
           <p className="text-sm font-semibold text-red-800">
             Impossibile chiudere: il cliente non ha ancora saldato.
           </p>
-          <p className="text-xs text-red-600 mt-1">
-            Registra l&apos;incasso delle fatture aperte oppure verifica che il fatturato raggiunga il preventivato, poi riprova.
+          <p className="text-xs text-red-600">
+            Esistono fatture non incassate o il fatturato è inferiore al preventivato. Registra l&apos;incasso delle fatture aperte, poi riprova.
           </p>
+          <a
+            href={`/impresa/fatture?commessaId=${id}`}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 underline underline-offset-2 hover:text-red-900"
+          >
+            Vai alle fatture di questa commessa →
+          </a>
         </div>
       )}
 
