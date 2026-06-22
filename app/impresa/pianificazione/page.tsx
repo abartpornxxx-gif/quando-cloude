@@ -1,8 +1,15 @@
 import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import Image from 'next/image'
 import Link from 'next/link'
+import { CalendarDays, CalendarClock, CalendarRange, MonitorCheck } from 'lucide-react'
 import { PianificazioneBoard } from './PianificazioneBoard'
+
+const VISTE_RAPIDE = [
+  { href: '/impresa/pianificazione/domani', label: 'Pianifica domani', desc: 'Assegna operai al giorno successivo', Icon: CalendarDays },
+  { href: '/impresa/pianificazione/giorno', label: 'Vista giorno', desc: 'Singolo giorno touch-friendly', Icon: CalendarClock },
+  { href: '/impresa/calendario', label: 'Calendario mensile', desc: 'Vista mensile pianificazioni', Icon: CalendarRange },
+  { href: '/impresa/giornate', label: 'Centro Operativo', desc: 'Chi è in cantiere adesso', Icon: MonitorCheck },
+] as const
 
 const GIORNI_ITA = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
 
@@ -69,36 +76,42 @@ export default async function PianificazionePage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Pianificazione settimanale</h1>
-          <p className="mt-0.5 text-sm text-gray-500">
-            Clicca + per assegnare un operaio · alterna vista per cantiere o per operaio
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Link
-            href="/impresa/pianificazione/giorno"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 text-sm font-medium shadow-sm transition-colors"
-          >
-            Vista giorno (nuova)
-          </Link>
-          <a
-            href="/impresa/pianificazione/domani"
-            className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
-          >
-            <Image src="/immagini/icona-calendario.png" width={14} height={14} alt="" className="brightness-0 invert shrink-0" />
-            Pianifica domani
-          </a>
+      {/* Accesso rapido viste correlate */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Viste disponibili</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {VISTE_RAPIDE.map(({ href, label, desc, Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex flex-col gap-1.5 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm hover:border-blue-200 hover:bg-blue-50/50 transition-colors group"
+            >
+              <Icon size={18} className="text-blue-600 group-hover:text-blue-700" />
+              <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">{label}</p>
+              <p className="text-xs text-gray-500 leading-snug">{desc}</p>
+            </Link>
+          ))}
         </div>
       </div>
-      <PianificazioneBoard
-        weekDays={weekDays}
-        commesse={commesse}
-        operai={operai}
-        pianificazioni={pians}
-        weekStart={weekStart.toISOString().slice(0, 10)}
-      />
+
+      {/* Board settimanale */}
+      <div>
+        <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Pianificazione settimanale</h1>
+            <p className="mt-0.5 text-sm text-gray-500">
+              Clicca + per assegnare un operaio · alterna vista per cantiere o per operaio
+            </p>
+          </div>
+        </div>
+        <PianificazioneBoard
+          weekDays={weekDays}
+          commesse={commesse}
+          operai={operai}
+          pianificazioni={pians}
+          weekStart={weekStart.toISOString().slice(0, 10)}
+        />
+      </div>
     </div>
   )
 }
