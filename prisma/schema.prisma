@@ -52,6 +52,7 @@ model Cliente {
   commesse           Commessa[]
   fattureAttive      FatturaAttiva[]
   richiesteOfferte   RichiestaOfferta[]
+  manutenzioni       ManutenzioneProgrammata[]
 
   @@map("clienti")
 }
@@ -815,6 +816,39 @@ model TaskLibreria {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("task_libreria")
+}
+
+// ─── Manutenzioni programmate ─────────────────────────────────────────────────
+
+enum TipoImpiantoManutenzione {
+  Elettrico
+  Allarme
+  Automazioni
+  Altro
+}
+
+enum IntervalloUnita {
+  Giorni
+  Mesi
+}
+
+model ManutenzioneProgrammata {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clienteId              String                   @map("cliente_id") @db.Uuid
+  cliente                Cliente                  @relation(fields: [clienteId], references: [id])
+  titolo                 String
+  tipoImpianto           TipoImpiantoManutenzione @map("tipo_impianto")
+  tipoImpiantoAltro      String?                  @map("tipo_impianto_altro")
+  intervalloValore       Int                      @map("intervallo_valore")
+  intervalloUnita        IntervalloUnita          @map("intervallo_unita")
+  dataUltimoIntervento   DateTime?                @map("data_ultimo_intervento") @db.Date
+  dataProssimoIntervento DateTime                 @map("data_prossimo_intervento") @db.Date
+  note                   String?
+  attiva                 Boolean                  @default(true)
+  createdAt              DateTime                 @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime                 @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("manutenzioni_programmate")
 }
 
 // ─── Stato lettura notifiche ─────────────────────────────────────────────────
