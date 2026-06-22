@@ -75,9 +75,9 @@ export function GiornoView({
     try {
       const result = await creaPianificazione({ commessaId, operaioId, data })
       setPians(prev => prev.map(p => (p.id === tempId ? { ...p, id: result.id } : p)))
-    } catch {
+    } catch (err: unknown) {
       setPians(prev => prev.filter(p => p.id !== tempId))
-      alert("Errore durante l'assegnazione. Riprova.")
+      alert(err instanceof Error ? err.message : "Errore durante l'assegnazione. Riprova.")
     } finally {
       setBusy(false)
     }
@@ -159,8 +159,12 @@ export function GiornoView({
           {commesse.map(c => {
             const commessaPians = pians.filter(p => p.commessaId === c.id && !p.sostituito)
             const isOpen = dropdownAperto === c.id
+            // Esclude anche operai già assegnati ad ALTRI cantieri oggi
+            const occupatiAltrove = new Set(
+              pians.filter(p => p.commessaId !== c.id && !p.sostituito).map(p => p.operaioId)
+            )
             const operaiLiberi = operai.filter(
-              o => !commessaPians.some(p => p.operaioId === o.id)
+              o => !commessaPians.some(p => p.operaioId === o.id) && !occupatiAltrove.has(o.id)
             )
 
             return (

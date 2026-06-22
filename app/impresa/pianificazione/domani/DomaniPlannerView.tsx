@@ -178,9 +178,9 @@ export function DomaniPlannerView({
     try {
       const result = await creaPianificazione({ commessaId, operaioId, data })
       setPians(prev => prev.map(p => (p.id === tempId ? { ...p, id: result.id } : p)))
-    } catch {
+    } catch (err: unknown) {
       setPians(prev => prev.filter(p => p.id !== tempId))
-      alert("Errore durante l'assegnazione. Riprova.")
+      alert(err instanceof Error ? err.message : "Errore durante l'assegnazione. Riprova.")
     } finally {
       setBusy(false)
     }
@@ -244,7 +244,13 @@ export function DomaniPlannerView({
             {commesse.map(c => {
               const commessaPians = pians.filter(p => p.commessaId === c.id)
               const isOpen = dropdownAperto === c.id
-              const operaiLiberi = operai.filter(o => !commessaPians.some(p => p.operaioId === o.id))
+              // Esclude anche operai già assegnati ad ALTRI cantieri domani
+              const occupatiAltrove = new Set(
+                pians.filter(p => p.commessaId !== c.id).map(p => p.operaioId)
+              )
+              const operaiLiberi = operai.filter(
+                o => !commessaPians.some(p => p.operaioId === o.id) && !occupatiAltrove.has(o.id)
+              )
 
               return (
                 <div key={c.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4">

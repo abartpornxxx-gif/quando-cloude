@@ -12,6 +12,19 @@ export async function creaPianificazione(input: {
 }): Promise<{ id: string }> {
   await requireImpresaOUfficio()
 
+  // Blocca se lo stesso operaio è già assegnato a un ALTRO cantiere nello stesso giorno
+  const conflitto = await prisma.pianificazione.findFirst({
+    where: {
+      operaioId: input.operaioId,
+      data: new Date(input.data),
+      commessaId: { not: input.commessaId },
+    },
+    select: { commessa: { select: { nome: true } } },
+  })
+  if (conflitto) {
+    throw new Error(`Operaio già assegnato a "${conflitto.commessa.nome}" per questa data.`)
+  }
+
   const pian = await prisma.pianificazione.upsert({
     where: {
       commessaId_operaioId_data: {
@@ -53,6 +66,19 @@ export async function sostituisciOperaio(pianificazioneId: string, nuovoOperaioI
 
   const originale = await prisma.pianificazione.findUnique({ where: { id: pianificazioneId } })
   if (!originale) throw new Error('Pianificazione non trovata')
+
+  // Blocca se il nuovo operaio è già assegnato a un altro cantiere quel giorno
+  const conflitto = await prisma.pianificazione.findFirst({
+    where: {
+      operaioId: nuovoOperaioId,
+      data: originale.data,
+      commessaId: { not: originale.commessaId },
+    },
+    select: { commessa: { select: { nome: true } } },
+  })
+  if (conflitto) {
+    throw new Error(`L'operaio è già assegnato a "${conflitto.commessa.nome}" per questa data.`)
+  }
 
   await prisma.$transaction([
     prisma.pianificazione.update({

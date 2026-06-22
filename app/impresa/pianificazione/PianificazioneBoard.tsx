@@ -88,11 +88,12 @@ function DettagliModal({ plan, onClose }: { plan: PianMini; onClose: () => void 
 // ─── Vista CANTIERI: riga=commessa, colonna=giorno ────────────────────────────
 
 function CellaCantiere({
-  cellId, pians, operai, onAssegna, onRemove, saving, isToday,
+  cellId, pians, operai, operaiBusyNelGiorno, onAssegna, onRemove, saving, isToday,
 }: {
   cellId: string
   pians: PianMini[]
   operai: OperaioMini[]
+  operaiBusyNelGiorno: ReadonlySet<string>
   onAssegna: (commessaId: string, date: string, operaioId: string) => void
   onRemove: (id: string) => void
   saving: boolean
@@ -103,7 +104,10 @@ function CellaCantiere({
 
   const [commessaId, date] = cellId.split('|')
   const attivi = pians.filter(p => !p.sostituito)
-  const operaiLiberi = operai.filter(o => !attivi.some(p => p.operaioId === o.id))
+  // Esclude operai già assegnati ad altri cantieri nello stesso giorno
+  const operaiLiberi = operai.filter(
+    o => !attivi.some(p => p.operaioId === o.id) && !operaiBusyNelGiorno.has(o.id)
+  )
   const planDettagli = pians.find(p => p.id === dettagliId)
 
   return (
@@ -306,9 +310,9 @@ export function PianificazioneBoard({
     try {
       const result = await creaPianificazione({ commessaId, operaioId, data: date })
       setPians(prev => prev.map(p => (p.id === tempId ? { ...p, id: result.id } : p)))
-    } catch {
+    } catch (err: unknown) {
       setPians(prev => prev.filter(p => p.id !== tempId))
-      alert("Errore durante l'assegnazione. Riprova.")
+      alert(err instanceof Error ? err.message : "Errore durante l'assegnazione. Riprova.")
     } finally {
       setSaving(false)
     }
@@ -462,6 +466,11 @@ export function PianificazioneBoard({
                       cellId={`${c.id}|${d.date}`}
                       pians={pians.filter(p => p.commessaId === c.id && p.data === d.date)}
                       operai={operai}
+                      operaiBusyNelGiorno={new Set(
+                        pians
+                          .filter(p => p.commessaId !== c.id && p.data === d.date && !p.sostituito)
+                          .map(p => p.operaioId)
+                      )}
                       onAssegna={handleAssegna}
                       onRemove={handleRemove}
                       saving={saving}
