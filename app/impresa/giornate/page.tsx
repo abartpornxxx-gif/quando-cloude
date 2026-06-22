@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import GiornateMonitor from './GiornateMonitor'
 import StoricoCentroOperativo from './StoricoCentroOperativo'
+import { PianificazioneSubNav } from '../pianificazione/PianificazioneSubNav'
 
 export default async function CentroOperativoPage() {
   await requireImpresa()
@@ -125,6 +126,7 @@ export default async function CentroOperativoPage() {
 
   return (
     <div className="space-y-6">
+      <PianificazioneSubNav />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Centro Operativo</h1>

@@ -71,7 +71,7 @@ export default async function BoardPage({
       <PianificazioneSubNav />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Vista settimanale</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Board drag-and-drop per settimana.</p>
+        <p className="text-sm text-gray-500 mt-0.5">Assegna gli operai ai cantieri per tutta la settimana.</p>
       </div>
       <PianificazioneBoard
         weekDays={weekDays}

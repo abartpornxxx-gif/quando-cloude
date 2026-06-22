@@ -2,6 +2,7 @@ import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CalendarioMensile } from '@/components/CalendarioMensile'
 import type { CalEvent } from '@/components/CalendarioMensile'
+import { PianificazioneSubNav } from '../pianificazione/PianificazioneSubNav'
 
 export default async function CalendarioImpresaPage({
   searchParams,
@@ -78,6 +79,7 @@ export default async function CalendarioImpresaPage({
 
   return (
     <div className="space-y-6">
+      <PianificazioneSubNav />
       <div>
         <h1 className="text-xl font-bold text-gray-900">Calendario</h1>
         <p className="mt-0.5 text-sm text-gray-500">Panoramica di giornate, pianificazioni e assenze</p>
