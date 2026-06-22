@@ -131,3 +131,57 @@ export async function annullaPropostaIntervento(propostaId: string): Promise<voi
   revalidatePath(`/impresa/manutenzioni/${updated.manutenzioneId}`)
   revalidatePath('/impresa/manutenzioni')
 }
+
+export async function creaCommessaDaProposta(propostaId: string): Promise<void> {
+  await requireImpresa()
+
+  const proposta = await prisma.propostaIntervento.findUnique({
+    where: { id: propostaId },
+    include: {
+      manutenzione: { select: { id: true, titolo: true } },
+    },
+  })
+
+  if (!proposta) throw new Error('Proposta non trovata.')
+
+  // Guard: commessa già esistente → redirect alla commessa senza creare duplicati
+  if (proposta.commessaId) {
+    redirect(`/impresa/commesse/${proposta.commessaId}`)
+  }
+
+  // Guard: solo Accettata o ConfermataManuale possono generare una commessa
+  if (proposta.stato !== 'Accettata' && proposta.stato !== 'ConfermataManuale') {
+    throw new Error(`La proposta è in stato "${proposta.stato}" e non può generare una commessa.`)
+  }
+
+  // Nome: "Titolo manutenzione — GG/MM/AAAA"
+  const dataFormattata = proposta.dataPropostaPrevista.toLocaleDateString('it-IT')
+  const nomeCommessa = `${proposta.manutenzione.titolo} — ${dataFormattata}`
+
+  // Crea commessa con i campi esistenti
+  const commessa = await prisma.commessa.create({
+    data: {
+      nome: nomeCommessa,
+      clienteId: proposta.clienteId,
+      note: `Creata da proposta di intervento (manutenzione programmata). Proposta: ${propostaId}.`,
+    },
+  })
+
+  // Collega proposta alla commessa e segna CommessaCreata
+  await prisma.propostaIntervento.update({
+    where: { id: propostaId },
+    data: {
+      commessaId: commessa.id,
+      stato: 'CommessaCreata',
+    },
+  })
+
+  // La manutenzione programmata NON viene aggiornata qui:
+  // dataUltimoIntervento e dataProssimoIntervento si aggiornano
+  // solo quando l'intervento è effettivamente eseguito (fase successiva).
+
+  revalidatePath(`/impresa/manutenzioni/${proposta.manutenzioneId}`)
+  revalidatePath('/impresa/manutenzioni')
+  revalidatePath('/impresa/notifiche')
+  redirect(`/impresa/commesse/${commessa.id}`)
+}

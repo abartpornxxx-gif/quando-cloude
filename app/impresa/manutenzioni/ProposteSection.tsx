@@ -7,6 +7,7 @@ import {
   creaPropostaIntervento,
   confermaPropostaManualmente,
   annullaPropostaIntervento,
+  creaCommessaDaProposta,
   type PropostaState,
 } from './actions'
 
@@ -180,11 +181,16 @@ export function ProposteSection({
                 </div>
               )}
 
-              {/* Stato: pronta per commessa */}
-              {(p.stato === 'Accettata' || p.stato === 'ConfermataManuale') && (
-                <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-700 font-medium">
-                  Pronta per creare commessa — fase successiva
-                </div>
+              {/* Crea commessa: solo Accettata/ConfermataManuale senza commessa già aperta */}
+              {(p.stato === 'Accettata' || p.stato === 'ConfermataManuale') && !p.commessa && (
+                <form action={creaCommessaDaProposta.bind(null, p.id)} className="pt-1">
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    Crea commessa
+                  </button>
+                </form>
               )}
             </div>
           ))}
