@@ -6,6 +6,9 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { TipoImpiantoManutenzione, IntervalloUnita } from '@/app/generated/prisma/client'
 
+// ─── Tipi per useActionState ──────────────────────────────────────────────────
+export type PropostaState = { error?: string; success?: boolean }
+
 export async function salvaManutenzione(fd: FormData): Promise<void> {
   await requireImpresa()
 
@@ -53,5 +56,78 @@ export async function salvaManutenzione(fd: FormData): Promise<void> {
 export async function eliminaManutenzione(id: string): Promise<void> {
   await requireImpresa()
   await prisma.manutenzioneProgrammata.delete({ where: { id } })
+  revalidatePath('/impresa/manutenzioni')
+}
+
+// ─── Proposte di intervento ───────────────────────────────────────────────────
+
+export async function creaPropostaIntervento(
+  _prevState: PropostaState,
+  fd: FormData,
+): Promise<PropostaState> {
+  await requireImpresa()
+
+  const manutenzioneId = fd.get('manutenzioneId') as string
+  const dataStr = fd.get('dataPropostaPrevista') as string
+  const messaggio = ((fd.get('messaggioImpresa') as string) ?? '').trim() || null
+
+  if (!manutenzioneId || !dataStr) return { error: 'Campi obbligatori mancanti.' }
+
+  const manutenzione = await prisma.manutenzioneProgrammata.findUnique({
+    where: { id: manutenzioneId },
+    select: { id: true, clienteId: true },
+  })
+  if (!manutenzione) return { error: 'Manutenzione non trovata.' }
+
+  // Controllo applicativo prima dell'indice unico parziale DB
+  const aperta = await prisma.propostaIntervento.findFirst({
+    where: { manutenzioneId, stato: { in: ['Inviata', 'VistaDalCliente'] } },
+  })
+  if (aperta) {
+    return { error: 'Esiste già una proposta aperta per questa manutenzione. Annullala prima di crearne una nuova.' }
+  }
+
+  try {
+    await prisma.propostaIntervento.create({
+      data: {
+        manutenzioneId,
+        clienteId: manutenzione.clienteId,
+        stato: 'Inviata',
+        dataPropostaPrevista: new Date(dataStr),
+        messaggioImpresa: messaggio,
+        confermataDaImpresa: false,
+      },
+    })
+  } catch (e: unknown) {
+    // Fallback: indice unico parziale DB ha catturato un race condition
+    if (e instanceof Error && e.message.includes('proposte_intervento_unica_aperta')) {
+      return { error: 'Esiste già una proposta aperta per questa manutenzione.' }
+    }
+    throw e
+  }
+
+  revalidatePath(`/impresa/manutenzioni/${manutenzioneId}`)
+  return { success: true }
+}
+
+export async function confermaPropostaManualmente(propostaId: string): Promise<void> {
+  await requireImpresa()
+  const updated = await prisma.propostaIntervento.update({
+    where: { id: propostaId },
+    data: { stato: 'ConfermataManuale', confermataDaImpresa: true },
+    select: { manutenzioneId: true },
+  })
+  revalidatePath(`/impresa/manutenzioni/${updated.manutenzioneId}`)
+  revalidatePath('/impresa/manutenzioni')
+}
+
+export async function annullaPropostaIntervento(propostaId: string): Promise<void> {
+  await requireImpresa()
+  const updated = await prisma.propostaIntervento.update({
+    where: { id: propostaId },
+    data: { stato: 'Annullata' },
+    select: { manutenzioneId: true },
+  })
+  revalidatePath(`/impresa/manutenzioni/${updated.manutenzioneId}`)
   revalidatePath('/impresa/manutenzioni')
 }
