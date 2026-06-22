@@ -37,7 +37,7 @@ export type AlertImpresa = {
 export async function alertImpresa(): Promise<AlertImpresa> {
   const tra30 = TRA_30_GIORNI()
 
-  const [rapportiniMancanti, scadenzeFatture, richiesteOfferte, richiesteMateriale, scadenzeMezzi, manutenzioniScadenti, proposteAccettate] =
+  const [rapportiniMancanti, scadenzeFatture, richiesteOfferte, richiesteMateriale, mezziScad, manutenzioniScadenti, proposteAccettate] =
     await Promise.all([
       prisma.giornata.count({ where: { fase: 'fine', stato: 'bozza', rapportino: null } }),
 
@@ -49,7 +49,8 @@ export async function alertImpresa(): Promise<AlertImpresa> {
 
       prisma.richiestaMateriale.count({ where: { stato: 'richiesta' } }),
 
-      prisma.mezzo.count({
+      // Conta le scadenze individuali (bollo/revisione/assicurazione), non i mezzi
+      prisma.mezzo.findMany({
         where: {
           OR: [
             { scadenzaBollo: { lte: tra30, not: null } },
@@ -57,6 +58,7 @@ export async function alertImpresa(): Promise<AlertImpresa> {
             { scadenzaAssicurazione: { lte: tra30, not: null } },
           ],
         },
+        select: { scadenzaBollo: true, scadenzaRevisione: true, scadenzaAssicurazione: true },
       }),
 
       // Scadenze senza proposta attiva: evita notifiche duplicate mentre il ciclo è in corso
@@ -77,6 +79,13 @@ export async function alertImpresa(): Promise<AlertImpresa> {
         where: { stato: { in: ['Accettata', 'ConfermataManuale'] }, commessaId: null },
       }),
     ])
+
+  // Somma le scadenze individuali (bollo + revisione + assicurazione)
+  const scadenzeMezzi = mezziScad.reduce((n, m) => n
+    + (m.scadenzaBollo && m.scadenzaBollo <= tra30 ? 1 : 0)
+    + (m.scadenzaRevisione && m.scadenzaRevisione <= tra30 ? 1 : 0)
+    + (m.scadenzaAssicurazione && m.scadenzaAssicurazione <= tra30 ? 1 : 0)
+  , 0)
 
   return {
     rapportiniMancanti,
@@ -227,20 +236,37 @@ export async function listaNotificheImpresa(userId?: string): Promise<ItemNotifi
     })
   }
 
-  for (const m of mezzi) {
-    const prossima = [m.scadenzaBollo, m.scadenzaRevisione, m.scadenzaAssicurazione]
-      .filter(Boolean)
-      .sort((a, b) => new Date(a!).getTime() - new Date(b!).getTime())[0]
-    items.push({
-      id: m.id,
-      tipo: 'mezzo',
-      titolo: `Scadenza mezzo: ${m.nome}`,
-      sottotitolo: m.targa ?? '',
-      href: `/impresa/mezzi`,
-      urgente: prossima ? new Date(prossima) < new Date() : false,
-      data: prossima,
-      letta: lette.has(`mezzo:${m.id}`),
-    })
+  {
+    const nowM = new Date()
+    const oggiUtcM = Date.UTC(nowM.getUTCFullYear(), nowM.getUTCMonth(), nowM.getUTCDate())
+    for (const m of mezzi) {
+      const tipi = [
+        { key: 'bollo', label: 'Bollo', data: m.scadenzaBollo },
+        { key: 'revisione', label: 'Revisione', data: m.scadenzaRevisione },
+        { key: 'assicurazione', label: 'Assicurazione', data: m.scadenzaAssicurazione },
+      ]
+      for (const { key, label, data } of tipi) {
+        if (!data) continue
+        const dUtc = Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), data.getUTCDate())
+        const diffGiorni = Math.floor((dUtc - oggiUtcM) / 86_400_000)
+        if (diffGiorni > 30) continue // oltre 30 giorni: nessuna urgenza
+        const urgente = diffGiorni <= 0
+        const statoLabel =
+          diffGiorni < 0 ? 'SCADUTA — da gestire subito' :
+          diffGiorni === 0 ? 'in scadenza oggi' :
+          'in scadenza'
+        items.push({
+          id: `${m.id}-${key}`,
+          tipo: 'mezzo',
+          titolo: `${label} ${statoLabel}: ${m.nome}`,
+          sottotitolo: m.targa ?? '',
+          href: `/impresa/mezzi/${m.id}`,
+          urgente,
+          data,
+          letta: lette.has(`mezzo:${m.id}-${key}`),
+        })
+      }
+    }
   }
 
   for (const man of manutenzioni) {
