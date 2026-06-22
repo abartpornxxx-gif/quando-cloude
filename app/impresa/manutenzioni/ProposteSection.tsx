@@ -88,8 +88,14 @@ export function ProposteSection({
     if (state.success) setShowForm(false)
   }, [state.success])
 
+  // Blocca la creazione di nuove proposte finché il ciclo corrente non è concluso:
+  // una proposta aperta (Inviata/VistaDalCliente) o accettata/confermata in attesa di commessa.
   const propostaAperta = proposte.find(
-    p => p.stato === 'Inviata' || p.stato === 'VistaDalCliente',
+    p =>
+      p.stato === 'Inviata' ||
+      p.stato === 'VistaDalCliente' ||
+      p.stato === 'Accettata' ||
+      p.stato === 'ConfermataManuale',
   )
 
   return (
@@ -236,7 +242,9 @@ export function ProposteSection({
       {/* Info: proposta già aperta */}
       {propostaAperta && !showForm && (
         <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
-          Esiste già una proposta aperta. Annullala prima di crearne una nuova.
+          {propostaAperta.stato === 'Accettata' || propostaAperta.stato === 'ConfermataManuale'
+            ? 'Proposta accettata in attesa di commessa. Crea la commessa prima di proporre un nuovo intervento.'
+            : 'Esiste già una proposta in corso. Completala o annullala prima di crearne una nuova.'}
         </div>
       )}
 

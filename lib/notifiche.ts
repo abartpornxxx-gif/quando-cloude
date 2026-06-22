@@ -59,8 +59,17 @@ export async function alertImpresa(): Promise<AlertImpresa> {
         },
       }),
 
+      // Scadenze senza proposta attiva: evita notifiche duplicate mentre il ciclo è in corso
       prisma.manutenzioneProgrammata.count({
-        where: { attiva: true, dataProssimoIntervento: { lte: tra30 } },
+        where: {
+          attiva: true,
+          dataProssimoIntervento: { lte: tra30 },
+          proposte: {
+            none: {
+              stato: { in: ['Inviata', 'VistaDalCliente', 'Accettata', 'ConfermataManuale', 'CommessaCreata'] },
+            },
+          },
+        },
       }),
 
       // Proposte di intervento accettate/confermate in attesa di commessa
@@ -138,8 +147,17 @@ export async function listaNotificheImpresa(userId?: string): Promise<ItemNotifi
       orderBy: { scadenzaBollo: 'asc' },
       take: 10,
     }),
+    // Scadenze senza proposta attiva: evita notifiche duplicate mentre il ciclo è in corso
     prisma.manutenzioneProgrammata.findMany({
-      where: { attiva: true, dataProssimoIntervento: { lte: tra30 } },
+      where: {
+        attiva: true,
+        dataProssimoIntervento: { lte: tra30 },
+        proposte: {
+          none: {
+            stato: { in: ['Inviata', 'VistaDalCliente', 'Accettata', 'ConfermataManuale', 'CommessaCreata'] },
+          },
+        },
+      },
       include: { cliente: { select: { nome: true } } },
       orderBy: { dataProssimoIntervento: 'asc' },
       take: 10,

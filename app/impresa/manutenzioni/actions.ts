@@ -79,12 +79,18 @@ export async function creaPropostaIntervento(
   })
   if (!manutenzione) return { error: 'Manutenzione non trovata.' }
 
-  // Controllo applicativo prima dell'indice unico parziale DB
-  const aperta = await prisma.propostaIntervento.findFirst({
-    where: { manutenzioneId, stato: { in: ['Inviata', 'VistaDalCliente'] } },
+  // Controllo applicativo: blocca se c'è già una proposta aperta o accettata in attesa di commessa
+  const inCorso = await prisma.propostaIntervento.findFirst({
+    where: {
+      manutenzioneId,
+      stato: { in: ['Inviata', 'VistaDalCliente', 'Accettata', 'ConfermataManuale'] },
+    },
   })
-  if (aperta) {
-    return { error: 'Esiste già una proposta aperta per questa manutenzione. Annullala prima di crearne una nuova.' }
+  if (inCorso) {
+    const messIn = inCorso.stato === 'Accettata' || inCorso.stato === 'ConfermataManuale'
+      ? 'Esiste già una proposta accettata in attesa di commessa. Crea la commessa prima di procedere.'
+      : 'Esiste già una proposta aperta per questa manutenzione. Completala o annullala prima di crearne una nuova.'
+    return { error: messIn }
   }
 
   try {
@@ -112,23 +118,37 @@ export async function creaPropostaIntervento(
 
 export async function confermaPropostaManualmente(propostaId: string): Promise<void> {
   await requireImpresa()
-  const updated = await prisma.propostaIntervento.update({
+  const proposta = await prisma.propostaIntervento.findUnique({
+    where: { id: propostaId },
+    select: { stato: true, manutenzioneId: true },
+  })
+  if (!proposta) throw new Error('Proposta non trovata.')
+  if (proposta.stato !== 'Inviata' && proposta.stato !== 'VistaDalCliente') {
+    throw new Error(`Proposta in stato "${proposta.stato}": non è possibile confermare manualmente.`)
+  }
+  await prisma.propostaIntervento.update({
     where: { id: propostaId },
     data: { stato: 'ConfermataManuale', confermataDaImpresa: true },
-    select: { manutenzioneId: true },
   })
-  revalidatePath(`/impresa/manutenzioni/${updated.manutenzioneId}`)
+  revalidatePath(`/impresa/manutenzioni/${proposta.manutenzioneId}`)
   revalidatePath('/impresa/manutenzioni')
 }
 
 export async function annullaPropostaIntervento(propostaId: string): Promise<void> {
   await requireImpresa()
-  const updated = await prisma.propostaIntervento.update({
+  const proposta = await prisma.propostaIntervento.findUnique({
+    where: { id: propostaId },
+    select: { stato: true, manutenzioneId: true },
+  })
+  if (!proposta) throw new Error('Proposta non trovata.')
+  if (proposta.stato !== 'Inviata' && proposta.stato !== 'VistaDalCliente') {
+    throw new Error(`Proposta in stato "${proposta.stato}": non è possibile annullare.`)
+  }
+  await prisma.propostaIntervento.update({
     where: { id: propostaId },
     data: { stato: 'Annullata' },
-    select: { manutenzioneId: true },
   })
-  revalidatePath(`/impresa/manutenzioni/${updated.manutenzioneId}`)
+  revalidatePath(`/impresa/manutenzioni/${proposta.manutenzioneId}`)
   revalidatePath('/impresa/manutenzioni')
 }
 
