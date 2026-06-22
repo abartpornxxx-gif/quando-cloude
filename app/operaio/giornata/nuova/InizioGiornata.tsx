@@ -4,7 +4,13 @@ import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import { iniziaGiornata } from './actions'
 
-type Commessa = { id: string; nome: string; indirizzoCantiere?: string | null }
+type Commessa = {
+  id: string
+  nome: string
+  indirizzoCantiere?: string | null
+  istruzioniCantiere?: string | null
+  attrezzatureNecessarie?: string | null
+}
 type Mezzo = { id: string; nome: string; targa?: string | null }
 type Attrezzatura = {
   id: string
@@ -98,11 +104,23 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
               <p className="text-sm text-white">{pianificazione.noteMateriale}</p>
             </div>
           )}
+          {pianificazione.commessa.istruzioniCantiere && (
+            <div className="bg-white/10 rounded-xl p-3">
+              <p className="text-xs font-semibold text-emerald-300 mb-1">📋 Istruzioni cantiere</p>
+              <p className="text-sm text-white whitespace-pre-line">{pianificazione.commessa.istruzioniCantiere}</p>
+            </div>
+          )}
+          {pianificazione.commessa.attrezzatureNecessarie && (
+            <div className="bg-white/10 rounded-xl p-3">
+              <p className="text-xs font-semibold text-emerald-300 mb-1">🔧 Porta sempre con te</p>
+              <p className="text-sm text-white whitespace-pre-line">{pianificazione.commessa.attrezzatureNecessarie}</p>
+            </div>
+          )}
         </div>
       ) : (
         /* Senza pianificazione: seleziona commessa */
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5">
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5 space-y-3">
+          <label className="block text-sm font-semibold text-gray-700">
             Cantiere *
           </label>
           <select
@@ -118,6 +136,28 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
               </option>
             ))}
           </select>
+          {/* Istruzioni cantiere, visibili subito dopo aver selezionato */}
+          {(() => {
+            const sel = commesse.find(c => c.id === commessaId)
+            if (!sel) return null
+            if (!sel.istruzioniCantiere && !sel.attrezzatureNecessarie) return null
+            return (
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 space-y-2">
+                {sel.istruzioniCantiere && (
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-700 mb-0.5">📋 Istruzioni cantiere</p>
+                    <p className="text-sm text-emerald-900 whitespace-pre-line">{sel.istruzioniCantiere}</p>
+                  </div>
+                )}
+                {sel.attrezzatureNecessarie && (
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-700 mb-0.5">🔧 Porta sempre con te</p>
+                    <p className="text-sm text-emerald-900 whitespace-pre-line">{sel.attrezzatureNecessarie}</p>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
         </div>
       )}
 

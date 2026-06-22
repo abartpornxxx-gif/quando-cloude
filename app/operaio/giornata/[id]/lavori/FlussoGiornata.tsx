@@ -34,7 +34,7 @@ interface Props {
   inizioMattina: string | null
   fineMattina: string | null
   inizioPomeriggio: string | null
-  commessa: { id: string; nome: string; indirizzoCantiere?: string | null }
+  commessa: { id: string; nome: string; indirizzoCantiere?: string | null; istruzioniCantiere?: string | null; attrezzatureNecessarie?: string | null }
   pianificazione: { lavoroDaFare: string | null; noteMateriale: string | null } | null
   foto: { id: string; url: string }[]
   suggerimenti: Suggerimento[]
@@ -256,6 +256,24 @@ export default function FlussoGiornata({
         <div className="rounded-2xl bg-blue-50 border border-blue-200 p-4">
           <p className="text-xs font-semibold text-blue-600 mb-1">Lavoro assegnato</p>
           <p className="text-sm text-gray-800">{pianificazione.lavoroDaFare}</p>
+        </div>
+      )}
+
+      {/* Istruzioni fisse del cantiere — sempre visibili */}
+      {(commessa.istruzioniCantiere || commessa.attrezzatureNecessarie) && fase !== 'completata' && (
+        <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 space-y-2">
+          {commessa.istruzioniCantiere && (
+            <div>
+              <p className="text-xs font-semibold text-emerald-700 mb-0.5">📋 Istruzioni cantiere</p>
+              <p className="text-sm text-emerald-900 whitespace-pre-line">{commessa.istruzioniCantiere}</p>
+            </div>
+          )}
+          {commessa.attrezzatureNecessarie && (
+            <div>
+              <p className="text-xs font-semibold text-emerald-700 mb-0.5">🔧 Porta sempre con te</p>
+              <p className="text-sm text-emerald-900 whitespace-pre-line">{commessa.attrezzatureNecessarie}</p>
+            </div>
+          )}
         </div>
       )}
 

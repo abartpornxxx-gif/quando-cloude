@@ -65,17 +65,17 @@ export default async function NuovaGiornataPage() {
     )
   }
 
-  // Commesse assegnate aperte
+  // Commesse assegnate aperte (incluse istruzioni per mostrarle all'operaio)
   const commesse = await prisma.commessaOperaio.findMany({
     where: { operaioId: operaio.id, commessa: { stato: 'aperta' } },
-    include: { commessa: { select: { id: true, nome: true, indirizzoCantiere: true } } },
+    include: { commessa: { select: { id: true, nome: true, indirizzoCantiere: true, istruzioniCantiere: true, attrezzatureNecessarie: true } } },
   })
 
   // Pianificazione di oggi (se esiste)
   const pianificazione = await prisma.pianificazione.findFirst({
     where: { operaioId: operaio.id, data: today },
     include: {
-      commessa: { select: { id: true, nome: true, indirizzoCantiere: true } },
+      commessa: { select: { id: true, nome: true, indirizzoCantiere: true, istruzioniCantiere: true, attrezzatureNecessarie: true } },
       mezzo: { select: { id: true, nome: true, targa: true } },
     },
   })
