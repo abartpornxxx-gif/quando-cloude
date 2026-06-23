@@ -72,9 +72,20 @@ export default async function OperaioDashboardPage() {
     weekday: 'long', day: 'numeric', month: 'long',
   })
 
+  // Bullet list istruzioni: split su newline, filtra righe vuote
+  const istruzioniBullet = pianificazioneOggi?.commessa.istruzioniCantiere
+    ? pianificazioneOggi.commessa.istruzioniCantiere.split('\n').filter(r => r.trim())
+    : []
+
+  // Cantieri da mostrare nella lista in fondo (escluso quello già in evidenza)
+  const altriCantieri = pianificazioneOggi
+    ? commesseAperte.filter(a => a.commessaId !== pianificazioneOggi.commessaId)
+    : commesseAperte.slice(1)
+
   return (
-    <div className="space-y-5">
-      {/* Banner rapportino urgente */}
+    <div className="space-y-4">
+
+      {/* ── Banner rapportino urgente ── */}
       {giornataRapportinoPendente && (
         <div className="rounded-2xl bg-red-600 text-white p-5 shadow-lg shadow-red-200">
           <p className="font-bold text-base flex items-center gap-2">
@@ -88,145 +99,186 @@ export default async function OperaioDashboardPage() {
           </p>
           <a
             href={`/operaio/giornata/${giornataRapportinoPendente.id}/rapportino`}
-            className="mt-4 flex items-center justify-center gap-2 w-full bg-white text-red-600 font-bold py-2.5 rounded-xl text-sm"
+            className="mt-4 flex items-center justify-center gap-2 w-full bg-white text-red-600 font-bold py-3 rounded-xl text-sm"
           >
             Compila ora →
           </a>
         </div>
       )}
 
-      {/* Greeting */}
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">
-          Ciao, {operaio.nome.split(' ')[0]}!
+      {/* ── 1. Saluto + data ── */}
+      <div className="pt-1">
+        <h1 className="text-2xl font-bold text-gray-900">
+          Ciao, {operaio.nome.split(' ')[0]}! 👋
         </h1>
         <p className="text-sm text-gray-500 mt-0.5 capitalize">{dataOggiLabel}</p>
       </div>
 
-      {/* Piano del giorno — da pianificazione impresa */}
-      {pianificazioneOggi && (
-        <div className="rounded-2xl overflow-hidden border border-emerald-200 shadow-sm">
-          <div className="bg-emerald-900 px-4 py-3">
+      {/* ── 2. Card "Cantiere di oggi" ── */}
+      {pianificazioneOggi ? (
+        <div className="rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
+          {/* Header verde scuro */}
+          <div className="bg-emerald-700 px-4 py-4">
             <p className="text-xs font-semibold text-emerald-300 uppercase tracking-widest mb-0.5">
-              Piano dell&apos;impresa per oggi
+              Cantiere di oggi
             </p>
-            <h2 className="font-bold text-white text-lg leading-tight">
+            <h2 className="font-bold text-white text-xl leading-tight">
               {pianificazioneOggi.commessa.nome}
             </h2>
             {pianificazioneOggi.commessa.cliente && (
-              <p className="text-sm text-emerald-300 mt-0.5">{pianificazioneOggi.commessa.cliente.nome}</p>
+              <p className="text-sm text-emerald-200 mt-0.5">
+                {pianificazioneOggi.commessa.cliente.nome}
+              </p>
             )}
           </div>
 
-          <div className="bg-white divide-y divide-gray-100">
-            {/* Indirizzo */}
+          {/* Corpo */}
+          <div className="divide-y divide-gray-100">
+            {/* Indirizzo + Maps */}
             {pianificazioneOggi.commessa.indirizzoCantiere ? (
-              <div className="px-4 py-3 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-xs text-gray-400 mb-0.5">Posizione</p>
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {pianificazioneOggi.commessa.indirizzoCantiere}
-                  </p>
-                </div>
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                <p className="text-sm text-gray-700 flex-1 min-w-0 leading-snug">
+                  📍 {pianificazioneOggi.commessa.indirizzoCantiere}
+                </p>
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pianificazioneOggi.commessa.indirizzoCantiere)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="shrink-0 flex items-center gap-1.5 rounded-xl bg-blue-600 text-white px-3 py-2 text-xs font-semibold hover:bg-blue-700 active:scale-95 transition-all"
+                  className="shrink-0 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 active:scale-95 transition-all"
                 >
                   🗺 Apri Maps
                 </a>
               </div>
             ) : (
               <div className="px-4 py-3">
-                <p className="text-xs text-gray-400 mb-0.5">Posizione</p>
-                <p className="text-sm text-gray-400 italic">Posizione non disponibile</p>
+                <p className="text-sm text-gray-400 italic">📍 Posizione non disponibile</p>
               </div>
             )}
 
-            {/* Mezzo */}
-            {pianificazioneOggi.mezzo && (
-              <div className="px-4 py-3">
-                <p className="text-xs text-gray-400 mb-0.5">Mezzo</p>
-                <p className="text-sm font-medium text-gray-900">
-                  🚗 {pianificazioneOggi.mezzo.nome}
-                  {pianificazioneOggi.mezzo.targa ? ` (${pianificazioneOggi.mezzo.targa})` : ''}
-                </p>
-              </div>
-            )}
-
-            {/* Lavoro da fare */}
+            {/* Lavoro di oggi */}
             {pianificazioneOggi.lavoroDaFare && (
               <div className="px-4 py-3">
                 <p className="text-xs text-gray-400 mb-0.5">Lavoro di oggi</p>
-                <p className="text-sm font-medium text-gray-900 whitespace-pre-line">
+                <p className="text-sm font-medium text-gray-800 whitespace-pre-line">
                   {pianificazioneOggi.lavoroDaFare}
                 </p>
               </div>
             )}
-
-            {/* Istruzioni cantiere */}
-            {pianificazioneOggi.commessa.istruzioniCantiere && (
-              <details className="group">
-                <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none select-none hover:bg-gray-50">
-                  <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Istruzioni cantiere</p>
-                    <p className="text-sm font-medium text-gray-700 line-clamp-1">
-                      {pianificazioneOggi.commessa.istruzioniCantiere}
-                    </p>
-                  </div>
-                  <span className="text-gray-400 text-sm shrink-0 ml-2 group-open:rotate-180 transition-transform">▼</span>
-                </summary>
-                <div className="px-4 pb-4 pt-1">
-                  <p className="text-sm text-gray-700 whitespace-pre-line bg-amber-50 border border-amber-200 rounded-xl p-3">
-                    {pianificazioneOggi.commessa.istruzioniCantiere}
-                  </p>
-                </div>
-              </details>
-            )}
-
-            {/* Attrezzatura necessaria */}
-            {pianificazioneOggi.commessa.attrezzatureNecessarie && (
-              <div className="px-4 py-3">
-                <p className="text-xs text-gray-400 mb-1">🔧 Porta con te</p>
-                <p className="text-sm text-gray-700 whitespace-pre-line">
-                  {pianificazioneOggi.commessa.attrezzatureNecessarie}
-                </p>
-              </div>
-            )}
-
-            {/* Note materiale */}
-            {pianificazioneOggi.noteMateriale && (
-              <div className="px-4 py-3">
-                <p className="text-xs text-gray-400 mb-0.5">📦 Note materiale</p>
-                <p className="text-sm text-gray-700 whitespace-pre-line">
-                  {pianificazioneOggi.noteMateriale}
-                </p>
-              </div>
-            )}
-
-            {/* Meteo */}
-            <div className="px-4 py-3">
-              <MeteoBox indirizzo={pianificazioneOggi.commessa.indirizzoCantiere} />
-            </div>
-
-            {/* Punti utili */}
-            {pianificazioneOggi.commessa.indirizzoCantiere && (
-              <div className="px-4 py-3">
-                <PuntiUtili indirizzo={pianificazioneOggi.commessa.indirizzoCantiere} />
-              </div>
+          </div>
+        </div>
+      ) : commesseAperte.length === 0 ? (
+        /* Nessun cantiere */
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+          <Image src="/immagini/vuoto-cantieri.png" width={80} height={80} alt="" className="mx-auto mb-3 opacity-80" />
+          <p className="text-sm font-semibold text-gray-700">Nessun cantiere assegnato</p>
+          <p className="text-xs text-gray-400 mt-1">Chiedi alla tua impresa</p>
+        </div>
+      ) : (
+        /* Cantiere da assegnazione permanente, nessuna pianificazione oggi */
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="bg-gray-100 px-4 py-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-0.5">
+              Cantiere assegnato
+            </p>
+            <h2 className="font-bold text-gray-900 text-lg leading-tight">
+              {commesseAperte[0].commessa.nome}
+            </h2>
+            {commesseAperte[0].commessa.cliente && (
+              <p className="text-sm text-gray-500 mt-0.5">
+                {commesseAperte[0].commessa.cliente.nome}
+              </p>
             )}
           </div>
+          {commesseAperte[0].commessa.indirizzoCantiere && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-gray-100">
+              <p className="text-sm text-gray-700 flex-1 min-w-0 leading-snug">
+                📍 {commesseAperte[0].commessa.indirizzoCantiere}
+              </p>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(commesseAperte[0].commessa.indirizzoCantiere)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="shrink-0 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 active:scale-95 transition-all"
+              >
+                🗺 Apri Maps
+              </a>
+            </div>
+          )}
         </div>
       )}
 
-      {/* CTA principale */}
+      {/* ── 3. Card "Istruzioni cantiere" — elenco puntato ── */}
+      {istruzioniBullet.length > 0 && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 shadow-sm p-4">
+          <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-3">
+            📋 Istruzioni cantiere
+          </p>
+          <ul className="space-y-2">
+            {istruzioniBullet.map((riga, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm text-amber-900">
+                <span className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-amber-200 text-amber-700 text-[10px] font-bold flex items-center justify-center">
+                  {i + 1}
+                </span>
+                <span className="leading-snug">{riga}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* ── 4. Card "Mezzo e attrezzatura" ── */}
+      {(pianificazioneOggi?.mezzo || pianificazioneOggi?.commessa.attrezzatureNecessarie || pianificazioneOggi?.noteMateriale) && (
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 space-y-3">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Mezzo e attrezzatura
+          </p>
+
+          {pianificazioneOggi.mezzo && (
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
+                <span className="text-xl">🚗</span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{pianificazioneOggi.mezzo.nome}</p>
+                {pianificazioneOggi.mezzo.targa && (
+                  <p className="text-xs text-gray-400">{pianificazioneOggi.mezzo.targa}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {pianificazioneOggi.commessa.attrezzatureNecessarie && (
+            <div className="rounded-xl bg-gray-50 px-3 py-2.5">
+              <p className="text-xs text-gray-400 mb-1">🔧 Porta con te</p>
+              <p className="text-sm text-gray-700 whitespace-pre-line">
+                {pianificazioneOggi.commessa.attrezzatureNecessarie}
+              </p>
+            </div>
+          )}
+
+          {pianificazioneOggi.noteMateriale && (
+            <div className="rounded-xl bg-blue-50 border border-blue-100 px-3 py-2.5">
+              <p className="text-xs text-blue-500 mb-1">📦 Note materiale</p>
+              <p className="text-sm text-blue-900 whitespace-pre-line">
+                {pianificazioneOggi.noteMateriale}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── 5. CTA giornata ── */}
       {giornataAttiva ? (
-        <div className="rounded-2xl border-2 border-emerald-500 bg-emerald-50 p-5 space-y-3">
+        /* Giornata in corso */
+        <div className="rounded-2xl bg-emerald-600 p-5 shadow-lg shadow-emerald-200 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Giornata in corso</p>
-              <p className="text-sm font-semibold text-gray-900 mt-0.5">{giornataAttiva.commessa.nome}</p>
+              <p className="text-xs font-semibold text-emerald-200 uppercase tracking-wide">
+                Giornata in corso
+              </p>
+              <p className="text-sm font-bold text-white mt-0.5">
+                {giornataAttiva.commessa.nome}
+              </p>
             </div>
             <Badge variant="success" dot>
               {giornataAttiva.fase === 'pausa' ? 'Pausa' : 'Attiva'}
@@ -234,31 +286,31 @@ export default async function OperaioDashboardPage() {
           </div>
           <a
             href={`/operaio/giornata/${giornataAttiva.id}/lavori`}
-            className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3.5 text-white font-bold text-base shadow-sm shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98] transition-all"
+            className="flex items-center justify-center gap-2 w-full rounded-xl bg-white text-emerald-700 font-bold py-3.5 text-base hover:bg-emerald-50 active:scale-[0.98] transition-all shadow-sm"
           >
             ▶ Riprendi giornata
           </a>
-          {/* Azioni rapide giornata attiva */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="flex gap-2">
             {giornataAttiva.commessa.indirizzoCantiere && (
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(giornataAttiva.commessa.indirizzoCantiere)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 active:scale-95 transition-all"
+                className="flex-1 flex items-center justify-center gap-1 rounded-xl bg-emerald-500 text-white py-2.5 text-sm font-semibold hover:bg-emerald-400 active:scale-95 transition-all"
               >
-                🗺 Apri Maps
+                🗺 Maps
               </a>
             )}
             <a
               href={`/operaio/giornata/${giornataAttiva.id}/chat`}
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 active:scale-95 transition-all"
+              className="flex-1 flex items-center justify-center gap-1 rounded-xl bg-emerald-500 text-white py-2.5 text-sm font-semibold hover:bg-emerald-400 active:scale-95 transition-all"
             >
               💬 Chat cantiere
             </a>
           </div>
         </div>
       ) : (
+        /* Nessuna giornata: pulsante Inizia */
         !giornataRapportinoPendente && (
           <Link
             href="/operaio/giornata/nuova"
@@ -275,79 +327,82 @@ export default async function OperaioDashboardPage() {
         )
       )}
 
-      {/* Cantieri assegnati */}
-      {commesseAperte.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
-          <Image src="/immagini/vuoto-cantieri.png" width={80} height={80} alt="" className="mx-auto mb-3 opacity-80" />
-          <p className="text-sm font-semibold text-gray-700">Nessun cantiere assegnato</p>
-          <p className="text-xs text-gray-400 mt-1">Chiedi alla tua impresa</p>
-        </div>
-      ) : (
+      {/* ── 6. Meteo + Punti utili (standalone, fuori dalla card cantiere) ── */}
+      <MeteoBox indirizzo={cantiereOggi?.indirizzoCantiere ?? null} />
+      {cantiereOggi?.indirizzoCantiere && (
+        <PuntiUtili indirizzo={cantiereOggi.indirizzoCantiere} />
+      )}
+
+      {/* ── 7. Altri cantieri assegnati ── */}
+      {(altriCantieri.length > 0 || commesseChiuse.length > 0) && (
         <div className="space-y-2.5">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">I tuoi cantieri</h2>
-          {commesseAperte.map(a => {
-            const c = a.commessa
-            const ultimaGiornata = c.giornate[0]
-            return (
-              <div key={a.commessaId} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-                <div className="px-4 py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{c.nome}</p>
-                      {c.cliente && (
-                        <p className="text-sm text-gray-500 mt-0.5">{c.cliente.nome}</p>
-                      )}
-                      {c.indirizzoCantiere ? (
-                        <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                          <p className="text-xs text-gray-400 flex items-center gap-1">
-                            <Image src="/immagini/icona-posizione.png" width={12} height={12} alt="" className="shrink-0 opacity-60" />
-                            {c.indirizzoCantiere}
-                          </p>
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.indirizzoCantiere)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs font-semibold text-blue-600 hover:text-blue-800 shrink-0"
-                          >
-                            🗺 Maps
-                          </a>
+          {altriCantieri.length > 0 && (
+            <>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                Altri cantieri
+              </h2>
+              {altriCantieri.map(a => {
+                const c = a.commessa
+                const ultimaGiornata = c.giornate[0]
+                return (
+                  <div key={a.commessaId} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                    <div className="px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-900 truncate">{c.nome}</p>
+                          {c.cliente && (
+                            <p className="text-sm text-gray-500 mt-0.5">{c.cliente.nome}</p>
+                          )}
+                          {c.indirizzoCantiere ? (
+                            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                              <p className="text-xs text-gray-400 truncate max-w-[200px]">
+                                📍 {c.indirizzoCantiere}
+                              </p>
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.indirizzoCantiere)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs font-semibold text-blue-600 hover:text-blue-800 shrink-0"
+                              >
+                                Maps →
+                              </a>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-gray-400 italic mt-1">Posizione non disponibile</p>
+                          )}
                         </div>
-                      ) : (
-                        <p className="text-xs text-gray-400 italic mt-1">Posizione non disponibile</p>
+                        <Badge variant="success" dot>Aperta</Badge>
+                      </div>
+                      {ultimaGiornata && (
+                        <p className="mt-2.5 text-xs text-gray-400 border-t border-gray-100 pt-2">
+                          Ultima giornata: {formatData(ultimaGiornata.data)}
+                        </p>
                       )}
                     </div>
-                    <Badge variant="success" dot>Aperta</Badge>
                   </div>
-                  {ultimaGiornata && (
-                    <p className="mt-2.5 text-xs text-gray-400 border-t border-gray-100 pt-2">
-                      Ultima giornata: {formatData(ultimaGiornata.data)}
-                    </p>
-                  )}
-                </div>
-
-                {/* Punti utili inline nella card cantiere (solo se indirizzo presente) */}
-                {c.indirizzoCantiere && (
-                  <div className="border-t border-gray-100 px-4 py-3 bg-gray-50">
-                    <PuntiUtili indirizzo={c.indirizzoCantiere} />
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                )
+              })}
+            </>
+          )}
 
           {commesseChiuse.length > 0 && (
             <>
-              <h2 className="mt-5 text-xs font-semibold uppercase tracking-wider text-gray-400">Cantieri chiusi</h2>
+              <h2 className="mt-4 text-xs font-semibold uppercase tracking-wider text-gray-300">
+                Cantieri chiusi
+              </h2>
               {commesseChiuse.map(a => (
-                <div key={a.commessaId} className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3.5 opacity-60">
-                  <p className="font-medium text-gray-700 text-sm">{a.commessa.nome}</p>
-                  {a.commessa.cliente && <p className="text-xs text-gray-500">{a.commessa.cliente.nome}</p>}
+                <div key={a.commessaId} className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 opacity-50">
+                  <p className="font-medium text-gray-600 text-sm">{a.commessa.nome}</p>
+                  {a.commessa.cliente && (
+                    <p className="text-xs text-gray-400">{a.commessa.cliente.nome}</p>
+                  )}
                 </div>
               ))}
             </>
           )}
         </div>
       )}
+
     </div>
   )
 }
