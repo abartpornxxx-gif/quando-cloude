@@ -38,3 +38,21 @@ export async function eliminaFornitoreUfficio(id: string) {
   await prisma.fornitore.delete({ where: { id } })
   revalidatePath('/ufficio/fornitori')
 }
+
+export async function pagaFatturePassiveInBlocco(fornitoreId: string, fattureIds: string[]) {
+  await requireImpresaOUfficio()
+  if (fattureIds.length === 0) return
+
+  // Esegue un aggiornamento efficiente tramite raw SQL per impostare importo_pagato = importo
+  await prisma.$executeRawUnsafe(`
+    UPDATE "fatture_passive"
+    SET "stato" = 'pagata'::"StatoFatturaPassiva",
+        "data_pagamento" = now(),
+        "importo_pagato" = "importo"
+    WHERE "id" = ANY($1::uuid[]) AND "fornitore_id" = $2::uuid
+  `, fattureIds, fornitoreId)
+
+  revalidatePath(`/ufficio/fornitori/${fornitoreId}`)
+  revalidatePath(`/ufficio/commesse`)
+}
+

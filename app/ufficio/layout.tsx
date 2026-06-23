@@ -25,6 +25,7 @@ const NAV = [
   { label: 'Pianificazione', href: '/ufficio/pianificazione', Icon: CalendarDays },
   { label: 'Fatture', href: '/ufficio/fatture', Icon: Receipt },
   { label: 'Saldi', href: '/ufficio/saldi-pendenti', Icon: AlertCircle },
+  { label: 'Scadenzario', href: '/ufficio/scadenzario', Icon: CalendarDays },
 ]
 
 const ANAGRAFICHE = [
@@ -111,6 +112,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
               <Link href="/ufficio/fatture" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Fatture</Link>
               <Link href="/ufficio/fatture-passive" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">F. Passive</Link>
               <Link href="/ufficio/saldi-pendenti" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Saldi pendenti</Link>
+              <Link href="/ufficio/scadenzario" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Scadenzario</Link>
             </div>
           </div>
         </div>

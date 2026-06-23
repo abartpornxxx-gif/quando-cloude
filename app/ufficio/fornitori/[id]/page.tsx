@@ -4,16 +4,29 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { salvaFornitoreUfficio } from '../actions'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { FornitoreFattureReconcile } from './FornitoreFattureReconcile'
 
 export default async function FornitoreUfficioDettaglioPage({ params }: { params: Promise<{ id: string }> }) {
   await requireUfficio()
   const { id } = await params
-  const f = await prisma.fornitore.findUnique({ where: { id } })
+  
+  const [f, fatture] = await Promise.all([
+    prisma.fornitore.findUnique({ where: { id } }),
+    prisma.fatturaPassiva.findMany({
+      where: { fornitoreId: id, stato: 'da_pagare' },
+      include: { commessa: { select: { nome: true } } },
+      orderBy: { data: 'desc' },
+    }),
+  ])
+
   if (!f) notFound()
 
   return (
-    <div className="max-w-xl">
-      <PageHeader title={f.nome} backHref="/ufficio/fornitori" />
+    <div className="max-w-xl space-y-6">
+      <div>
+        <PageHeader title={f.nome} backHref="/ufficio/fornitori" />
+      </div>
+
       <form action={salvaFornitoreUfficio} className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 space-y-4">
         <input type="hidden" name="id" value={f.id} />
         <div className="grid grid-cols-2 gap-4">
@@ -32,6 +45,8 @@ export default async function FornitoreUfficioDettaglioPage({ params }: { params
           <Link href="/ufficio/fornitori" className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Annulla</Link>
         </div>
       </form>
+
+      <FornitoreFattureReconcile fornitoreId={f.id} fatture={fatture} />
     </div>
   )
 }
