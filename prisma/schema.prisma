@@ -96,6 +96,7 @@ model Operaio {
   assenze           Assenza[]
   attrezzatureUsi   AttrezzaturaUso[]
   richiesteMateriale RichiestaMateriale[]
+  pushSubscriptions PushSubscription[]
 
   @@map("operai")
 }
@@ -523,6 +524,8 @@ model Rapportino {
   cosaFareDomani       String?  @map("cosa_fare_domani")
   urgenzaDomani        Int?     @map("urgenza_domani")
   stimaOreDomani       Float?   @map("stima_ore_domani")
+  // Firma digitale operaio (data URL PNG dal canvas, opzionale)
+  firmaDataUrl         String?  @map("firma_data_url")
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("rapportini")
@@ -911,4 +914,20 @@ model ConfigurazioneOrari {
   durataPomeriggioMinuti Int    @default(240) @map("durata_pomeriggio_minuti")
 
   @@map("configurazione_orari")
+}
+
+// ─── Push subscriptions Web Push ─────────────────────────────────────────────
+// Tabella referenziata in lib/push.ts — registra le subscription browser degli operai.
+// Per attivare: npm install web-push + generare VAPID keys (vedi lib/push.ts).
+model PushSubscription {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  operaioId  String   @map("operaio_id") @db.Uuid
+  operaio    Operaio  @relation(fields: [operaioId], references: [id], onDelete: Cascade)
+  endpoint   String   @unique
+  subscription Json
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([operaioId, endpoint])
+  @@map("push_subscriptions")
 }

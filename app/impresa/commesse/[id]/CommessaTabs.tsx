@@ -176,6 +176,14 @@ export function CommessaTabs({
                       {g.fotoCount > 0 && (
                         <p className="text-xs text-blue-600">📷 {g.fotoCount}</p>
                       )}
+                      {g.lavoroEseguito !== null && (
+                        <a
+                          href={`/impresa/giornate/${g.id}/rapportino`}
+                          className="block text-xs font-medium text-emerald-600 hover:text-emerald-800"
+                        >
+                          📋 Rapportino
+                        </a>
+                      )}
                       <a
                         href={`/impresa/giornate/${g.id}/chat`}
                         className="block text-xs font-medium text-blue-600 hover:text-blue-800"
