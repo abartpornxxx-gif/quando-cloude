@@ -187,6 +187,14 @@ export default function StoricoCentroOperativo({ giornate, operai, commesse }: P
                             className="w-12 h-12 object-cover rounded-xl border border-gray-200 mt-1 ml-auto"
                           />
                         )}
+                        {g.hasRapportino && (
+                          <a
+                            href={`/impresa/giornate/${g.id}/rapportino`}
+                            className="inline-block text-xs font-medium text-emerald-600 hover:text-emerald-800"
+                          >
+                            📋 Rapportino
+                          </a>
+                        )}
                         <a
                           href={`/impresa/giornate/${g.id}/chat`}
                           className="inline-block text-xs font-medium text-blue-600 hover:text-blue-800"

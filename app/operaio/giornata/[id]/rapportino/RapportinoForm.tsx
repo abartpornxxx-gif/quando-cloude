@@ -94,7 +94,9 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
           stimaOreDomani: cosaFareDomani.trim() && stimaOreDomani ? parseFloat(stimaOreDomani) : undefined,
         })
       } catch (err: unknown) {
-        setErrore(err instanceof Error ? err.message : 'Errore')
+        const msg = (err as Error)?.message ?? ''
+        if (msg.includes('NEXT_REDIRECT')) throw err
+        setErrore(msg || 'Errore')
       }
     })
   }
