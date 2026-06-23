@@ -2,7 +2,6 @@
 
 import { prisma } from '@/lib/prisma'
 import { requireOperaio } from '@/lib/auth'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
 export async function inviaRapportino(
@@ -20,7 +19,7 @@ export async function inviaRapportino(
     urgenzaDomani?: number
     stimaOreDomani?: number
   }
-): Promise<void> {
+): Promise<string> {
   const { operaio } = await requireOperaio()
 
   const giornata = await prisma.giornata.findUnique({
@@ -112,5 +111,5 @@ export async function inviaRapportino(
   })
 
   revalidatePath(`/operaio/giornata/${giornataId}/rapportino`)
-  redirect('/operaio/dashboard')
+  return '/operaio/dashboard'
 }

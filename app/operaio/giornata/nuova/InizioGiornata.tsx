@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { iniziaGiornata } from './actions'
 
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export default function InizioGiornata({ commesse, mezzi, attrezzature, pianificazione }: Props) {
+  const router = useRouter()
   const [commessaId, setCommessaId] = useState(pianificazione?.commessa.id ?? '')
   const [mezzoId, setMezzoId] = useState(pianificazione?.mezzo?.id ?? '')
   const [attrezzatureSelezionate, setAttrezzatureSelezionate] = useState<string[]>([])
@@ -56,17 +58,16 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
     setErrore('')
     startTransition(async () => {
       try {
-        await iniziaGiornata({
+        // iniziaGiornata restituisce l'URL di destinazione (non chiama redirect internamente)
+        const url = await iniziaGiornata({
           commessaId,
           mezzoId: mezzoId || undefined,
           pianificazioneId: pianificazione?.id,
           attrezzatureIds: attrezzatureSelezionate,
         })
+        router.push(url)
       } catch (err: unknown) {
-        const msg = (err as Error)?.message ?? ''
-        // redirect() di Next.js si propaga come errore: lasciarlo passare
-        if (msg.includes('NEXT_REDIRECT') || msg.includes('NEXT_NOT_FOUND')) throw err
-        setErrore(msg || 'Errore imprevisto')
+        setErrore(err instanceof Error ? err.message : 'Errore imprevisto')
       }
     })
   }

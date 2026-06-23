@@ -158,11 +158,10 @@ export default function FlussoGiornata({
     startTransition(async () => {
       try {
         await annullaGiornata(giornataId)
+        // annullaGiornata non chiama redirect() — il client naviga direttamente
+        router.push('/operaio/dashboard')
       } catch (err: unknown) {
-        const msg = (err as Error)?.message ?? ''
-        // annullaGiornata chiama redirect() — NEXT_REDIRECT si propaga come errore: lasciarlo passare
-        if (msg.includes('NEXT_REDIRECT') || msg.includes('NEXT_NOT_FOUND')) throw err
-        setErrore(msg || 'Errore')
+        setErrore(err instanceof Error ? err.message : 'Errore')
       }
     })
   }
@@ -218,7 +217,8 @@ export default function FlussoGiornata({
     setRapportinoErrore('')
     startRapportinoTransition(async () => {
       try {
-        await inviaRapportino(giornataId, {
+        // inviaRapportino restituisce l'URL di destinazione (non chiama redirect internamente)
+        const url = await inviaRapportino(giornataId, {
           lavoroEseguito: lavoroEseguito.trim(),
           oreOrdinarie: ore,
           oreStraordinarie: 0,
@@ -226,11 +226,9 @@ export default function FlussoGiornata({
           cosaFareDomani: cosaFareDomani.trim() || undefined,
           urgenzaDomani: cosaFareDomani.trim() ? urgenzaDomani : undefined,
         })
+        router.push(url)
       } catch (err: unknown) {
-        const msg = (err as Error)?.message ?? ''
-        // i redirect di Next.js propagano come errori: li lasciamo passare
-        if (msg.includes('NEXT_REDIRECT')) throw err
-        setRapportinoErrore(msg || 'Errore')
+        setRapportinoErrore(err instanceof Error ? err.message : 'Errore')
       }
     })
   }

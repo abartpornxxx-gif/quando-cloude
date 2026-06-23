@@ -2,14 +2,17 @@
 
 import { prisma } from '@/lib/prisma'
 import { requireOperaio } from '@/lib/auth'
-import { redirect } from 'next/navigation'
 
+// Restituisce l'URL di destinazione invece di chiamare redirect():
+// redirect() dentro una server action propagava come errore in produzione (sanitizzato
+// da Next.js a "An error occurred in the Server Components render…"), rendendo impossibile
+// distinguere redirect da errore reale nel catch del client.
 export async function iniziaGiornata(input: {
   commessaId: string
   mezzoId?: string
   pianificazioneId?: string
   attrezzatureIds: string[]
-}): Promise<void> {
+}): Promise<string> {
   const { operaio } = await requireOperaio()
 
   // Verifica assegnazione
@@ -30,7 +33,7 @@ export async function iniziaGiornata(input: {
     },
     orderBy: { data: 'desc' },
   })
-  if (giornataAperta) redirect(`/operaio/giornata/${giornataAperta.id}/lavori`)
+  if (giornataAperta) return `/operaio/giornata/${giornataAperta.id}/lavori`
 
   const g = await prisma.giornata.create({
     data: {
@@ -64,5 +67,5 @@ export async function iniziaGiornata(input: {
     })
   }
 
-  redirect(`/operaio/giornata/${g.id}/lavori`)
+  return `/operaio/giornata/${g.id}/lavori`
 }

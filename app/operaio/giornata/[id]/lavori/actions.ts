@@ -3,7 +3,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireOperaio } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { pushRapportinoDaCompilare as inviaPushRapportino } from '@/lib/push'
 import { inviaEmailRapportino } from '@/lib/email'
@@ -133,7 +132,7 @@ export async function annullaGiornata(giornataId: string): Promise<void> {
     await tx.giornata.delete({ where: { id: giornataId } })
   })
 
-  redirect('/operaio/dashboard')
+  // Il redirect viene gestito lato client (router.push) per evitare l'errore produzione Next.js
 }
 
 export async function uploadFotoAvanzamento(

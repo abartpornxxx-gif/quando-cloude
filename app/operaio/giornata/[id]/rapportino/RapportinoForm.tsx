@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { inviaRapportino } from './actions'
 
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function RapportinoForm({ giornataId, attrezzatureUsate, materiali }: Props) {
+  const router = useRouter()
   const [lavoroEseguito, setLavoroEseguito] = useState('')
   const [lavoriExtra, setLavoriExtra] = useState('')
   const [noteAttrezzatura, setNoteAttrezzatura] = useState('')
@@ -80,7 +82,7 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
 
     startTransition(async () => {
       try {
-        await inviaRapportino(giornataId, {
+        const url = await inviaRapportino(giornataId, {
           lavoroEseguito,
           lavoriExtra: lavoriExtra || undefined,
           noteAttrezzatura: noteAttrezzatura || undefined,
@@ -93,10 +95,9 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
           urgenzaDomani: cosaFareDomani.trim() ? urgenzaDomani : undefined,
           stimaOreDomani: cosaFareDomani.trim() && stimaOreDomani ? parseFloat(stimaOreDomani) : undefined,
         })
+        router.push(url)
       } catch (err: unknown) {
-        const msg = (err as Error)?.message ?? ''
-        if (msg.includes('NEXT_REDIRECT')) throw err
-        setErrore(msg || 'Errore')
+        setErrore(err instanceof Error ? err.message : 'Errore')
       }
     })
   }
