@@ -31,7 +31,7 @@ export default function RegistraIncassoForm({
     setErrore('')
     startTransition(async () => {
       try {
-        await registraIncasso(fatturaId, dataIncasso, cents, totaleFattura)
+        await registraIncasso(fatturaId, dataIncasso, cents)
         setSuccesso(true)
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')

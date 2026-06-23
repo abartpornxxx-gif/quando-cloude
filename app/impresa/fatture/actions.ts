@@ -46,27 +46,33 @@ export async function creaFatturaAttiva(input: {
 export async function registraIncasso(
   fatturaId: string,
   dataIncasso: string,
-  nuovoImporto: number,
-  totaleRighe: number
+  nuovoImporto: number
 ): Promise<void> {
   await requireImpresaOUfficio()
 
+  // Il totale viene calcolato server-side dalle righe del DB (mai fidarsi del client)
   const fattura = await prisma.fatturaAttiva.findUnique({
     where: { id: fatturaId },
+    include: { righe: true },
   })
   if (!fattura) throw new Error('Fattura non trovata')
   if (fattura.stato === 'incassata') throw new Error('Fattura già interamente incassata')
 
+  const imponibile = fattura.righe.reduce(
+    (acc, r) => acc + Math.round(r.quantita * r.prezzoUnitario),
+    0
+  )
+  const iva = Math.round(imponibile * fattura.aliquotaIva / 100)
+  const totaleFattura = imponibile + iva
+
   const giaIncassato = fattura.importoIncassato ?? 0
-  const residuo = totaleRighe - giaIncassato
+  const residuo = totaleFattura - giaIncassato
   if (nuovoImporto <= 0) throw new Error('Importo non valido')
   if (nuovoImporto > residuo) throw new Error(`Importo superiore al residuo (${(residuo / 100).toFixed(2)} €)`)
 
   const nuovoTotaleIncassato = giaIncassato + nuovoImporto
-  const completamenteIncassata = nuovoTotaleIncassato >= totaleRighe
+  const completamenteIncassata = nuovoTotaleIncassato >= totaleFattura
   const nuovoStato = completamenteIncassata ? 'incassata' : 'parzialmente_incassata'
-  // Delta da propagare sulla commessa: solo il nuovo importo ricevuto
-  const delta = nuovoImporto
 
   await prisma.$transaction(async tx => {
     await tx.fatturaAttiva.update({
@@ -80,7 +86,7 @@ export async function registraIncasso(
     if (fattura.commessaId) {
       await tx.commessa.update({
         where: { id: fattura.commessaId },
-        data: { fatturato: { increment: delta } },
+        data: { fatturato: { increment: nuovoImporto } },
       })
     }
   })
