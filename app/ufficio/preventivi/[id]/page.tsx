@@ -53,13 +53,19 @@ export default async function PreventivoUfficioDettaglioPage({ params }: { param
 
       {/* Commessa già creata */}
       {p.commessa && (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <span className="text-emerald-600 text-lg">✓</span>
-          <div>
-            <p className="text-sm font-semibold text-emerald-800">Commessa già creata</p>
-            <p className="text-xs text-emerald-700">{p.commessa.nome}</p>
+        <Link
+          href={`/ufficio/commesse/${p.commessa.id}`}
+          className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 hover:border-emerald-300 hover:bg-emerald-100 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-emerald-600 text-lg">✓</span>
+            <div>
+              <p className="text-sm font-semibold text-emerald-800">Commessa creata</p>
+              <p className="text-xs text-emerald-700">{p.commessa.nome}</p>
+            </div>
           </div>
-        </div>
+          <span className="text-emerald-400 group-hover:text-emerald-600 text-lg">›</span>
+        </Link>
       )}
 
       {/* Pulsante conversione */}

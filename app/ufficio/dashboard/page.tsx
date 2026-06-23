@@ -1,7 +1,7 @@
 import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { FileText, Package, CalendarDays, Receipt, Users, AlertCircle } from 'lucide-react'
+import { FileText, Package, CalendarDays, Receipt, Users, AlertCircle, Building2 } from 'lucide-react'
 
 export default async function UfficioDashboard() {
   const { collaboratore } = await requireUfficio()
@@ -48,6 +48,15 @@ export default async function UfficioDashboard() {
       : null
 
   const SEZIONI = [
+    {
+      href: '/ufficio/commesse',
+      Icon: Building2,
+      label: 'Commesse',
+      desc: `${commesseAperte} aperte`,
+      alert: false,
+      color: 'bg-teal-50 border-teal-200 text-teal-700',
+      iconCls: 'text-teal-600',
+    },
     {
       href: '/ufficio/preventivi',
       Icon: FileText,

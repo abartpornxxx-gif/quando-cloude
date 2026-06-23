@@ -14,10 +14,12 @@ import {
   Receipt,
   ChevronDown,
   AlertCircle,
+  Building2,
 } from 'lucide-react'
 
 const NAV = [
   { label: 'Dashboard', href: '/ufficio/dashboard', Icon: LayoutDashboard },
+  { label: 'Commesse', href: '/ufficio/commesse', Icon: Building2 },
   { label: 'Preventivi', href: '/ufficio/preventivi', Icon: FileText },
   { label: 'Ordini', href: '/ufficio/ordini', Icon: Package },
   { label: 'Pianificazione', href: '/ufficio/pianificazione', Icon: CalendarDays },
@@ -99,6 +101,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
         <div className="md:hidden border-t border-teal-600/50">
           <div className="mx-auto max-w-7xl px-4">
             <div className="flex overflow-x-auto scrollbar-none gap-0.5 py-1">
+              <Link href="/ufficio/commesse" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Commesse</Link>
               <Link href="/ufficio/clienti" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Clienti</Link>
               <Link href="/ufficio/fornitori" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Fornitori</Link>
               <Link href="/ufficio/operai" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Operai</Link>
