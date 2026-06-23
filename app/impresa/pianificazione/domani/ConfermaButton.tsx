@@ -23,18 +23,24 @@ export function ConfermaButton({
   const [stimaImpresa, setStimaImpresa] = useState(stimaOreDomani?.toString() ?? '')
   const [pending, startTransition] = useTransition()
   const [done, setDone] = useState(false)
+  const [errore, setErrore] = useState('')
 
   function conferma() {
+    setErrore('')
     startTransition(async () => {
-      await creaPianificazioneConStima({
-        operaioId,
-        commessaId: commessaSelezionata,
-        data,
-        lavoroDaFare: lavoroNota.trim() || undefined,
-        stimaImpresaOre: stimaImpresa ? parseFloat(stimaImpresa) : undefined,
-      })
-      setDone(true)
-      setAperta(false)
+      try {
+        await creaPianificazioneConStima({
+          operaioId,
+          commessaId: commessaSelezionata,
+          data,
+          lavoroDaFare: lavoroNota.trim() || undefined,
+          stimaImpresaOre: stimaImpresa ? parseFloat(stimaImpresa) : undefined,
+        })
+        setDone(true)
+        setAperta(false)
+      } catch (e: unknown) {
+        setErrore(e instanceof Error ? e.message : 'Errore durante la pianificazione')
+      }
     })
   }
 
@@ -98,6 +104,12 @@ export function ConfermaButton({
         />
       </div>
 
+      {errore && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2">
+          <p className="text-xs font-medium text-red-700">{errore}</p>
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <button
           onClick={conferma}
@@ -107,7 +119,7 @@ export function ConfermaButton({
           {pending ? '…' : 'Conferma giornata'}
         </button>
         <button
-          onClick={() => setAperta(false)}
+          onClick={() => { setAperta(false); setErrore('') }}
           className="px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
         >
           Annulla

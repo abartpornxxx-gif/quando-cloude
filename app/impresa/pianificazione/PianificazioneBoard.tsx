@@ -247,7 +247,8 @@ function CellaOperaio({
       </div>
 
       <div className="relative">
-        {commesseLibere.length > 0 && (
+        {/* Mostra "Assegna cantiere" solo se l'operaio non è già assegnato ad altro in questo giorno */}
+        {commesseLibere.length > 0 && attivi.length === 0 && (
           <button
             onClick={() => setDropdownAperto(v => !v)}
             className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-gray-300 px-2 py-1.5 text-[11px] font-medium text-gray-400 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
@@ -293,6 +294,7 @@ export function PianificazioneBoard({
   const [pians, setPians] = useState(initialPians)
   const [saving, setSaving] = useState(false)
   const [vista, setVista] = useState<'cantieri' | 'operai'>('cantieri')
+  const [erroreMsg, setErroreMsg] = useState('')
 
   const todayStr = new Date().toISOString().slice(0, 10)
   const totAssegnazioni = pians.filter(p => !p.sostituito).length
@@ -301,6 +303,7 @@ export function PianificazioneBoard({
     const operaio = operai.find(o => o.id === operaioId)
     if (!operaio) return
 
+    setErroreMsg('')
     const tempId = `temp-${Date.now()}`
     setSaving(true)
     setPians(prev => [
@@ -312,7 +315,7 @@ export function PianificazioneBoard({
       setPians(prev => prev.map(p => (p.id === tempId ? { ...p, id: result.id } : p)))
     } catch (err: unknown) {
       setPians(prev => prev.filter(p => p.id !== tempId))
-      alert(err instanceof Error ? err.message : "Errore durante l'assegnazione. Riprova.")
+      setErroreMsg(err instanceof Error ? err.message : "Errore durante l'assegnazione. Riprova.")
     } finally {
       setSaving(false)
     }
@@ -320,13 +323,13 @@ export function PianificazioneBoard({
 
   async function handleRemove(id: string) {
     if (id.startsWith('temp-')) return
+    setErroreMsg('')
     setSaving(true)
     setPians(prev => prev.filter(p => p.id !== id))
     try {
       await eliminaPianificazione(id)
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Impossibile rimuovere.'
-      alert(msg)
+      setErroreMsg(err instanceof Error ? err.message : 'Impossibile rimuovere la pianificazione.')
       router.refresh()
     } finally {
       setSaving(false)
@@ -394,6 +397,11 @@ export function PianificazioneBoard({
         </button>
 
         {saving && <span className="text-xs text-blue-500 animate-pulse">Salvataggio…</span>}
+      {erroreMsg && (
+        <div className="w-full rounded-xl border border-red-200 bg-red-50 px-4 py-2">
+          <p className="text-sm font-medium text-red-700">{erroreMsg}</p>
+        </div>
+      )}
 
         {/* Toggle vista */}
         <div className="flex rounded-xl border border-gray-200 bg-gray-50 p-0.5">
