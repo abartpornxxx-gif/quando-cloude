@@ -63,7 +63,10 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
           attrezzatureIds: attrezzatureSelezionate,
         })
       } catch (err: unknown) {
-        setErrore(err instanceof Error ? err.message : 'Errore imprevisto')
+        const msg = (err as Error)?.message ?? ''
+        // redirect() di Next.js si propaga come errore: lasciarlo passare
+        if (msg.includes('NEXT_REDIRECT') || msg.includes('NEXT_NOT_FOUND')) throw err
+        setErrore(msg || 'Errore imprevisto')
       }
     })
   }

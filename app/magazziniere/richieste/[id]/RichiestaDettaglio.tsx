@@ -39,10 +39,12 @@ export default function RichiestaDettaglio({
     startTransition(async () => {
       try {
         await aggiornaStatoRichiesta(richiesta.id, stato, materialeId || undefined)
-        router.refresh()
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')
+        return
       }
+      // router.refresh() fuori dal try-catch: errori di re-render gestiti da React, non da setErrore
+      router.refresh()
     })
   }
 
@@ -50,21 +52,22 @@ export default function RichiestaDettaglio({
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
+    let uploadOk = false
     try {
       const fd = new FormData()
       fd.append('foto', file)
-      // Se c'è un materiale selezionato, aggiorna prima la richiesta con materialeId
       if (materialeId && !richiesta.materiale) {
         await aggiornaStatoRichiesta(richiesta.id, 'in_preparazione', materialeId)
       }
       await uploadFotoConsegna(richiesta.id, fd)
-      router.refresh()
+      uploadOk = true
     } catch (err: unknown) {
       setErrore(err instanceof Error ? err.message : 'Errore upload')
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
     }
+    if (uploadOk) router.refresh()
   }
 
   const statoLabel: Record<string, string> = {

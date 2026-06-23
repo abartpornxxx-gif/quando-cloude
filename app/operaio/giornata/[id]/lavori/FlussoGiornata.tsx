@@ -130,10 +130,13 @@ export default function FlussoGiornata({
     startTransition(async () => {
       try {
         await avanzaFase(giornataId, fase)
-        router.refresh()
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')
+        return
       }
+      // router.refresh() fuori dal try-catch: se il re-render del server component fallisce
+      // l'errore viene gestito da React, non da setErrore
+      router.refresh()
     })
   }
 
@@ -142,10 +145,11 @@ export default function FlussoGiornata({
     startTransition(async () => {
       try {
         await terminaGiornata(giornataId)
-        router.refresh()
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')
+        return
       }
+      router.refresh()
     })
   }
 
@@ -155,7 +159,10 @@ export default function FlussoGiornata({
       try {
         await annullaGiornata(giornataId)
       } catch (err: unknown) {
-        setErrore(err instanceof Error ? err.message : 'Errore')
+        const msg = (err as Error)?.message ?? ''
+        // annullaGiornata chiama redirect() — NEXT_REDIRECT si propaga come errore: lasciarlo passare
+        if (msg.includes('NEXT_REDIRECT') || msg.includes('NEXT_NOT_FOUND')) throw err
+        setErrore(msg || 'Errore')
       }
     })
   }
@@ -164,39 +171,42 @@ export default function FlussoGiornata({
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
+    let uploadOk = false
     try {
       const fd = new FormData()
       fd.append('foto', file)
       await uploadFotoAvanzamento(giornataId, fd)
-      router.refresh()
+      uploadOk = true
     } catch (err: unknown) {
       setErrore(err instanceof Error ? err.message : 'Errore upload')
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
     }
+    if (uploadOk) router.refresh()
   }
 
   async function handleProblema(e: React.FormEvent) {
     e.preventDefault()
     if (!problemaNote.trim()) return
     startProblemaTransition(async () => {
+      let ok = false
       try {
-        // Upload foto problema se presente
         const fotoFile = problemaFileRef.current?.files?.[0]
         if (fotoFile) {
           const fd = new FormData()
           fd.append('foto', fotoFile)
           await uploadFotoAvanzamento(giornataId, fd)
-          router.refresh()
         }
         await segnalaProblema(giornataId, problemaNote.trim())
         setProblemaNote('')
         setMostraProblema(false)
         if (problemaFileRef.current) problemaFileRef.current.value = ''
+        ok = true
       } catch (err: unknown) {
         setErrore(err instanceof Error ? err.message : 'Errore')
       }
+      if (ok) router.refresh()
     })
   }
 
