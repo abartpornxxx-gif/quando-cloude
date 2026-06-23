@@ -4,6 +4,11 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
 
+function toDateKey(d: Date | string): string {
+  const dt = d instanceof Date ? d : new Date(d)
+  return `${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`
+}
+
 export default async function CommessaMaterialiPage({
   params,
 }: {
@@ -25,6 +30,7 @@ export default async function CommessaMaterialiPage({
           materiali: {
             include: { materiale: { select: { codice: true, unita: true } } },
           },
+          rapportino: { select: { id: true } },
         },
       },
       ordini: {
@@ -66,6 +72,14 @@ export default async function CommessaMaterialiPage({
   )
 
   const scostamento = totaleOrdini - totalePrev
+
+  // Mappa data → giornataId per collegare i movimenti reso ai rapportini
+  const giornataPerData = new Map<string, string>()
+  for (const g of commessa.giornate) {
+    if (g.rapportino) {
+      giornataPerData.set(toDateKey(g.data), g.id)
+    }
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -238,11 +252,22 @@ export default async function CommessaMaterialiPage({
             {commessa.movimenti.map(mv => {
               const segno = mv.tipo === 'scarico' ? '−' : '+'
               const color = mv.tipo === 'carico' ? 'text-green-600' : mv.tipo === 'reso' ? 'text-yellow-600' : 'text-red-600'
+              const rapportinoGiornataId = mv.tipo === 'reso' && mv.descrizione?.startsWith('Reso da rapportino')
+                ? giornataPerData.get(toDateKey(mv.data))
+                : undefined
               return (
                 <div key={mv.id} className="px-4 py-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm text-gray-900">{mv.descrizione ?? mv.materiale?.descrizione ?? '—'}</p>
                     <p className="text-xs text-gray-400">{formatData(mv.data)} — {mv.tipo}</p>
+                    {rapportinoGiornataId && (
+                      <Link
+                        href={`/impresa/giornate/${rapportinoGiornataId}/rapportino`}
+                        className="text-xs text-emerald-600 hover:text-emerald-800 font-medium"
+                      >
+                        📋 Vedi rapportino →
+                      </Link>
+                    )}
                   </div>
                   <p className={`text-sm font-semibold ${color}`}>
                     {segno}{mv.quantita} {mv.materiale?.unita ?? 'pz'}

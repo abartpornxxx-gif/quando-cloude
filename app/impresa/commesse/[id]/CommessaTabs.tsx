@@ -210,6 +210,21 @@ export function CommessaTabs({
         {/* ── DOCUMENTI ── */}
         {activeTab === 'documenti' && (
           <div className="space-y-4">
+            {/* Materiali & Movimenti */}
+            <a
+              href={`/impresa/commesse/${commessaId}/materiali`}
+              className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🔧</span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">Materiali & Movimenti</p>
+                  <p className="text-xs text-gray-400">Costo materiali: {formatEuro(defaultValues.costiMateriali)}</p>
+                </div>
+              </div>
+              <span className="text-gray-300 group-hover:text-blue-400 text-lg">›</span>
+            </a>
+
             {/* Preventivo */}
             <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
               <div className="border-b border-gray-100 px-5 py-4">
@@ -371,23 +386,6 @@ export function CommessaTabs({
         {/* ── NOTE & MODIFICA ── */}
         {activeTab === 'note' && (
           <div className="space-y-6">
-            {/* Link rapido materiali */}
-            <a
-              href={`/impresa/commesse/${commessaId}/materiali`}
-              className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">🔧</span>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">
-                    Materiali & Report
-                  </p>
-                  <p className="text-xs text-gray-400">Movimenti, richieste, report giornate</p>
-                </div>
-              </div>
-              <span className="text-gray-300 group-hover:text-blue-400 text-lg">›</span>
-            </a>
-
             {/* Gestione operai */}
             <OperaiManager
               commessaId={commessaId}
