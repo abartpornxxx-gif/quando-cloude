@@ -75,6 +75,7 @@ model Fornitore {
   updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz
   ordini          OrdineFornitore[]
   fatturePassive  FatturaPassiva[]
+  richiestePreventivi RichiestaPreventivoFornitore[]
 
   @@map("fornitori")
 }
@@ -263,6 +264,8 @@ model Commessa {
   richiesteOfferte        RichiestaOfferta[]
   adempimenti             AdempimentoCommessa[]
   proposteIntervento      PropostaIntervento[]
+  varianti                VarianteLavoro[]
+  richiestePreventiviFornitori RichiestaPreventivoFornitore[]
 
   @@map("commesse")
 }
@@ -666,6 +669,62 @@ model FatturaPassiva {
   updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("fatture_passive")
+}
+
+enum StatoVariante {
+  bozza
+  inviata
+  approvata
+  rifiutata
+  annullata
+}
+
+model VarianteLavoro {
+  id           String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId   String                       @map("commessa_id") @db.Uuid
+  commessa     Commessa                     @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  titolo       String
+  descrizione  String?
+  importo      Int                          @default(0) // in centesimi
+  costoStimato Int                          @default(0) @map("costo_stimato") // in centesimi
+  stato        StatoVariante                @default(bozza)
+  approvatoAt  DateTime?                    @map("approvato_at") @db.Timestamptz
+  note         String?
+  fileUrl      String?                      @map("file_url")
+  filePath     String?                      @map("file_path")
+  preventiviFornitori RichiestaPreventivoFornitore[]
+  createdAt    DateTime                     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime                     @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("varianti_lavoro")
+}
+
+enum StatoPreventivoFornitore {
+  in_attesa
+  ricevuto
+  approvato
+  scartato
+}
+
+model RichiestaPreventivoFornitore {
+  id            String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId    String                   @map("commessa_id") @db.Uuid
+  commessa      Commessa                 @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  varianteId    String?                  @map("variante_id") @db.Uuid
+  variante      VarianteLavoro?          @relation(fields: [varianteId], references: [id], onDelete: SetNull)
+  fornitoreId   String                   @map("fornitore_id") @db.Uuid
+  fornitore     Fornitore                @relation(fields: [fornitoreId], references: [id], onDelete: Cascade)
+  descrizione   String
+  stato         StatoPreventivoFornitore @default(in_attesa)
+  note          String?
+  fileUrl       String?                  @map("file_url")
+  filePath      String?                  @map("file_path")
+  dataRichiesta DateTime                 @default(now()) @map("data_richiesta") @db.Timestamptz
+  dataScadenza  DateTime?                @map("data_scadenza") @db.Date
+  createdAt     DateTime                 @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime                 @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("richieste_preventivi_fornitori")
 }
 
 model DichiarazioneConformita {

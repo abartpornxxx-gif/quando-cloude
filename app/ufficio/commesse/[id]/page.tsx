@@ -13,6 +13,34 @@ const STATO_COMM_VARIANT: Record<string, BadgeVariant> = { aperta: 'success', fi
 const STATO_FA_LABEL: Record<string, string> = { da_incassare: 'Da incassare', parzialmente_incassata: 'Parz. incassata', incassata: 'Incassata', scaduta: 'Scaduta' }
 const STATO_FA_VARIANT: Record<string, BadgeVariant> = { da_incassare: 'warning', parzialmente_incassata: 'warning', incassata: 'success', scaduta: 'danger' }
 
+const STATO_VAR_LABEL: Record<string, string> = {
+  bozza: 'Bozza',
+  inviata: 'Inviata',
+  approvata: 'Approvata',
+  rifiutata: 'Rifiutata',
+  annullata: 'Annullata',
+}
+const STATO_VAR_VARIANT: Record<string, BadgeVariant> = {
+  bozza: 'neutral',
+  inviata: 'info',
+  approvata: 'success',
+  rifiutata: 'danger',
+  annullata: 'neutral',
+}
+
+const STATO_PREV_FORN_LABEL: Record<string, string> = {
+  in_attesa: 'In attesa',
+  ricevuto: 'Ricevuto',
+  approvato: 'Approvato',
+  scartato: 'Scartato',
+}
+const STATO_PREV_FORN_VARIANT: Record<string, BadgeVariant> = {
+  in_attesa: 'warning',
+  ricevuto: 'info',
+  approvato: 'success',
+  scartato: 'danger',
+}
+
 function totaleRighe(righe: { quantita: number; prezzoUnitario: number }[]) {
   return righe.reduce((s, r) => s + Math.round(r.quantita * r.prezzoUnitario), 0)
 }
@@ -67,6 +95,16 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
         },
         orderBy: { createdAt: 'desc' },
       },
+      varianti: {
+        orderBy: { createdAt: 'desc' },
+      },
+      richiestePreventiviFornitori: {
+        include: {
+          fornitore: { select: { nome: true } },
+          variante: { select: { titolo: true } },
+        },
+        orderBy: { dataRichiesta: 'desc' },
+      },
     },
   })
 
@@ -75,6 +113,10 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
   // ── Fatture ──
   const totaleFattureAttive = c.fattureAttive.reduce((s, f) => s + totaleRighe(f.righe), 0)
   const totaleFatturePassive = c.fatturePassive.reduce((s, f) => s + f.importo, 0)
+
+  // ── Varianti ──
+  const totaleVariantiApprovate = c.varianti.filter(v => v.stato === 'approvata').reduce((s, v) => s + v.importo, 0)
+  const costoStimatoVarianti = c.varianti.filter(v => v.stato === 'approvata').reduce((s, v) => s + v.costoStimato, 0)
 
   // ── Costi Manodopera Dinamici ──
   const costiManodoperaDinamici = c.giornate.reduce((sum, g) => {
@@ -85,10 +127,10 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
   }, 0)
 
   // ── KPI finanziari ──
-  const costiTotali = c.costiMateriali + costiManodoperaDinamici + totaleFatturePassive
+  const costiTotali = c.costiMateriali + costiManodoperaDinamici + totaleFatturePassive + costoStimatoVarianti
   const daIncassare = totaleFattureAttive - c.fatturato
   const daFatturare = c.preventivato - totaleFattureAttive
-  const riferimento = totaleFattureAttive > 0 ? totaleFattureAttive : c.preventivato
+  const riferimento = (totaleFattureAttive > 0 ? totaleFattureAttive : c.preventivato) + totaleVariantiApprovate
   const margineBase = riferimento - costiTotali
   const marginePct = riferimento > 0 ? Math.round((margineBase / riferimento) * 100) : null
 
@@ -454,6 +496,113 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
           </div>
         </div>
       )}
+
+      {/* Varianti Lavori */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Varianti lavori (Extra)</p>
+            {totaleVariantiApprovate > 0 && (
+              <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-semibold border border-emerald-200">
+                +{formatEuro(totaleVariantiApprovate)} approvato
+              </span>
+            )}
+          </div>
+          <Link
+            href={`/ufficio/commesse/${c.id}/varianti/nuova`}
+            className="text-xs text-teal-600 hover:text-teal-800 font-semibold flex items-center gap-0.5"
+          >
+            + Aggiungi variante
+          </Link>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          {c.varianti.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-center text-gray-400">Nessuna variante inserita per questa commessa.</p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {c.varianti.map(v => (
+                <Link
+                  key={v.id}
+                  href={`/ufficio/commesse/${c.id}/varianti/${v.id}`}
+                  className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50/70 transition-colors group"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700 truncate">
+                      {v.titolo}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate mt-0.5">
+                      {v.descrizione || 'Nessuna descrizione'}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0 flex items-center gap-3 ml-4">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{formatEuro(v.importo)}</p>
+                      {v.costoStimato > 0 && (
+                        <p className="text-[10px] text-gray-400 font-medium">Costo stimato: {formatEuro(v.costoStimato)}</p>
+                      )}
+                      <Badge variant={STATO_VAR_VARIANT[v.stato]}>{STATO_VAR_LABEL[v.stato]}</Badge>
+                    </div>
+                    <span className="text-gray-300 group-hover:text-teal-400">›</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Richieste Preventivi Fornitori */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Richieste preventivi fornitori</p>
+          <Link
+            href={`/ufficio/commesse/${c.id}/preventivi-fornitori/nuova`}
+            className="text-xs text-teal-600 hover:text-teal-800 font-semibold flex items-center gap-0.5"
+          >
+            + Nuova richiesta
+          </Link>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          {c.richiestePreventiviFornitori.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-center text-gray-400">Nessuna richiesta preventivo registrata.</p>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {c.richiestePreventiviFornitori.map(rp => (
+                <Link
+                  key={rp.id}
+                  href={`/ufficio/commesse/${c.id}/preventivi-fornitori/${rp.id}`}
+                  className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50/70 transition-colors group"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700 truncate">
+                      {rp.fornitore.nome}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                      {rp.descrizione}
+                    </p>
+                    {rp.variante && (
+                      <p className="text-[10px] text-teal-600 font-medium mt-0.5">
+                        ↳ Variante: {rp.variante.titolo}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0 flex items-center gap-3 ml-4">
+                    <div>
+                      {rp.dataScadenza && (
+                        <p className="text-[10px] text-gray-400">Scadenza: {formatData(rp.dataScadenza)}</p>
+                      )}
+                      <Badge variant={STATO_PREV_FORN_VARIANT[rp.stato]}>{STATO_PREV_FORN_LABEL[rp.stato]}</Badge>
+                    </div>
+                    <span className="text-gray-300 group-hover:text-teal-400">›</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
     </div>
   )
