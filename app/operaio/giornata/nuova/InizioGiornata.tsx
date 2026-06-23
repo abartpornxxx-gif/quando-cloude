@@ -80,10 +80,20 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
           <div>
             <p className="text-xl font-bold leading-tight">{pianificazione.commessa.nome}</p>
             {pianificazione.commessa.indirizzoCantiere && (
-              <p className="text-sm text-emerald-200 mt-1 flex items-center gap-1">
-                <Image src="/immagini/icona-posizione.png" width={12} height={12} alt="" className="shrink-0 brightness-0 invert opacity-80" />
-                {pianificazione.commessa.indirizzoCantiere}
-              </p>
+              <div className="mt-1 flex items-center gap-2 flex-wrap">
+                <p className="text-sm text-emerald-200 flex items-center gap-1">
+                  <Image src="/immagini/icona-posizione.png" width={12} height={12} alt="" className="shrink-0 brightness-0 invert opacity-80" />
+                  {pianificazione.commessa.indirizzoCantiere}
+                </p>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pianificazione.commessa.indirizzoCantiere)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold text-emerald-100 hover:text-white underline shrink-0"
+                >
+                  🗺 Indicazioni
+                </a>
+              </div>
             )}
             {pianificazione.mezzo && (
               <p className="text-sm text-emerald-200 mt-0.5">
@@ -136,13 +146,27 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
               </option>
             ))}
           </select>
-          {/* Istruzioni cantiere, visibili subito dopo aver selezionato */}
+          {/* Dettagli cantiere, visibili subito dopo aver selezionato */}
           {(() => {
             const sel = commesse.find(c => c.id === commessaId)
             if (!sel) return null
-            if (!sel.istruzioniCantiere && !sel.attrezzatureNecessarie) return null
+            const hasDetails = sel.istruzioniCantiere || sel.attrezzatureNecessarie || sel.indirizzoCantiere
+            if (!hasDetails) return null
             return (
               <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 space-y-2">
+                {sel.indirizzoCantiere && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-xs text-emerald-700">📍 {sel.indirizzoCantiere}</p>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sel.indirizzoCantiere)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 underline shrink-0"
+                    >
+                      🗺 Indicazioni
+                    </a>
+                  </div>
+                )}
                 {sel.istruzioniCantiere && (
                   <div>
                     <p className="text-xs font-semibold text-emerald-700 mb-0.5">📋 Istruzioni cantiere</p>

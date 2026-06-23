@@ -65,7 +65,17 @@ export default async function DomaniPage() {
                 <div className="bg-emerald-700 px-4 py-3">
                   <h2 className="font-bold text-white">{p.commessa.nome}</h2>
                   {p.commessa.indirizzoCantiere && (
-                    <p className="mt-0.5 text-sm text-emerald-200">{p.commessa.indirizzoCantiere}</p>
+                    <div className="mt-0.5 flex items-center gap-2 flex-wrap">
+                      <p className="text-sm text-emerald-200">{p.commessa.indirizzoCantiere}</p>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.commessa.indirizzoCantiere)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-semibold text-emerald-100 hover:text-white underline shrink-0"
+                      >
+                        🗺 Indicazioni
+                      </a>
+                    </div>
                   )}
                 </div>
 

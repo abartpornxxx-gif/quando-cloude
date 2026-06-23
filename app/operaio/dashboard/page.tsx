@@ -137,10 +137,20 @@ export default async function OperaioDashboardPage() {
                     <p className="font-semibold text-gray-900 truncate">{c.nome}</p>
                     {c.cliente && <p className="text-sm text-gray-500 mt-0.5">{c.cliente.nome}</p>}
                     {c.indirizzoCantiere && (
-                      <p className="mt-1.5 text-xs text-gray-400 flex items-center gap-1">
-                        <Image src="/immagini/icona-posizione.png" width={12} height={12} alt="" className="shrink-0 opacity-60" />
-                        {c.indirizzoCantiere}
-                      </p>
+                      <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                          <Image src="/immagini/icona-posizione.png" width={12} height={12} alt="" className="shrink-0 opacity-60" />
+                          {c.indirizzoCantiere}
+                        </p>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.indirizzoCantiere)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-medium text-blue-600 hover:text-blue-800 shrink-0"
+                        >
+                          🗺 Maps
+                        </a>
+                      </div>
                     )}
                   </div>
                   <Badge variant="success" dot>Aperta</Badge>

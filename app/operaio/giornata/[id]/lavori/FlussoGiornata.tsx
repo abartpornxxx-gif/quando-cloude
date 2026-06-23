@@ -247,7 +247,17 @@ export default function FlussoGiornata({
         <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Cantiere</p>
         <p className="font-bold text-base text-gray-900">{commessa.nome}</p>
         {commessa.indirizzoCantiere && (
-          <p className="text-sm text-gray-500 mt-0.5">{commessa.indirizzoCantiere}</p>
+          <div className="flex items-center gap-2 flex-wrap mt-0.5">
+            <p className="text-sm text-gray-500">{commessa.indirizzoCantiere}</p>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(commessa.indirizzoCantiere)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-medium text-blue-600 hover:text-blue-800 shrink-0"
+            >
+              🗺 Maps
+            </a>
+          </div>
         )}
       </div>
 

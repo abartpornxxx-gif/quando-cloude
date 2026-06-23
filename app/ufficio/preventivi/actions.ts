@@ -5,6 +5,7 @@ import { requireImpresaOUfficio } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { StatoPreventivo } from '@/app/generated/prisma/client'
+import { calcolaTotalePreventivo } from '@/lib/calcoli'
 
 type RigaInput = { descrizione: string; quantita: number; prezzoUnitario: number }
 
@@ -54,6 +55,40 @@ export async function salvaPreventivoUfficio(formData: FormData) {
   }
 
   redirect('/ufficio/preventivi')
+}
+
+export async function trasformaInCommessaUfficio(preventivoId: string) {
+  await requireImpresaOUfficio()
+
+  const preventivo = await prisma.preventivo.findUniqueOrThrow({
+    where: { id: preventivoId },
+    include: { righe: true, cliente: true, commessa: { select: { id: true } } },
+  })
+
+  // Commessa già esistente: non creare doppione
+  if (preventivo.commessa) {
+    redirect(`/ufficio/preventivi/${preventivoId}`)
+  }
+
+  if (preventivo.stato !== 'accettato') {
+    throw new Error('Il preventivo deve essere in stato "accettato" per creare una commessa.')
+  }
+
+  const totale = calcolaTotalePreventivo(preventivo.righe)
+  const nomeCliente = preventivo.cliente?.nome ?? 'Cliente'
+  const anno = new Date().getFullYear()
+
+  await prisma.commessa.create({
+    data: {
+      nome: `${nomeCliente} — ${anno}`,
+      clienteId: preventivo.clienteId,
+      preventivato: totale,
+      preventivoId: preventivo.id,
+      stato: 'aperta',
+    },
+  })
+
+  redirect(`/ufficio/preventivi/${preventivoId}`)
 }
 
 export async function eliminaPreventivoUfficio(id: string) {
