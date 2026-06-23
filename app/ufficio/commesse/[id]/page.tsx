@@ -77,7 +77,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
   const totaleFatturePassive = c.fatturePassive.reduce((s, f) => s + f.importo, 0)
 
   // ── KPI finanziari ──
-  const costiTotali = c.costiMateriali + c.costiManodopera + c.costiMezzi
+  const costiTotali = c.costiMateriali + c.costiManodopera + c.costiMezzi + totaleFatturePassive
   const daIncassare = totaleFattureAttive - c.fatturato
   const daFatturare = c.preventivato - totaleFattureAttive
   const riferimento = totaleFattureAttive > 0 ? totaleFattureAttive : c.preventivato
@@ -180,7 +180,12 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
           <KpiCard label="Costi manodopera" value={formatEuro(c.costiManodopera)} />
           <KpiCard label="Costi fornitori" value={formatEuro(totaleFatturePassive)} />
         </div>
-        {datiIncompleti && (
+        {c.stato === 'aperta' && (
+          <p className="mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            ⚠ Margine non definitivo — cantiere ancora aperto (lavorazioni in corso).
+          </p>
+        )}
+        {c.stato !== 'aperta' && datiIncompleti && (
           <p className="mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
             ⚠ Margine non definitivo — alcuni costi non ancora registrati (rapportini mancanti o ordini non consegnati).
           </p>
@@ -243,9 +248,12 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
                               )}
                             </div>
                             {g.rapportino ? (
-                              <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                              <Link
+                                href={`/impresa/giornate/${g.id}/rapportino`}
+                                className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 transition-colors"
+                              >
                                 ✓ Rapportino
-                              </span>
+                              </Link>
                             ) : (
                               <span className="shrink-0 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-400">
                                 Bozza

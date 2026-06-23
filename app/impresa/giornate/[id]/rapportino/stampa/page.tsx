@@ -1,4 +1,4 @@
-import { requireImpresa } from '@/lib/auth'
+import { requireImpresaOUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { formatData, formatEuro } from '@/lib/format'
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default async function RapportinoStampaPage({ params }: Props) {
-  await requireImpresa()
+  await requireImpresaOUfficio()
   const { id } = await params
 
   const giornata = await prisma.giornata.findUnique({
