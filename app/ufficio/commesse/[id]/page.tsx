@@ -178,6 +178,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
           />
           <KpiCard label="Costi materiali" value={formatEuro(c.costiMateriali)} />
           <KpiCard label="Costi manodopera" value={formatEuro(c.costiManodopera)} />
+          <KpiCard label="Costi fornitori" value={formatEuro(totaleFatturePassive)} />
         </div>
         {datiIncompleti && (
           <p className="mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">

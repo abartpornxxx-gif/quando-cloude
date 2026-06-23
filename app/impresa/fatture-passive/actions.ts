@@ -31,6 +31,7 @@ export async function creaFatturaPassiva(input: {
   })
 
   revalidatePath('/impresa/fatture-passive')
+  revalidatePath('/ufficio/fatture-passive')
   return fattura.id
 }
 
@@ -52,6 +53,8 @@ export async function registraPagamento(
 
   revalidatePath('/impresa/fatture-passive')
   revalidatePath(`/impresa/fatture-passive/${fatturaId}`)
+  revalidatePath('/ufficio/fatture-passive')
+  revalidatePath(`/ufficio/fatture-passive/${fatturaId}`)
 }
 
 export async function eliminaFatturaPassiva(fatturaId: string): Promise<void> {
@@ -63,5 +66,6 @@ export async function eliminaFatturaPassiva(fatturaId: string): Promise<void> {
 
   await prisma.fatturaPassiva.delete({ where: { id: fatturaId } })
   revalidatePath('/impresa/fatture-passive')
+  revalidatePath('/ufficio/fatture-passive')
   redirect('/impresa/fatture-passive')
 }

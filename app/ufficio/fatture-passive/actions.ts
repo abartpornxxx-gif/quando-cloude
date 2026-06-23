@@ -12,6 +12,7 @@ export async function eliminaFatturaPassivaUfficio(fatturaId: string): Promise<v
   if (fattura.stato === 'pagata') throw new Error('Non puoi eliminare una fattura già pagata')
   await prisma.fatturaPassiva.delete({ where: { id: fatturaId } })
   revalidatePath('/ufficio/fatture-passive')
+  revalidatePath('/impresa/fatture-passive')
   redirect('/ufficio/fatture-passive')
 }
 
@@ -23,6 +24,8 @@ export async function toggleControllata(fatturaId: string, nuovoValore: boolean)
   })
   revalidatePath(`/ufficio/fatture-passive/${fatturaId}`)
   revalidatePath('/ufficio/fatture-passive')
+  revalidatePath(`/impresa/fatture-passive/${fatturaId}`)
+  revalidatePath('/impresa/fatture-passive')
   redirect(`/ufficio/fatture-passive/${fatturaId}`)
 }
 
@@ -34,6 +37,7 @@ export async function aggiornaNoteUfficio(fatturaId: string, formData: FormData)
     data: { note: note.trim() || null },
   })
   revalidatePath(`/ufficio/fatture-passive/${fatturaId}`)
+  revalidatePath(`/impresa/fatture-passive/${fatturaId}`)
   redirect(`/ufficio/fatture-passive/${fatturaId}`)
 }
 
@@ -48,5 +52,7 @@ export async function annullaPagamento(fatturaId: string): Promise<void> {
   })
   revalidatePath(`/ufficio/fatture-passive/${fatturaId}`)
   revalidatePath('/ufficio/fatture-passive')
+  revalidatePath(`/impresa/fatture-passive/${fatturaId}`)
+  revalidatePath('/impresa/fatture-passive')
   redirect(`/ufficio/fatture-passive/${fatturaId}`)
 }
