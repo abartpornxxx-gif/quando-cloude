@@ -38,7 +38,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
   if (!user || user.user_metadata?.role !== 'ufficio') redirect('/login')
 
   const nome = user.user_metadata?.full_name ?? user.email ?? 'Ufficio'
-  const alertCount = await alertUfficio()
+  const alertCount = await alertUfficio(user.id)
 
   return (
     <div className="min-h-screen bg-gray-50">

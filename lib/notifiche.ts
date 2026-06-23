@@ -569,41 +569,50 @@ export async function listaNotificheCliente(clienteId: string, userId?: string):
 
 // ─── UFFICIO ──────────────────────────────────────────────────────────────────
 
-export async function alertUfficio(): Promise<number> {
+export async function alertUfficio(userId?: string): Promise<number> {
   const commesse = await prisma.commessa.findMany({
     where: { stato: 'finita', archiviata: false },
     select: {
+      id: true,
       preventivato: true,
       fatturato: true,
       _count: { select: { fattureAttive: { where: { stato: { in: ['da_incassare', 'scaduta'] } } } } },
     },
   })
-  return commesse.filter(
+  const tutte = commesse.filter(
     c => c._count.fattureAttive > 0 || (c.preventivato > 0 && c.fatturato < c.preventivato)
-  ).length
+  )
+  if (tutte.length === 0 || !userId) return tutte.length
+
+  // Sottrai le notifiche già lette dall'utente ufficio
+  const lette = await getNotificheLette(userId)
+  return tutte.filter(c => !lette.has(`saldo_pendente:${c.id}`)).length
 }
 
-export async function listaNotificheUfficio(): Promise<ItemNotifica[]> {
+export async function listaNotificheUfficio(userId?: string): Promise<ItemNotifica[]> {
   const now = new Date()
-  const commesse = await prisma.commessa.findMany({
-    where: { stato: 'finita', archiviata: false },
-    include: {
-      cliente: { select: { nome: true } },
-      fattureAttive: {
-        where: { stato: { in: ['da_incassare', 'scaduta'] } },
-        select: {
-          id: true,
-          numero: true,
-          anno: true,
-          stato: true,
-          dataScadenza: true,
-          righe: { select: { quantita: true, prezzoUnitario: true } },
+  const [commesse, lette] = await Promise.all([
+    prisma.commessa.findMany({
+      where: { stato: 'finita', archiviata: false },
+      include: {
+        cliente: { select: { nome: true } },
+        fattureAttive: {
+          where: { stato: { in: ['da_incassare', 'scaduta'] } },
+          select: {
+            id: true,
+            numero: true,
+            anno: true,
+            stato: true,
+            dataScadenza: true,
+            righe: { select: { quantita: true, prezzoUnitario: true } },
+          },
         },
       },
-    },
-    orderBy: { updatedAt: 'desc' },
-    take: 30,
-  })
+      orderBy: { updatedAt: 'desc' },
+      take: 30,
+    }),
+    userId ? getNotificheLette(userId) : Promise.resolve(new Set<string>()),
+  ])
 
   const items: ItemNotifica[] = []
 
@@ -630,6 +639,7 @@ export async function listaNotificheUfficio(): Promise<ItemNotifica[]> {
       href: `/ufficio/saldi-pendenti`,
       urgente,
       data: c.updatedAt,
+      letta: lette.has(`saldo_pendente:${c.id}`),
     })
   }
 

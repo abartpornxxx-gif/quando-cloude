@@ -11,8 +11,8 @@ import { Badge } from '@/components/ui/Badge'
 
 type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral'
 
-const STATO_LABEL: Record<string, string> = { bozza: 'Bozza', inviato: 'Inviato', accettato: 'Accettato', rifiutato: 'Rifiutato' }
-const STATO_VARIANT: Record<string, BadgeVariant> = { bozza: 'neutral', inviato: 'info', accettato: 'success', rifiutato: 'danger' }
+const STATO_LABEL: Record<string, string> = { bozza: 'Bozza', inviato: 'Inviato', accettato: 'Accettato', rifiutato: 'Rifiutato', scaduto: 'Scaduto' }
+const STATO_VARIANT: Record<string, BadgeVariant> = { bozza: 'neutral', inviato: 'info', accettato: 'success', rifiutato: 'danger', scaduto: 'warning' }
 
 export default async function UfficioPreventiviPage() {
   await requireUfficio()

@@ -4,6 +4,7 @@ import { getAdminClient } from '@/lib/supabase/admin'
 import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { inviaEmailInvito } from '@/lib/email'
 
 export async function verificaAccesso(email: string): Promise<boolean> {
   await requireImpresa()
@@ -44,9 +45,10 @@ export async function creaAccesso({
     throw new Error(error.message)
   }
 
-  // TODO_RESEND: in futuro, quando configurato Resend, invia qui l'email di invito
-  // con le credenziali iniziali anziché comunicarle a voce.
-  // Sostituire: await sendInviteEmail({ email, nome, ruolo, password }) — vedi lib/email.ts
+  // Invio email invito — silenzioso se RESEND_API_KEY non configurata
+  try {
+    await inviaEmailInvito(email, nome, ruolo, password)
+  } catch { /* non bloccare la creazione accesso se l'email fallisce */ }
 
   if (revalidate) revalidatePath(revalidate)
 

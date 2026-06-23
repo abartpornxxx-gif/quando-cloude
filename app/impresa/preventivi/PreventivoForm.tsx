@@ -73,6 +73,7 @@ export function PreventivoForm({ action, clienti, defaultValues }: Props) {
             <option value="inviato">Inviato</option>
             <option value="accettato">Accettato</option>
             <option value="rifiutato">Rifiutato</option>
+            <option value="scaduto">Scaduto</option>
           </select>
         </div>
       </div>

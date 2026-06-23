@@ -211,6 +211,37 @@ export async function inviaEmailFatturaInScadenzaCliente(
   // })
 }
 
+// ─── Accessi utente ───────────────────────────────────────────────────────────
+
+export async function inviaEmailInvito(
+  email: string,
+  nome: string,
+  ruolo: string,
+  password: string,
+): Promise<void> {
+  if (!resendConfigured()) {
+    console.warn('[email] RESEND_API_KEY non configurata — email invito non inviata')
+    return
+  }
+  // TODO ATTIVARE — decommentare dopo npm install resend:
+  //
+  // const { Resend } = await import('resend')
+  // const resend = new Resend(process.env.RESEND_API_KEY)
+  // await resend.emails.send({
+  //   from: process.env.EMAIL_FROM ?? 'noreply@quadro.app',
+  //   to: email,
+  //   subject: 'QUADRO — Il tuo accesso è pronto',
+  //   html: `
+  //     <p>Ciao ${nome},</p>
+  //     <p>Il tuo account QUADRO è stato creato con ruolo <strong>${ruolo}</strong>.</p>
+  //     <p>Accedi su: <a href="${appUrl()}/login">${appUrl()}/login</a></p>
+  //     <p>Email: <strong>${email}</strong><br>
+  //     Password temporanea: <strong>${password}</strong> — cambiala al primo accesso.</p>
+  //     <p style="color:#666;font-size:12px">QUADRO — Gestionale cantieri</p>
+  //   `,
+  // })
+}
+
 export async function inviaEmailAppuntamento(
   emailCliente: string,
   nomeCliente: string,

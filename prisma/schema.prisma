@@ -190,6 +190,7 @@ enum StatoPreventivo {
   inviato
   accettato
   rifiutato
+  scaduto
 }
 
 model Preventivo {
