@@ -15,11 +15,24 @@ export async function iniziaGiornata(input: {
 }): Promise<string> {
   const { operaio } = await requireOperaio()
 
-  // Verifica assegnazione
-  const assegnazione = await prisma.commessaOperaio.findUnique({
-    where: { commessaId_operaioId: { commessaId: input.commessaId, operaioId: operaio.id } },
-  })
-  if (!assegnazione) throw new Error('Non sei assegnato a questa commessa')
+  // Verifica assegnazione: via CommessaOperaio (permanente) OPPURE via Pianificazione (giornaliera).
+  // I tre campi della pianificazione (id + operaioId + commessaId) devono coincidere nel DB
+  // per evitare che un operaio possa aprire commesse altrui passando un id a caso.
+  const [assegnazione, pianoValido] = await Promise.all([
+    prisma.commessaOperaio.findUnique({
+      where: { commessaId_operaioId: { commessaId: input.commessaId, operaioId: operaio.id } },
+    }),
+    input.pianificazioneId
+      ? prisma.pianificazione.findFirst({
+          where: {
+            id: input.pianificazioneId,
+            operaioId: operaio.id,
+            commessaId: input.commessaId,
+          },
+        })
+      : null,
+  ])
+  if (!assegnazione && !pianoValido) throw new Error('Non sei assegnato a questa commessa')
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
