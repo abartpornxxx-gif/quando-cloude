@@ -35,13 +35,14 @@ export default async function SaldiPendentiPage() {
     include: {
       cliente: { select: { nome: true, telefono: true, email: true } },
       fattureAttive: {
-        where: { stato: { in: ['da_incassare', 'scaduta'] } },
+        where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] } },
         select: {
           id: true,
           numero: true,
           anno: true,
           stato: true,
           dataScadenza: true,
+          importoIncassato: true,
           righe: { select: { quantita: true, prezzoUnitario: true } },
         },
         orderBy: [{ anno: 'desc' }, { numero: 'desc' }],
@@ -187,13 +188,16 @@ export default async function SaldiPendentiPage() {
                     </div>
                     <div className="space-y-2">
                       {c.fattureAttive.map(f => {
-                        const totale = totaleFattura(f.righe)
+                        const totFattura = totaleFattura(f.righe)
+                        const giaIncassato = f.importoIncassato ?? 0
+                        const residuoFattura = totFattura - giaIncassato
                         const isScaduta = f.stato === 'scaduta'
+                        const isParziale = f.stato === 'parzialmente_incassata'
                         return (
                           <div
                             key={f.id}
                             className={`flex items-center justify-between rounded-xl px-3 py-2 ${
-                              isScaduta ? 'bg-red-50 border border-red-200' : 'bg-gray-50 border border-gray-200'
+                              isScaduta ? 'bg-red-50 border border-red-200' : isParziale ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50 border border-gray-200'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -208,11 +212,16 @@ export default async function SaldiPendentiPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className={`text-sm font-bold ${isScaduta ? 'text-red-600' : 'text-gray-900'}`}>
-                                {eur(totale)}
-                              </span>
-                              <Badge variant={isScaduta ? 'danger' : 'warning'}>
-                                {isScaduta ? 'Scaduta' : 'Da incassare'}
+                              <div className="text-right">
+                                <span className={`text-sm font-bold ${isScaduta ? 'text-red-600' : 'text-gray-900'}`}>
+                                  {eur(residuoFattura)}
+                                </span>
+                                {isParziale && (
+                                  <p className="text-xs text-gray-400">residuo su {eur(totFattura)}</p>
+                                )}
+                              </div>
+                              <Badge variant={isScaduta ? 'danger' : isParziale ? 'warning' : 'warning'}>
+                                {isScaduta ? 'Scaduta' : isParziale ? 'Parz. incassata' : 'Da incassare'}
                               </Badge>
                             </div>
                           </div>

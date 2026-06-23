@@ -8,10 +8,16 @@ import { eliminaFatturaAttivaUfficio, segnaScadutaUfficio } from '../actions'
 
 const BADGE: Record<string, string> = {
   da_incassare: 'bg-yellow-100 text-yellow-800',
+  parzialmente_incassata: 'bg-amber-100 text-amber-800',
   incassata: 'bg-green-100 text-green-800',
   scaduta: 'bg-red-100 text-red-800',
 }
-const LABEL: Record<string, string> = { da_incassare: 'Da incassare', incassata: 'Incassata', scaduta: 'Scaduta' }
+const LABEL: Record<string, string> = {
+  da_incassare: 'Da incassare',
+  parzialmente_incassata: 'Parz. incassata',
+  incassata: 'Incassata',
+  scaduta: 'Scaduta',
+}
 
 export default async function FatturaUfficioPage({ params }: { params: Promise<{ id: string }> }) {
   await requireUfficio()
@@ -26,6 +32,10 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
   const imponibile = fattura.righe.reduce((acc, r) => acc + Math.round(r.quantita * r.prezzoUnitario), 0)
   const iva = Math.round(imponibile * fattura.aliquotaIva / 100)
   const totale = imponibile + iva
+  const giaIncassato = fattura.importoIncassato ?? 0
+  const residuo = totale - giaIncassato
+  const isParziale = fattura.stato === 'parzialmente_incassata'
+  const canRegisterIncasso = fattura.stato === 'da_incassare' || isParziale
 
   return (
     <div className="p-4 max-w-3xl mx-auto space-y-5">
@@ -59,7 +69,9 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
             {fattura.commessa && (
               <div>
                 <p className="text-gray-500 text-xs">Commessa</p>
-                <p className="font-medium text-gray-700">{fattura.commessa.nome}</p>
+                <Link href={`/ufficio/commesse/${fattura.commessa.id}`} className="font-medium text-teal-600 hover:underline">
+                  {fattura.commessa.nome}
+                </Link>
               </div>
             )}
           </div>
@@ -104,6 +116,28 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
         </table>
       </div>
 
+      {/* Stato incasso — parziale */}
+      {isParziale && (
+        <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 space-y-2">
+          <p className="text-amber-800 font-semibold">⏳ Incasso parziale in corso</p>
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-amber-600 uppercase tracking-wider font-semibold">Totale fattura</p>
+              <p className="font-bold text-gray-900">{formatEuro(totale)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-amber-600 uppercase tracking-wider font-semibold">Già incassato</p>
+              <p className="font-bold text-green-700">{formatEuro(giaIncassato)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-amber-600 uppercase tracking-wider font-semibold">Residuo</p>
+              <p className="font-bold text-red-600">{formatEuro(residuo)}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stato incasso — completo */}
       {fattura.stato === 'incassata' && fattura.dataIncasso && (
         <div className="rounded-xl bg-green-50 border border-green-200 p-4">
           <p className="text-green-800 font-semibold">✓ Incassata il {formatData(fattura.dataIncasso)}</p>
@@ -113,8 +147,8 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
         </div>
       )}
 
-      {fattura.stato === 'da_incassare' && (
-        <RegistraIncassoForm fatturaId={fattura.id} totaleFattura={totale} />
+      {canRegisterIncasso && (
+        <RegistraIncassoForm fatturaId={fattura.id} totaleFattura={totale} giaIncassato={giaIncassato} />
       )}
 
       <div className="flex flex-wrap gap-3">
@@ -125,7 +159,7 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
             </button>
           </form>
         )}
-        {fattura.stato !== 'incassata' && (
+        {(fattura.stato === 'da_incassare' || fattura.stato === 'scaduta') && (
           <form action={eliminaFatturaAttivaUfficio.bind(null, fattura.id)}>
             <button type="submit" className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
               Elimina

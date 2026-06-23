@@ -33,7 +33,7 @@ export async function salvaCommessa(formData: FormData) {
     if (data.stato === 'chiusa') {
       const [fatturePendenti, commessaDb] = await Promise.all([
         prisma.fatturaAttiva.count({
-          where: { commessaId: id, stato: { in: ['da_incassare', 'scaduta'] } },
+          where: { commessaId: id, stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] } },
         }),
         prisma.commessa.findUnique({
           where: { id },

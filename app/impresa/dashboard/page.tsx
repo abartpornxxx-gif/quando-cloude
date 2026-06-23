@@ -105,7 +105,7 @@ export default async function ImpresaDashboardPage() {
     prisma.commessa.count({ where: { stato: 'aperta' } }),
     prisma.giornata.count({ where: { fase: 'fine', stato: 'bozza', rapportino: null } }),
     prisma.fatturaAttiva.count({
-      where: { stato: { in: ['da_incassare', 'scaduta'] }, dataScadenza: { lte: tra30, not: null } },
+      where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] }, dataScadenza: { lte: tra30, not: null } },
     }),
     prisma.ordineFornitore.count({ where: { stato: { in: ['richiesto', 'ordinato'] } } }),
     prisma.richiestaOfferta.count({ where: { stato: 'nuova' } }),

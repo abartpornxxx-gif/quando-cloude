@@ -46,7 +46,8 @@ export async function creaFatturaAttiva(input: {
 export async function registraIncasso(
   fatturaId: string,
   dataIncasso: string,
-  importoIncassato: number
+  nuovoImporto: number,
+  totaleRighe: number
 ): Promise<void> {
   await requireImpresaOUfficio()
 
@@ -54,23 +55,32 @@ export async function registraIncasso(
     where: { id: fatturaId },
   })
   if (!fattura) throw new Error('Fattura non trovata')
-  // Guard idempotenza: impedisce doppio incremento se chiamata due volte
-  if (fattura.stato === 'incassata') throw new Error('Fattura già registrata come incassata')
+  if (fattura.stato === 'incassata') throw new Error('Fattura già interamente incassata')
+
+  const giaIncassato = fattura.importoIncassato ?? 0
+  const residuo = totaleRighe - giaIncassato
+  if (nuovoImporto <= 0) throw new Error('Importo non valido')
+  if (nuovoImporto > residuo) throw new Error(`Importo superiore al residuo (${(residuo / 100).toFixed(2)} €)`)
+
+  const nuovoTotaleIncassato = giaIncassato + nuovoImporto
+  const completamenteIncassata = nuovoTotaleIncassato >= totaleRighe
+  const nuovoStato = completamenteIncassata ? 'incassata' : 'parzialmente_incassata'
+  // Delta da propagare sulla commessa: solo il nuovo importo ricevuto
+  const delta = nuovoImporto
 
   await prisma.$transaction(async tx => {
     await tx.fatturaAttiva.update({
       where: { id: fatturaId },
       data: {
-        stato: 'incassata',
-        dataIncasso: new Date(dataIncasso),
-        importoIncassato,
+        stato: nuovoStato,
+        dataIncasso: completamenteIncassata ? new Date(dataIncasso) : fattura.dataIncasso,
+        importoIncassato: nuovoTotaleIncassato,
       },
     })
-    // Propaga il fatturato sulla commessa
     if (fattura.commessaId) {
       await tx.commessa.update({
         where: { id: fattura.commessaId },
-        data: { fatturato: { increment: importoIncassato } },
+        data: { fatturato: { increment: delta } },
       })
     }
   })
@@ -78,11 +88,13 @@ export async function registraIncasso(
   revalidatePath('/impresa/fatture')
   revalidatePath(`/impresa/fatture/${fatturaId}`)
   if (fattura.commessaId) revalidatePath(`/impresa/commesse/${fattura.commessaId}`)
-  // Invalida anche i path ufficio: incasso può essere registrato da entrambi i ruoli
   revalidatePath('/ufficio/fatture')
   revalidatePath(`/ufficio/fatture/${fatturaId}`)
   revalidatePath('/ufficio/saldi-pendenti')
   revalidatePath('/ufficio/dashboard')
+  if (fattura.commessaId) {
+    revalidatePath(`/ufficio/commesse/${fattura.commessaId}`)
+  }
 }
 
 export async function segnaScaduta(fatturaId: string): Promise<void> {
@@ -105,7 +117,7 @@ export async function eliminaFatturaAttiva(fatturaId: string): Promise<void> {
 
   const fattura = await prisma.fatturaAttiva.findUnique({ where: { id: fatturaId } })
   if (!fattura) throw new Error('Fattura non trovata')
-  if (fattura.stato === 'incassata') throw new Error('Non puoi eliminare una fattura già incassata')
+  if (fattura.stato === 'incassata' || fattura.stato === 'parzialmente_incassata') throw new Error('Non puoi eliminare una fattura con incassi già registrati')
 
   await prisma.fatturaAttiva.delete({ where: { id: fatturaId } })
   revalidatePath('/impresa/fatture')

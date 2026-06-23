@@ -18,7 +18,7 @@ export default async function UfficioDashboard() {
   ] = await Promise.all([
     prisma.preventivo.count({ where: { stato: 'bozza' } }),
     prisma.ordineFornitore.count({ where: { stato: { in: ['richiesto', 'ordinato'] } } }),
-    prisma.fatturaAttiva.count({ where: { stato: { in: ['da_incassare', 'scaduta'] } } }),
+    prisma.fatturaAttiva.count({ where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] } } }),
     prisma.fatturaPassiva.count({ where: { stato: 'da_pagare' } }),
     prisma.cliente.count(),
     // Solo nome/stato — nessun costo o margine selezionato
@@ -29,7 +29,7 @@ export default async function UfficioDashboard() {
       select: {
         preventivato: true,
         fatturato: true,
-        _count: { select: { fattureAttive: { where: { stato: { in: ['da_incassare', 'scaduta'] } } } } },
+        _count: { select: { fattureAttive: { where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] } } } } },
       },
     }),
   ])

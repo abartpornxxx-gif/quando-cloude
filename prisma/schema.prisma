@@ -600,6 +600,7 @@ model MovimentoMagazzino {
 
 enum StatoFatturaAttiva {
   da_incassare
+  parzialmente_incassata
   incassata
   scaduta
 }

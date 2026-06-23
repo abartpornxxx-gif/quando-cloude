@@ -42,7 +42,7 @@ export async function alertImpresa(): Promise<AlertImpresa> {
       prisma.giornata.count({ where: { fase: 'fine', stato: 'bozza', rapportino: null } }),
 
       prisma.fatturaAttiva.count({
-        where: { stato: { in: ['da_incassare', 'scaduta'] }, dataScadenza: { lte: tra30, not: null } },
+        where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] }, dataScadenza: { lte: tra30, not: null } },
       }),
 
       prisma.richiestaOfferta.count({ where: { stato: 'nuova' } }),
@@ -436,7 +436,7 @@ export async function alertCliente(clienteId: string): Promise<number> {
     prisma.fatturaAttiva.count({
       where: {
         clienteId,
-        stato: { in: ['da_incassare', 'scaduta'] },
+        stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] },
         dataScadenza: { lte: tra14, not: null },
       },
     }),
@@ -461,7 +461,7 @@ export async function listaNotificheCliente(clienteId: string, userId?: string):
     prisma.fatturaAttiva.findMany({
       where: {
         clienteId,
-        stato: { in: ['da_incassare', 'scaduta'] },
+        stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] },
         dataScadenza: { lte: tra14, not: null },
       },
       orderBy: { dataScadenza: 'asc' },
@@ -576,7 +576,7 @@ export async function alertUfficio(userId?: string): Promise<number> {
       id: true,
       preventivato: true,
       fatturato: true,
-      _count: { select: { fattureAttive: { where: { stato: { in: ['da_incassare', 'scaduta'] } } } } },
+      _count: { select: { fattureAttive: { where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] } } } } },
     },
   })
   const tutte = commesse.filter(
@@ -597,7 +597,7 @@ export async function listaNotificheUfficio(userId?: string): Promise<ItemNotifi
       include: {
         cliente: { select: { nome: true } },
         fattureAttive: {
-          where: { stato: { in: ['da_incassare', 'scaduta'] } },
+          where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] } },
           select: {
             id: true,
             numero: true,

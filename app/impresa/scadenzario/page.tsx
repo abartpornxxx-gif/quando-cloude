@@ -17,7 +17,7 @@ export default async function ScadenzarioPage() {
   const [attive, passive] = await Promise.all([
     prisma.fatturaAttiva.findMany({
       where: {
-        stato: { in: ['da_incassare', 'scaduta'] },
+        stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] },
         dataScadenza: { not: null },
       },
       include: {
@@ -69,12 +69,15 @@ export default async function ScadenzarioPage() {
       .filter(f => f.dataScadenza)
       .map(f => {
         const cl = classificaData(f.dataScadenza!)
+        const totFattura = totaleAttiva(f.righe, f.aliquotaIva)
+        const residuo = totFattura - (f.importoIncassato ?? 0)
+        const isParziale = f.stato === 'parzialmente_incassata'
         return {
           id: f.id,
           tipo: 'attiva' as const,
-          descrizione: `Da incassare: ${f.cliente?.nome ?? '?'} — n. ${f.numero}/${f.anno}`,
+          descrizione: `${isParziale ? 'Parz. incassata' : 'Da incassare'}: ${f.cliente?.nome ?? '?'} — n. ${f.numero}/${f.anno}`,
           scadenza: f.dataScadenza!,
-          importo: totaleAttiva(f.righe, f.aliquotaIva),
+          importo: residuo,
           ...cl,
           href: `/impresa/fatture/${f.id}`,
         }
@@ -134,7 +137,7 @@ export default async function ScadenzarioPage() {
     )
   }
 
-  const totDaIncassare = attive.reduce((acc, f) => acc + totaleAttiva(f.righe, f.aliquotaIva), 0)
+  const totDaIncassare = attive.reduce((acc, f) => acc + (totaleAttiva(f.righe, f.aliquotaIva) - (f.importoIncassato ?? 0)), 0)
   const totDaPagare    = passive.reduce((acc, f) => acc + f.importo, 0)
 
   return (

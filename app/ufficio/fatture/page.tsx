@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/Badge'
 
 type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral'
 
-const BADGE_VARIANT: Record<string, BadgeVariant> = { da_incassare: 'warning', incassata: 'success', scaduta: 'danger' }
-const LABEL: Record<string, string> = { da_incassare: 'Da incassare', incassata: 'Incassata', scaduta: 'Scaduta' }
+const BADGE_VARIANT: Record<string, BadgeVariant> = { da_incassare: 'warning', parzialmente_incassata: 'warning', incassata: 'success', scaduta: 'danger' }
+const LABEL: Record<string, string> = { da_incassare: 'Da incassare', parzialmente_incassata: 'Parz. incassata', incassata: 'Incassata', scaduta: 'Scaduta' }
 
 export default async function UfficioFatturePage({
   searchParams,
@@ -44,8 +44,12 @@ export default async function UfficioFatturePage({
   }
 
   const totaleDaIncassare = fatture
-    .filter(f => f.stato === 'da_incassare' || f.stato === 'scaduta')
-    .reduce((acc, f) => acc + totaleImponibile(f.righe), 0)
+    .filter(f => f.stato === 'da_incassare' || f.stato === 'parzialmente_incassata' || f.stato === 'scaduta')
+    .reduce((acc, f) => {
+      const imp = totaleImponibile(f.righe)
+      const iva = Math.round(imp * f.aliquotaIva / 100)
+      return acc + (imp + iva) - (f.importoIncassato ?? 0)
+    }, 0)
   const scadute = fatture.filter(f => f.stato === 'scaduta').length
 
   return (

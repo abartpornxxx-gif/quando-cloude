@@ -10,8 +10,8 @@ type BadgeVariant = 'success' | 'warning' | 'neutral' | 'danger' | 'info'
 const STATO_COMM_LABEL: Record<string, string> = { aperta: 'Aperta', finita: 'Finita', chiusa: 'Chiusa' }
 const STATO_COMM_VARIANT: Record<string, BadgeVariant> = { aperta: 'success', finita: 'warning', chiusa: 'neutral' }
 
-const STATO_FA_LABEL: Record<string, string> = { da_incassare: 'Da incassare', incassata: 'Incassata', scaduta: 'Scaduta' }
-const STATO_FA_VARIANT: Record<string, BadgeVariant> = { da_incassare: 'warning', incassata: 'success', scaduta: 'danger' }
+const STATO_FA_LABEL: Record<string, string> = { da_incassare: 'Da incassare', parzialmente_incassata: 'Parz. incassata', incassata: 'Incassata', scaduta: 'Scaduta' }
+const STATO_FA_VARIANT: Record<string, BadgeVariant> = { da_incassare: 'warning', parzialmente_incassata: 'warning', incassata: 'success', scaduta: 'danger' }
 
 function totaleRighe(righe: { quantita: number; prezzoUnitario: number }[]) {
   return righe.reduce((s, r) => s + Math.round(r.quantita * r.prezzoUnitario), 0)
@@ -334,27 +334,42 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
             <p className="px-4 py-6 text-sm text-center text-gray-400">Nessuna fattura attiva per questa commessa.</p>
           ) : (
             <div className="divide-y divide-gray-100">
-              {c.fattureAttive.map(f => (
-                <Link
-                  key={f.id}
-                  href={`/ufficio/fatture/${f.id}`}
-                  className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50/70 transition-colors group"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700">
-                      Fattura {f.numero}/{f.anno}
-                    </p>
-                    <p className="text-xs text-gray-400">{formatData(f.data)}</p>
-                  </div>
-                  <div className="text-right shrink-0 flex items-center gap-3">
+              {c.fattureAttive.map(f => {
+                const imponibile = totaleRighe(f.righe)
+                const ivaAmt = Math.round(imponibile * f.aliquotaIva / 100)
+                const totFattura = imponibile + ivaAmt
+                const giaIncassato = f.importoIncassato ?? 0
+                const residuoFattura = totFattura - giaIncassato
+                const isParziale = f.stato === 'parzialmente_incassata'
+                return (
+                  <Link
+                    key={f.id}
+                    href={`/ufficio/fatture/${f.id}`}
+                    className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50/70 transition-colors group"
+                  >
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{formatEuro(totaleRighe(f.righe))}</p>
-                      <Badge variant={STATO_FA_VARIANT[f.stato]}>{STATO_FA_LABEL[f.stato]}</Badge>
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700">
+                        Fattura {f.numero}/{f.anno}
+                      </p>
+                      <p className="text-xs text-gray-400">{formatData(f.data)}</p>
                     </div>
-                    <span className="text-gray-300 group-hover:text-teal-400">›</span>
-                  </div>
-                </Link>
-              ))}
+                    <div className="text-right shrink-0 flex items-center gap-3">
+                      <div>
+                        {isParziale ? (
+                          <>
+                            <p className="text-sm font-semibold text-amber-700">{formatEuro(residuoFattura)} residuo</p>
+                            <p className="text-xs text-gray-400">su {formatEuro(totFattura)}</p>
+                          </>
+                        ) : (
+                          <p className="text-sm font-semibold text-gray-900">{formatEuro(totFattura)}</p>
+                        )}
+                        <Badge variant={STATO_FA_VARIANT[f.stato]}>{STATO_FA_LABEL[f.stato]}</Badge>
+                      </div>
+                      <span className="text-gray-300 group-hover:text-teal-400">›</span>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>

@@ -12,11 +12,13 @@ interface Props {
 
 const BADGE: Record<string, string> = {
   da_incassare: 'bg-yellow-100 text-yellow-800',
+  parzialmente_incassata: 'bg-amber-100 text-amber-800',
   incassata: 'bg-green-100 text-green-800',
   scaduta: 'bg-red-100 text-red-800',
 }
 const LABEL: Record<string, string> = {
   da_incassare: 'Da incassare',
+  parzialmente_incassata: 'Parz. incassata',
   incassata: 'Incassata',
   scaduta: 'Scaduta',
 }
@@ -41,6 +43,10 @@ export default async function FatturaAttivaPage({ params }: Props) {
   )
   const iva = Math.round(imponibile * fattura.aliquotaIva / 100)
   const totale = imponibile + iva
+  const giaIncassato = fattura.importoIncassato ?? 0
+  const residuo = totale - giaIncassato
+  const isParziale = fattura.stato === 'parzialmente_incassata'
+  const canRegisterIncasso = fattura.stato === 'da_incassare' || isParziale
 
   return (
     <div className="p-4 max-w-3xl mx-auto space-y-5">
@@ -127,7 +133,28 @@ export default async function FatturaAttivaPage({ params }: Props) {
         </table>
       </div>
 
-      {/* Incasso */}
+      {/* Stato incasso — parziale */}
+      {isParziale && (
+        <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 space-y-2">
+          <p className="text-amber-800 font-semibold">⏳ Incasso parziale in corso</p>
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-amber-600 uppercase tracking-wider font-semibold">Totale fattura</p>
+              <p className="font-bold text-gray-900">{formatEuro(totale)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-amber-600 uppercase tracking-wider font-semibold">Già incassato</p>
+              <p className="font-bold text-green-700">{formatEuro(giaIncassato)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-amber-600 uppercase tracking-wider font-semibold">Residuo</p>
+              <p className="font-bold text-red-600">{formatEuro(residuo)}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stato incasso — completo */}
       {fattura.stato === 'incassata' && fattura.dataIncasso && (
         <div className="rounded-xl bg-green-50 border border-green-200 p-4">
           <p className="text-green-800 font-semibold">✓ Incassata il {formatData(fattura.dataIncasso)}</p>
@@ -137,8 +164,8 @@ export default async function FatturaAttivaPage({ params }: Props) {
         </div>
       )}
 
-      {fattura.stato === 'da_incassare' && (
-        <RegistraIncassoForm fatturaId={fattura.id} totaleFattura={totale} />
+      {canRegisterIncasso && (
+        <RegistraIncassoForm fatturaId={fattura.id} totaleFattura={totale} giaIncassato={giaIncassato} />
       )}
 
       {/* Azioni */}
@@ -157,7 +184,7 @@ export default async function FatturaAttivaPage({ params }: Props) {
             </button>
           </form>
         )}
-        {fattura.stato !== 'incassata' && (
+        {(fattura.stato === 'da_incassare' || fattura.stato === 'scaduta') && (
           <form action={eliminaFatturaAttiva.bind(null, fattura.id)}>
             <button
               type="submit"

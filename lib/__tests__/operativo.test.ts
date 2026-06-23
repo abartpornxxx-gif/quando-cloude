@@ -144,26 +144,29 @@ describe('Conflict detection pianificazione — logica', () => {
 type FatturaIncasso = {
   id: string
   importoOriginale: number
-  stato: 'da_incassare' | 'incassata' | 'scaduta'
+  stato: 'da_incassare' | 'parzialmente_incassata' | 'incassata' | 'scaduta'
   importoIncassato: number | null
 }
 
 function applicaIncasso(
   fattura: FatturaIncasso,
-  importo: number,
+  nuovoImporto: number,
 ): FatturaIncasso {
-  // Idempotente: se già incassata con stesso importo, non fa nulla
-  if (fattura.stato === 'incassata' && fattura.importoIncassato === importo) {
-    return fattura
-  }
+  if (fattura.stato === 'incassata') throw new Error('Fattura già interamente incassata')
+  const giaIncassato = fattura.importoIncassato ?? 0
+  const residuo = fattura.importoOriginale - giaIncassato
+  if (nuovoImporto <= 0) throw new Error('Importo non valido')
+  if (nuovoImporto > residuo) throw new Error('Importo superiore al residuo')
+  const nuovoTotale = giaIncassato + nuovoImporto
+  const completo = nuovoTotale >= fattura.importoOriginale
   return {
     ...fattura,
-    stato: 'incassata',
-    importoIncassato: importo,
+    stato: completo ? 'incassata' : 'parzialmente_incassata',
+    importoIncassato: nuovoTotale,
   }
 }
 
-describe('Idempotenza registraIncasso — logica', () => {
+describe('Incassi parziali registraIncasso — logica', () => {
   const fatturaAperta: FatturaIncasso = {
     id: 'f1',
     importoOriginale: 100000,
@@ -171,23 +174,37 @@ describe('Idempotenza registraIncasso — logica', () => {
     importoIncassato: null,
   }
 
-  it('incassa una fattura aperta', () => {
+  it('incasso totale → stato incassata', () => {
     const r = applicaIncasso(fatturaAperta, 100000)
     expect(r.stato).toBe('incassata')
     expect(r.importoIncassato).toBe(100000)
   })
 
-  it('è idempotente: secondo incasso con stesso importo non cambia lo stato', () => {
-    const incassata = applicaIncasso(fatturaAperta, 100000)
-    const riaplicata = applicaIncasso(incassata, 100000)
-    expect(riaplicata).toEqual(incassata)
-    expect(riaplicata.stato).toBe('incassata')
+  it('incasso parziale → stato parzialmente_incassata', () => {
+    const r = applicaIncasso(fatturaAperta, 50000)
+    expect(r.stato).toBe('parzialmente_incassata')
+    expect(r.importoIncassato).toBe(50000)
   })
 
-  it('importo parziale registra comunque come incassata (comportamento attuale)', () => {
-    const r = applicaIncasso(fatturaAperta, 50000)
-    expect(r.stato).toBe('incassata')
-    expect(r.importoIncassato).toBe(50000)
+  it('secondo incasso completa la fattura', () => {
+    const parziale = applicaIncasso(fatturaAperta, 40000)
+    const completa = applicaIncasso(parziale, 60000)
+    expect(completa.stato).toBe('incassata')
+    expect(completa.importoIncassato).toBe(100000)
+  })
+
+  it('importo superiore al residuo → errore', () => {
+    const parziale = applicaIncasso(fatturaAperta, 60000)
+    expect(() => applicaIncasso(parziale, 60000)).toThrow('Importo superiore al residuo')
+  })
+
+  it('fattura già incassata → errore', () => {
+    const incassata = applicaIncasso(fatturaAperta, 100000)
+    expect(() => applicaIncasso(incassata, 1)).toThrow('già interamente incassata')
+  })
+
+  it('importo 0 → errore', () => {
+    expect(() => applicaIncasso(fatturaAperta, 0)).toThrow('Importo non valido')
   })
 })
 
