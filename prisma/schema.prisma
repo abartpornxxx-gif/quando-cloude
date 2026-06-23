@@ -660,6 +660,7 @@ model FatturaPassiva {
   stato         StatoFatturaPassiva @default(da_pagare)
   dataPagamento DateTime?          @map("data_pagamento") @db.Date
   importoPagato Int?               @map("importo_pagato")
+  controllata   Boolean            @default(false)
   note          String?
   createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz

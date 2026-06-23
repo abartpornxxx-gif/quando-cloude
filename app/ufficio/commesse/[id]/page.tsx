@@ -72,12 +72,17 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
 
   if (!c) notFound()
 
+  // ── Fatture ──
+  const totaleFattureAttive = c.fattureAttive.reduce((s, f) => s + totaleRighe(f.righe), 0)
+  const totaleFatturePassive = c.fatturePassive.reduce((s, f) => s + f.importo, 0)
+
   // ── KPI finanziari ──
   const costiTotali = c.costiMateriali + c.costiManodopera + c.costiMezzi
-  const riferimento = c.fatturato > 0 ? c.fatturato : c.preventivato
+  const daIncassare = totaleFattureAttive - c.fatturato
+  const daFatturare = c.preventivato - totaleFattureAttive
+  const riferimento = totaleFattureAttive > 0 ? totaleFattureAttive : c.preventivato
   const margineBase = riferimento - costiTotali
   const marginePct = riferimento > 0 ? Math.round((margineBase / riferimento) * 100) : null
-  const residuo = c.preventivato - c.fatturato
 
   // Dati incompleti: ci sono giornate ma costi manodopera a 0,
   // oppure ci sono ordini consegnati ma costi materiali a 0
@@ -110,10 +115,6 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
   const nResi = c.movimenti.filter(m => m.tipo === 'reso').length
   const totaleOrdini = c.ordini.reduce((s, o) => s + totaleRighe(o.righe), 0)
 
-  // ── Fatture ──
-  const totaleFattureAttive = c.fattureAttive.reduce((s, f) => s + totaleRighe(f.righe), 0)
-  const totaleFatturePassive = c.fatturePassive.reduce((s, f) => s + f.importo, 0)
-
   return (
     <div className="max-w-3xl mx-auto space-y-6">
 
@@ -135,6 +136,9 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
             {c.indirizzoCantiere && (
               <p className="text-xs text-gray-400 mt-1">📍 {c.indirizzoCantiere}</p>
             )}
+            {c.note && (
+              <p className="text-xs text-gray-500 mt-1.5 bg-gray-50 rounded-lg px-2 py-1 whitespace-pre-line">{c.note}</p>
+            )}
           </div>
           <div className="flex items-center gap-2 flex-wrap shrink-0">
             <Badge variant={STATO_COMM_VARIANT[c.stato]}>{STATO_COMM_LABEL[c.stato]}</Badge>
@@ -155,19 +159,25 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Riepilogo economico</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <KpiCard label="Preventivato" value={formatEuro(c.preventivato)} />
-          <KpiCard label="Fatturato" value={formatEuro(c.fatturato)} />
+          <KpiCard label="Fatturato al cliente" value={totaleFattureAttive > 0 ? formatEuro(totaleFattureAttive) : '—'} />
           <KpiCard
-            label="Residuo"
-            value={residuo > 0 ? formatEuro(residuo) : '—'}
-            accent={residuo > 0 ? 'amber' : 'gray'}
+            label="Da fatturare"
+            value={daFatturare > 0 ? formatEuro(daFatturare) : '—'}
+            accent={daFatturare > 0 ? 'amber' : 'gray'}
           />
-          <KpiCard label="Costi materiali" value={formatEuro(c.costiMateriali)} />
-          <KpiCard label="Costi manodopera" value={formatEuro(c.costiManodopera)} />
+          <KpiCard label="Incassato" value={c.fatturato > 0 ? formatEuro(c.fatturato) : '—'} accent="emerald" />
+          <KpiCard
+            label="Da incassare"
+            value={daIncassare > 0 ? formatEuro(daIncassare) : '—'}
+            accent={daIncassare > 0 ? 'amber' : 'gray'}
+          />
           <KpiCard
             label={marginePct != null ? `Margine (${marginePct}%)` : 'Margine'}
             value={riferimento > 0 ? formatEuro(margineBase) : '—'}
             accent={margineBase >= 0 ? 'emerald' : 'red'}
           />
+          <KpiCard label="Costi materiali" value={formatEuro(c.costiMateriali)} />
+          <KpiCard label="Costi manodopera" value={formatEuro(c.costiManodopera)} />
         </div>
         {datiIncompleti && (
           <p className="mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
@@ -405,11 +415,18 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
                     <div className="text-right shrink-0 flex items-center gap-3">
                       <div>
                         <p className="text-sm font-semibold text-gray-900">{formatEuro(f.importo)}</p>
-                        <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-                          f.stato === 'pagata' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                        }`}>
-                          {f.stato === 'pagata' ? 'Pagata' : 'Da pagare'}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                          <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
+                            f.stato === 'pagata' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                          }`}>
+                            {f.stato === 'pagata' ? 'Pagata' : 'Da pagare'}
+                          </span>
+                          {f.controllata && (
+                            <span className="text-xs rounded-full px-2 py-0.5 font-medium bg-blue-100 text-blue-700">
+                              ✓ Ctrl.
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <span className="text-gray-300 group-hover:text-teal-400">›</span>
                     </div>
