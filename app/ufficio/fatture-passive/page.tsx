@@ -115,10 +115,16 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
         title="Fatture passive"
         subtitle={`${tutteleFatture.length} ${tutteleFatture.length === 1 ? 'fattura' : 'fatture'} fornitori`}
         action={
-          <Link href="/ufficio/fatture-passive/nuova"
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">
-            + Nuova
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/ufficio/fatture-passive/importa"
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+              📥 Importa CSV
+            </Link>
+            <Link href="/ufficio/fatture-passive/nuova"
+              className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">
+              + Nuova
+            </Link>
+          </div>
         }
       />
 
