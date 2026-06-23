@@ -85,6 +85,132 @@ function DettagliModal({ plan, onClose }: { plan: PianMini; onClose: () => void 
   )
 }
 
+// ─── Modal statistiche mensili cantiere ─────────────────────────────────────
+
+function CantiereStatsModal({
+  stats,
+  loading,
+  month,
+  onMonthChange,
+  onClose,
+}: {
+  commessaId: string
+  stats: any
+  loading: boolean
+  month: string
+  onMonthChange: (m: string) => void
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-lg space-y-4 rounded-2xl bg-white p-5 shadow-xl max-h-[85vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900">Riepilogo Mensile Cantiere</h3>
+            <p className="text-xs text-gray-500">{stats?.nomeCantiere || 'Caricamento...'}</p>
+          </div>
+          <button onClick={onClose} className="text-xl text-gray-400 hover:text-gray-600">×</button>
+        </div>
+
+        {/* Selettore Mese */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold text-gray-600">Mese di riferimento:</label>
+          <input
+            type="month"
+            value={month}
+            onChange={e => onMonthChange(e.target.value)}
+            className="rounded-lg border border-gray-300 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none"
+          />
+        </div>
+
+        {loading ? (
+          <div className="py-12 text-center text-xs text-blue-500 animate-pulse font-medium">
+            Caricamento statistiche in corso...
+          </div>
+        ) : !stats ? (
+          <div className="py-12 text-center text-xs text-red-500 font-medium">
+            Errore nel caricamento dei dati.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* KPI Totale Giornate */}
+            <div className="rounded-xl bg-blue-50/50 border border-blue-100 p-3.5 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-blue-800">Giornate Lavorate</p>
+                <p className="text-xs text-blue-600 mt-0.5">Effettuate nel mese di {month}</p>
+              </div>
+              <span className="text-2xl font-black text-blue-700">{stats.totaleGiornate}</span>
+            </div>
+
+            {/* Eventi & Rapportini */}
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Eventi e Lavori Eseguiti (Rapportini)</p>
+              {stats.giornate.length === 0 ? (
+                <p className="text-xs text-gray-400 py-3 text-center border border-dashed border-gray-150 rounded-xl bg-gray-50/30">
+                  Nessuna giornata registrata in questo mese.
+                </p>
+              ) : (
+                <div className="max-h-[180px] overflow-y-auto space-y-2 pr-1 divide-y divide-gray-100 border border-gray-100 rounded-xl p-3">
+                  {stats.giornate.map((g: any, index: number) => (
+                    <div key={g.id} className={`text-xs ${index > 0 ? 'pt-2' : ''}`}>
+                      <div className="flex justify-between font-semibold text-gray-700">
+                        <span>{new Date(g.data).toLocaleDateString('it-IT')}</span>
+                        <span className="text-gray-500">{g.operaioNome}</span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        <strong className="text-gray-600">Previsto:</strong> {g.lavoroSvolto}
+                      </p>
+                      {g.lavoroEseguito && (
+                        <p className="text-[11px] text-emerald-700 mt-0.5 bg-emerald-50/50 rounded px-1.5 py-0.5 border border-emerald-100">
+                          <strong className="text-emerald-800">Eseguito:</strong> {g.lavoroEseguito}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Materiali presi */}
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Materiali Prelievati</p>
+              {stats.materiali.length === 0 ? (
+                <p className="text-xs text-gray-400 py-3 text-center border border-dashed border-gray-150 rounded-xl bg-gray-50/30">
+                  Nessun materiale registrato in questo mese.
+                </p>
+              ) : (
+                <div className="max-h-[160px] overflow-y-auto border border-gray-100 rounded-xl p-3">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-100 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                        <th className="pb-1">Descrizione</th>
+                        <th className="pb-1 text-right">Quantità</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {stats.materiali.map((m: any, idx: number) => (
+                        <tr key={idx}>
+                          <td className="py-2 text-gray-700 font-medium">{m.descrizione}</td>
+                          <td className="py-2 text-right text-gray-800 font-bold">
+                            {m.quantita} <span className="text-gray-400 font-normal">{m.unita}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Vista CANTIERI: riga=commessa, colonna=giorno ────────────────────────────
 
 function CellaCantiere({
@@ -296,6 +422,27 @@ export function PianificazioneBoard({
   const [vista, setVista] = useState<'cantieri' | 'operai'>('cantieri')
   const [erroreMsg, setErroreMsg] = useState('')
 
+  const [cantiereStatsId, setCantiereStatsId] = useState<string | null>(null)
+  const [cantiereStats, setCantiereStats] = useState<any | null>(null)
+  const [statsLoading, setStatsLoading] = useState(false)
+  const [statsMonth, setStatsMonth] = useState(() => weekStart.slice(0, 7))
+
+  async function loadCantiereStats(commessaId: string, monthStr: string) {
+    setStatsLoading(true)
+    setCantiereStatsId(commessaId)
+    setStatsMonth(monthStr)
+    try {
+      const { getCantiereMeseStats } = await import('./actions')
+      const stats = await getCantiereMeseStats(commessaId, monthStr)
+      setCantiereStats(stats)
+    } catch (e) {
+      console.error(e)
+      setErroreMsg('Impossibile caricare le statistiche del cantiere.')
+    } finally {
+      setStatsLoading(false)
+    }
+  }
+
   const todayStr = new Date().toISOString().slice(0, 10)
   const totAssegnazioni = pians.filter(p => !p.sostituito).length
 
@@ -460,8 +607,15 @@ export function PianificazioneBoard({
             <tbody>
               {commesse.map((c, ci) => (
                 <tr key={c.id} className={ci % 2 === 1 ? 'bg-gray-50/30' : ''}>
-                  <td className="border-b border-r border-gray-200 px-3 py-3 align-top">
-                    <div className="text-xs font-semibold leading-snug text-gray-800">{c.nome}</div>
+                  <td
+                    className="border-b border-r border-gray-200 px-3 py-3 align-top cursor-pointer hover:bg-blue-50/50 transition-colors group"
+                    onClick={() => loadCantiereStats(c.id, statsMonth)}
+                    title="Clicca per visualizzare il riepilogo mensile"
+                  >
+                    <div className="text-xs font-semibold leading-snug text-gray-800 group-hover:text-blue-700 transition-colors flex items-center gap-1">
+                      <span>{c.nome}</span>
+                      <span className="text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">📊</span>
+                    </div>
                     {c.indirizzoCantiere && (
                       <div className="mt-0.5 max-w-[140px] truncate text-[10px] text-gray-400">
                         {c.indirizzoCantiere}
@@ -538,6 +692,20 @@ export function PianificazioneBoard({
             </tbody>
           </table>
         </div>
+      )}
+
+      {cantiereStatsId && (
+        <CantiereStatsModal
+          commessaId={cantiereStatsId}
+          stats={cantiereStats}
+          loading={statsLoading}
+          month={statsMonth}
+          onMonthChange={(m) => loadCantiereStats(cantiereStatsId, m)}
+          onClose={() => {
+            setCantiereStatsId(null)
+            setCantiereStats(null)
+          }}
+        />
       )}
     </div>
   )
