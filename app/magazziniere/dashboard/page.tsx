@@ -24,9 +24,15 @@ export default async function MagazziniereDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">Ciao, {magazziniere.nome.split(' ')[0]}!</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Gestione magazzino e richieste cantiere</p>
+      {/* Hero */}
+      <div className="rounded-2xl mesh-bg-magazziniere border border-amber-850 px-6 py-6 shadow-premium-lg">
+        <p className="text-amber-100/90 text-xs font-semibold uppercase tracking-wider">Area Magazzino</p>
+        <h1 className="text-2xl font-black text-white tracking-tight mt-1">
+          Ciao, {magazziniere.nome.split(' ')[0]}!
+        </h1>
+        <p className="text-amber-100/80 text-sm mt-1.5 font-medium">
+          Gestione magazzino e richieste cantiere.
+        </p>
       </div>
 
       {/* KPI */}
@@ -50,33 +56,33 @@ export default async function MagazziniereDashboard() {
       {/* Lista richieste */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-700">Richieste in attesa</h2>
-          <a href="/magazziniere/richieste" className="text-xs text-amber-700 font-medium hover:text-amber-800">
+          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Richieste in attesa</h2>
+          <a href="/magazziniere/richieste" className="text-xs text-amber-700 font-bold hover:text-amber-800 transition-colors">
             Vedi tutte →
           </a>
         </div>
 
         {recenti.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center shadow-premium">
             <Image src="/immagini/successo.png" width={80} height={80} alt="" className="mx-auto mb-3 opacity-80" />
-            <p className="text-sm font-semibold text-gray-700">Tutto evaso</p>
-            <p className="text-xs text-gray-400 mt-1">Nessuna richiesta in attesa</p>
+            <p className="text-sm font-bold text-gray-700">Tutto evaso</p>
+            <p className="text-xs text-gray-400 mt-1 font-medium">Nessuna richiesta in attesa</p>
           </div>
         ) : (
-          <div className="rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden divide-y divide-gray-100">
+          <div className="rounded-2xl bg-white border border-slate-100 shadow-premium overflow-hidden divide-y divide-slate-100/60">
             {recenti.map(r => (
-              <a key={r.id} href={`/magazziniere/richieste/${r.id}`} className="flex items-start justify-between gap-3 px-4 py-4 hover:bg-gray-50 transition-colors">
+              <a key={r.id} href={`/magazziniere/richieste/${r.id}`} className="flex items-start justify-between gap-3 px-5 py-4 hover:bg-slate-50/50 hover-lift active-press transition-all duration-300">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     {r.urgente && (
-                      <span className="inline-flex items-center rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-xs font-bold text-red-700">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-xs font-bold text-red-700">
                         <Image src="/immagini/icona-urgente.png" width={12} height={12} alt="" className="shrink-0" />
                         {' '}URGENTE
                       </span>
                     )}
                     <p className="text-sm font-semibold text-gray-900 truncate">{r.descrizione}</p>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 mt-1 font-medium">
                     {r.operaio.nome} · {r.commessa.nome}
                   </p>
                 </div>

@@ -72,22 +72,22 @@ interface StatCardProps {
 export function StatCard({ label, value, sub, href, variant = 'default', icon: Icon }: StatCardProps) {
   const cls = VARIANTS[variant]
   const inner = (
-    <div className={`rounded-2xl border ${cls.card} p-5 shadow-sm hover:shadow-md transition-all group`}>
+    <div className={`rounded-2xl border ${cls.card} p-5 shadow-premium transition-all duration-300 group ${href ? 'hover-lift active-press cursor-pointer' : ''}`}>
       {Icon && (
-        <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${ICON_BG[variant]}`}>
-          <Icon size={20} className={ICON_CLS[variant]} />
+        <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${ICON_BG[variant]} border border-white/20 shadow-sm`}>
+          <Icon size={18} className={`transition-transform duration-300 ${ICON_CLS[variant]}`} />
         </div>
       )}
-      <p className={`text-[11px] font-bold uppercase tracking-wider ${cls.label}`}>{label}</p>
-      <p className={`mt-1.5 text-4xl font-bold leading-none ${cls.value}`}>{value}</p>
-      {sub && <p className={`mt-2 text-xs ${cls.sub}`}>{sub}</p>}
+      <p className={`text-[10px] font-bold uppercase tracking-widest ${cls.label}`}>{label}</p>
+      <p className={`mt-2 text-3xl font-extrabold tracking-tight leading-none ${cls.value}`}>{value}</p>
+      {sub && <p className={`mt-2 text-xs font-medium ${cls.sub}`}>{sub}</p>}
       {href && (
-        <p className={`mt-3 text-xs font-medium opacity-0 group-hover:opacity-70 transition-opacity ${cls.label}`}>
-          Vedi tutti →
+        <p className={`mt-3 text-xs font-semibold flex items-center gap-1 opacity-0 group-hover:opacity-90 transition-all duration-300 translate-x-[-4px] group-hover:translate-x-0 ${cls.label}`}>
+          Vedi tutti <span className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
         </p>
       )}
     </div>
   )
-  if (href) return <Link href={href} className="block">{inner}</Link>
+  if (href) return <Link href={href} className="block no-underline">{inner}</Link>
   return inner
 }

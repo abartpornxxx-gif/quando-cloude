@@ -30,32 +30,34 @@ function RingChart({
   hex: string
 }) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0
-  const r = 40
+  const r = 42
+  const strokeWidth = 7
   const circ = parseFloat((2 * Math.PI * r).toFixed(2))
   const dash = parseFloat(((pct / 100) * circ).toFixed(2))
   const gap = parseFloat((circ - dash).toFixed(2))
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative w-28 h-28">
+    <div className="flex flex-col items-center gap-3 group/ring">
+      <div className="relative w-28 h-28 transition-transform duration-300 group-hover/ring:scale-105">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 112 112" aria-hidden="true">
-          <circle cx="56" cy="56" r={r} fill="none" stroke="#f1f5f9" strokeWidth="10" />
+          <circle cx="56" cy="56" r={r} fill="none" stroke="rgba(15, 23, 42, 0.04)" strokeWidth={strokeWidth} />
           {pct > 0 && (
             <circle
               cx="56" cy="56" r={r} fill="none"
-              stroke={hex} strokeWidth="10"
+              stroke={hex} strokeWidth={strokeWidth}
               strokeDasharray={`${dash} ${gap}`}
               strokeLinecap="round"
+              className="transition-all duration-500 ease-out"
             />
           )}
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl font-bold text-gray-900 leading-none">{pct}%</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-2xl font-black text-slate-800 tracking-tight leading-none">{pct}%</span>
         </div>
       </div>
       <div className="text-center">
-        <p className="text-sm font-bold text-gray-800">{label}</p>
-        <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
+        <p className="text-xs font-bold text-slate-700 tracking-wide uppercase">{label}</p>
+        <p className="text-[11px] text-slate-400 font-medium mt-0.5">{sub}</p>
       </div>
     </div>
   )
@@ -158,22 +160,22 @@ export default async function ImpresaDashboardPage() {
     <div className="space-y-8">
 
       {/* Hero */}
-      <div className="rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700 px-6 py-5 flex items-center justify-between gap-4 shadow-md">
+      <div className="rounded-2xl mesh-bg-impresa border border-slate-800 px-6 py-6 flex items-center justify-between gap-4 shadow-premium-lg">
         <div>
-          <p className="text-slate-400 text-xs font-medium capitalize">{oggi}</p>
-          <h1 className="text-xl font-bold text-white mt-0.5">Dashboard</h1>
+          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider capitalize">{oggi}</p>
+          <h1 className="text-2xl font-black text-white tracking-tight mt-1">Dashboard</h1>
         </div>
         <div className="hidden sm:flex items-center gap-2 flex-wrap justify-end">
           {rapportiniMancanti > 0 && (
             <Link href="/impresa/giornate"
-              className="flex items-center gap-1.5 rounded-xl bg-red-500/20 border border-red-500/40 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/30">
+              className="flex items-center gap-1.5 rounded-xl bg-red-500/20 border border-red-500/30 px-3.5 py-2 text-xs font-bold text-red-200 hover:bg-red-500/30 transition-all hover-lift active-press">
               <AlertTriangle size={13} className="shrink-0" />
               {rapportiniMancanti} rapportini mancanti
             </Link>
           )}
           {richiesteNuove > 0 && (
             <Link href="/impresa/richieste-offerte"
-              className="flex items-center gap-1.5 rounded-xl bg-violet-500/20 border border-violet-500/40 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:bg-violet-500/30">
+              className="flex items-center gap-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30 px-3.5 py-2 text-xs font-bold text-violet-200 hover:bg-violet-500/30 transition-all hover-lift active-press">
               <MessageSquare size={13} className="shrink-0" />
               {richiesteNuove} nuove richieste
             </Link>
@@ -224,11 +226,11 @@ export default async function ImpresaDashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
 
         {/* Grafici */}
-        <div className="lg:col-span-3 rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
+        <div className="lg:col-span-3 rounded-2xl border border-slate-100 bg-white shadow-premium p-6 transition-all duration-300">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Grafici</p>
-              <p className="text-base font-bold text-gray-900 mt-0.5">Salute dell&apos;impresa</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Grafici</p>
+              <p className="text-base font-extrabold text-gray-900 mt-0.5">Salute dell&apos;impresa</p>
             </div>
             {statoMargine && (
               <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold ${statoMargine.cls}`}>
@@ -279,13 +281,13 @@ export default async function ImpresaDashboardPage() {
         </div>
 
         {/* Cantieri attivi */}
-        <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
+        <div className="lg:col-span-2 rounded-2xl border border-slate-100 bg-white shadow-premium p-6 transition-all duration-300">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Lista</p>
-              <p className="text-base font-bold text-gray-900 mt-0.5">Cantieri in corso</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Lista</p>
+              <p className="text-base font-extrabold text-gray-900 mt-0.5">Cantieri in corso</p>
             </div>
-            <Link href="/impresa/commesse" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+            <Link href="/impresa/commesse" className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors">
               Vedi tutte →
             </Link>
           </div>
@@ -300,12 +302,12 @@ export default async function ImpresaDashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-slate-100/60">
               {commesseRecenti.map(c => {
                 const costi = c.costiMateriali + c.costiManodopera + c.costiMezzi
                 return (
                   <Link key={c.id} href={`/impresa/commesse/${c.id}`}
-                    className="block py-3.5 group first:pt-0 last:pb-0">
+                    className="block py-3.5 px-2.5 -mx-2.5 hover-lift hover:bg-slate-50/50 rounded-xl transition-all group first:pt-0 last:pb-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-700 transition-colors">
@@ -315,7 +317,7 @@ export default async function ImpresaDashboardPage() {
                           <p className="text-xs text-gray-400 mt-0.5">{c.cliente.nome}</p>
                         )}
                       </div>
-                      <p className="text-xs font-medium text-gray-500 shrink-0">{formatEuro(c.preventivato)}</p>
+                      <p className="text-xs font-bold text-gray-600 shrink-0">{formatEuro(c.preventivato)}</p>
                     </div>
                     {c.preventivato > 0 && <BudgetBar costi={costi} preventivato={c.preventivato} />}
                   </Link>
@@ -329,8 +331,8 @@ export default async function ImpresaDashboardPage() {
       {/* Adempimenti in sospeso */}
       {commesseAdempimenti.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Adempimenti cantiere in sospeso</p>
-          <div className="rounded-2xl border border-amber-200 bg-white shadow-sm overflow-hidden">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Adempimenti cantiere in sospeso</p>
+          <div className="rounded-2xl border border-amber-200 bg-white shadow-premium overflow-hidden transition-all duration-300">
             <div className="divide-y divide-gray-100">
               {commesseAdempimenti.map(c => {
                 const totale = c._count.adempimenti
@@ -338,7 +340,7 @@ export default async function ImpresaDashboardPage() {
                 const mancanti = totale - fatti
                 const pct = totale > 0 ? Math.round((fatti / totale) * 100) : 0
                 return (
-                  <Link key={c.id} href={`/impresa/commesse/${c.id}`} className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors group">
+                  <Link key={c.id} href={`/impresa/commesse/${c.id}`} className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50/50 transition-colors group">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 truncate">{c.nome}</p>
                       {c.cliente && <p className="text-xs text-gray-400">{c.cliente.nome}</p>}
@@ -353,7 +355,7 @@ export default async function ImpresaDashboardPage() {
                           <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
-                      <span className="text-xs font-semibold text-amber-700 bg-amber-50 rounded-full px-2 py-0.5">
+                      <span className="text-xs font-bold text-amber-700 bg-amber-50 rounded-full px-2.5 py-1">
                         {mancanti} mancant{mancanti === 1 ? 'e' : 'i'}
                       </span>
                     </div>
@@ -361,8 +363,8 @@ export default async function ImpresaDashboardPage() {
                 )
               })}
             </div>
-            <div className="border-t border-gray-100 bg-gray-50 px-5 py-2.5 text-right">
-              <Link href="/impresa/commesse" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+            <div className="border-t border-gray-100 bg-gray-50 px-5 py-3 text-right">
+              <Link href="/impresa/commesse" className="text-xs font-bold text-blue-600 hover:text-blue-700">
                 Vedi tutte le commesse →
               </Link>
             </div>
@@ -372,23 +374,23 @@ export default async function ImpresaDashboardPage() {
 
       {/* Azioni rapide */}
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Azioni rapide</p>
-        <div className="flex flex-wrap gap-2">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Azioni rapide</p>
+        <div className="flex flex-wrap gap-3">
           <Link href="/impresa/preventivi/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors">
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4.5 py-2.5 text-sm font-semibold text-white shadow-premium transition-all hover:bg-blue-700 hover-lift active-press">
             + Nuovo preventivo
           </Link>
           <Link href="/impresa/commesse/nuova"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Nuova commessa
           </Link>
           <Link href="/impresa/ordini/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Ordine fornitore
           </Link>
           <Link href="/impresa/notifiche"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
-            <Bell size={14} className="text-gray-500" />
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
+            <Bell size={14} className="text-slate-500" />
             Notifiche
           </Link>
         </div>

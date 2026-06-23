@@ -79,11 +79,11 @@ export default async function ClienteDashboardPage() {
   return (
     <div className="space-y-7">
       {/* Welcome */}
-      <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-violet-700 text-white px-6 py-6 shadow-lg shadow-violet-200 flex items-center justify-between gap-4">
+      <div className="rounded-2xl mesh-bg-cliente text-white px-6 py-6 shadow-premium-lg border border-violet-850 flex items-center justify-between gap-4">
         <div>
-          <p className="text-violet-200 text-sm font-medium">Portale personale</p>
-          <h1 className="text-2xl font-bold mt-1">Ciao, {nome.split(' ')[0]}!</h1>
-          <p className="text-violet-200 text-sm mt-1">
+          <p className="text-violet-200 text-xs font-semibold uppercase tracking-wider">Portale personale</p>
+          <h1 className="text-2xl font-black mt-1 tracking-tight">Ciao, {nome.split(' ')[0]}!</h1>
+          <p className="text-violet-100/90 text-sm mt-1.5 font-medium">
             {commesseAperte.length > 0
               ? `Hai ${commesseAperte.length} cantiere${commesseAperte.length > 1 ? 'i' : ''} in corso`
               : 'Benvenuto nel tuo portale QUADRO'}
@@ -94,7 +94,7 @@ export default async function ClienteDashboardPage() {
           width={100}
           height={90}
           alt=""
-          className="shrink-0 hidden sm:block opacity-90 select-none"
+          className="shrink-0 hidden sm:block opacity-90 select-none transition-transform duration-300 hover:scale-105"
         />
       </div>
 
@@ -124,25 +124,27 @@ export default async function ClienteDashboardPage() {
       </div>
 
       {/* Menu sezioni */}
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {MENU.map(item => (
           <Link
             key={item.href}
             href={item.href}
-            className="group flex items-center gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:border-violet-200 hover:shadow-md transition-all"
+            className="group flex items-center gap-4 rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-premium hover:border-violet-100 hover-lift active-press transition-all duration-300"
           >
             {item.icon.startsWith('/') ? (
-              <Image src={item.icon} width={28} height={28} alt="" className="shrink-0 opacity-80" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 border border-slate-100/50 group-hover:scale-105 transition-transform duration-300">
+                <Image src={item.icon} width={26} height={26} alt="" className="opacity-90" />
+              </div>
             ) : (
-              <span className="text-2xl shrink-0">{item.icon}</span>
+              <span className="text-2xl shrink-0 group-hover:scale-105 transition-transform duration-300">{item.icon}</span>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 group-hover:text-violet-700">{item.titolo}</p>
-              <p className="text-xs text-gray-500 mt-0.5 truncate">{item.desc}</p>
+              <p className="text-sm font-bold text-gray-900 group-hover:text-violet-700 transition-colors leading-tight">{item.titolo}</p>
+              <p className="text-xs text-gray-400 mt-1 font-medium truncate">{item.desc}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {item.badge}
-              <span className="text-gray-300 group-hover:text-violet-400 text-lg">›</span>
+              <span className="text-gray-300 group-hover:text-violet-450 text-lg font-bold transition-colors group-hover:translate-x-0.5 duration-300">›</span>
             </div>
           </Link>
         ))}
@@ -150,17 +152,17 @@ export default async function ClienteDashboardPage() {
 
       {/* Ultima foto cantiere */}
       {commesse.length > 0 && commesse[0].giornate[0]?.foto[0] && (
-        <div>
-          <h2 className="text-sm font-semibold text-gray-500 mb-2">Ultima foto dal cantiere</h2>
-          <Link href={`/cliente/lavori/${commesse[0].id}`} className="block rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="pt-2">
+          <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Ultima foto dal cantiere</h2>
+          <Link href={`/cliente/lavori/${commesse[0].id}`} className="block rounded-2xl overflow-hidden border border-slate-100 bg-white shadow-premium hover-lift active-press transition-all duration-300">
             <img
               src={commesse[0].giornate[0].foto[0].url}
               alt="Ultima foto cantiere"
-              className="w-full object-cover max-h-52"
+              className="w-full object-cover max-h-56 transition-transform duration-500 hover:scale-[1.02]"
             />
-            <div className="px-4 py-3 bg-white">
-              <p className="text-sm font-medium text-gray-700">{commesse[0].nome}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{formatData(commesse[0].giornate[0].data)}</p>
+            <div className="px-5 py-4">
+              <p className="text-sm font-bold text-gray-900 leading-tight">{commesse[0].nome}</p>
+              <p className="text-xs text-gray-400 mt-1 font-medium">{formatData(commesse[0].giornate[0].data)}</p>
             </div>
           </Link>
         </div>

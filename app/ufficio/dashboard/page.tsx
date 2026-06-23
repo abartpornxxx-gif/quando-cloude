@@ -129,31 +129,35 @@ export default async function UfficioDashboard() {
   return (
     <div className="space-y-8">
       {/* Hero */}
-      <div className="rounded-2xl bg-gradient-to-r from-teal-700 to-teal-600 border border-teal-600 px-6 py-5 shadow-md">
-        <p className="text-teal-200 text-xs font-medium">Area Ufficio</p>
-        <h1 className="text-xl font-bold text-white mt-0.5">
+      <div className="rounded-2xl mesh-bg-ufficio border border-teal-850 px-6 py-6 shadow-premium-lg">
+        <p className="text-teal-200 text-xs font-semibold uppercase tracking-wider">Area Ufficio</p>
+        <h1 className="text-2xl font-black text-white tracking-tight mt-1">
           Ciao, {collaboratore.nome.split(' ')[0]}!
         </h1>
-        <p className="text-teal-200 text-sm mt-1">
+        <p className="text-teal-100/90 text-sm mt-1.5 font-medium">
           Preventivi, ordini, fatture e pianificazione.
         </p>
       </div>
 
       {/* Sezioni operative */}
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Attività</p>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Attività</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {SEZIONI.map(s => (
             <Link key={s.href} href={s.href}
-              className={`rounded-2xl border ${s.color} p-5 hover:shadow-md transition-all group`}>
+              className="rounded-2xl border border-slate-100 bg-white p-5 shadow-premium hover-lift active-press transition-all duration-300 group flex flex-col justify-between min-h-[140px]">
               <div className="flex items-start justify-between">
-                <s.Icon size={22} className={s.iconCls} />
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${s.color.split(' ')[0]} border border-white/10 shadow-sm`}>
+                  <s.Icon size={18} className={s.iconCls} />
+                </div>
                 {s.alert && (
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white px-1">!</span>
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white px-1 shadow-sm">!</span>
                 )}
               </div>
-              <p className="mt-3 font-semibold text-gray-900">{s.label}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{s.desc}</p>
+              <div className="mt-4">
+                <p className="font-bold text-slate-800 group-hover:text-teal-700 transition-colors leading-tight">{s.label}</p>
+                <p className="text-xs text-slate-400 mt-1 font-medium">{s.desc}</p>
+              </div>
             </Link>
           ))}
         </div>
@@ -161,22 +165,22 @@ export default async function UfficioDashboard() {
 
       {/* Azioni rapide */}
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Azioni rapide</p>
-        <div className="flex flex-wrap gap-2">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Azioni rapide</p>
+        <div className="flex flex-wrap gap-3">
           <Link href="/ufficio/preventivi/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors">
+            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4.5 py-2.5 text-sm font-semibold text-white shadow-premium transition-all hover:bg-teal-700 hover-lift active-press">
             + Nuovo preventivo
           </Link>
           <Link href="/ufficio/clienti/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Nuovo cliente
           </Link>
           <Link href="/ufficio/ordini/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Nuovo ordine
           </Link>
           <Link href="/ufficio/fatture/nuova"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Nuova fattura
           </Link>
         </div>
