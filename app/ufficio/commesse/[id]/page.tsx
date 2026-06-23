@@ -39,7 +39,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
       preventivo: { select: { id: true } },
       giornate: {
         include: {
-          operaio: { select: { nome: true } },
+          operaio: { select: { nome: true, costoOrario: true } },
           ore: { select: { tipo: true, quantita: true } },
           rapportino: {
             select: { id: true, lavoroEseguito: true, oreOrdinarie: true, oreStraordinarie: true },
@@ -76,8 +76,16 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
   const totaleFattureAttive = c.fattureAttive.reduce((s, f) => s + totaleRighe(f.righe), 0)
   const totaleFatturePassive = c.fatturePassive.reduce((s, f) => s + f.importo, 0)
 
+  // ── Costi Manodopera Dinamici ──
+  const costiManodoperaDinamici = c.giornate.reduce((sum, g) => {
+    const oreOrd = g.ore.filter(o => o.tipo === 'ordinaria').reduce((acc, o) => acc + o.quantita, 0)
+    const oreStr = g.ore.filter(o => o.tipo === 'straordinaria').reduce((acc, o) => acc + o.quantita, 0)
+    const costoOrario = g.operaio.costoOrario ?? 0
+    return sum + Math.round(oreOrd * costoOrario + oreStr * costoOrario * 1.5)
+  }, 0)
+
   // ── KPI finanziari ──
-  const costiTotali = c.costiMateriali + c.costiManodopera + c.costiMezzi + totaleFatturePassive
+  const costiTotali = c.costiMateriali + costiManodoperaDinamici + totaleFatturePassive
   const daIncassare = totaleFattureAttive - c.fatturato
   const daFatturare = c.preventivato - totaleFattureAttive
   const riferimento = totaleFattureAttive > 0 ? totaleFattureAttive : c.preventivato
@@ -88,7 +96,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
   // oppure ci sono ordini consegnati ma costi materiali a 0
   const ordiniConsegnati = c.ordini.filter(o => o.stato === 'consegnato' || o.stato === 'usato')
   const datiIncompleti =
-    (c.giornate.length > 0 && c.costiManodopera === 0) ||
+    (c.giornate.length > 0 && costiManodoperaDinamici === 0) ||
     (ordiniConsegnati.length > 0 && c.costiMateriali === 0)
 
   // ── Giornate ──
@@ -177,7 +185,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
             accent={margineBase >= 0 ? 'emerald' : 'red'}
           />
           <KpiCard label="Costi materiali" value={formatEuro(c.costiMateriali)} />
-          <KpiCard label="Costi manodopera" value={formatEuro(c.costiManodopera)} />
+          <KpiCard label="Costi manodopera" value={formatEuro(costiManodoperaDinamici)} />
           <KpiCard label="Costi fornitori" value={formatEuro(totaleFatturePassive)} />
         </div>
         {c.stato === 'aperta' && (
