@@ -2,6 +2,20 @@
 
 > Questo file è il "cervello di contesto" del progetto. L'agente di coding (Claude Code, Kimi Code) lo legge per restare allineato in ogni fase. Va tenuto nella cartella principale del progetto. **Non cancellarlo e aggiornalo quando cambiano le decisioni.**
 
+## REGOLA DI COORDINAMENTO MULTI-STRUMENTO
+Su questo progetto lavorano a turno due strumenti: Claude Code e Antigravity.
+Per evitare conflitti valgono SEMPRE queste regole, senza eccezioni:
+1. Si lavora SOLO sul branch main. Vietato creare o usare altri branch.
+2. All'AVVIO di ogni sessione, prima di toccare qualsiasi file, eseguire:
+   - git branch --show-current  (deve rispondere "main"; se no, fermarsi e avvisare l'utente)
+   - git pull
+3. Prima di FERMARSI o passare la mano all'altro strumento, eseguire SEMPRE:
+   - git add -A
+   - git commit -m "messaggio chiaro in italiano"
+   - git push
+4. Mai lasciare lavoro non committato e non pushato a fine sessione.
+5. Una sola area di lavoro alla volta, test (tsc + build) prima di ogni commit.
+
 ## Cos'è QUADRO
 
 QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** in Italia (DM 37/2008). Ha **tre accessi distinti**:
