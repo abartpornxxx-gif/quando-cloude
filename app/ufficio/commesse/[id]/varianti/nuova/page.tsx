@@ -98,6 +98,18 @@ export default async function NuovaVariantePage({ params }: Props) {
           </select>
         </div>
 
+        <div className="flex items-center gap-2 py-1">
+          <input
+            id="visibileCliente"
+            name="visibileCliente"
+            type="checkbox"
+            className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+          />
+          <label htmlFor="visibileCliente" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
+            Visibile al cliente (mostra nel portale cliente)
+          </label>
+        </div>
+
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1">Link documento / verbale</label>
           <input

@@ -26,6 +26,7 @@ export async function salvaVarianteLavoro(commessaId: string, formData: FormData
   const stato = formData.get('stato') as any // StatoVariante
   const note = (formData.get('note') as string) || null
   const fileUrl = (formData.get('fileUrl') as string) || null
+  const visibileCliente = formData.get('visibileCliente') === 'on' || formData.get('visibileCliente') === 'true'
 
   const data: any = {
     commessaId,
@@ -36,6 +37,7 @@ export async function salvaVarianteLavoro(commessaId: string, formData: FormData
     stato,
     note,
     fileUrl,
+    visibileCliente,
     approvatoAt: stato === 'approvata' ? new Date() : null,
   }
 
@@ -76,6 +78,8 @@ export async function salvaRichiestaPreventivo(commessaId: string, formData: For
   const fileUrl = (formData.get('fileUrl') as string) || null
   const dataScadenzaStr = formData.get('dataScadenza') as string | null
   const dataScadenza = dataScadenzaStr ? new Date(dataScadenzaStr) : null
+  const importoStr = formData.get('importo') as string | null
+  const importo = importoStr && importoStr.trim() !== '' ? toCentesimi(importoStr) : null
 
   const data: any = {
     commessaId,
@@ -86,6 +90,7 @@ export async function salvaRichiestaPreventivo(commessaId: string, formData: For
     note,
     fileUrl,
     dataScadenza,
+    importo,
   }
 
   if (id) {

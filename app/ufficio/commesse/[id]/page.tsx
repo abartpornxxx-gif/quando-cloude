@@ -541,7 +541,14 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
                       {v.costoStimato > 0 && (
                         <p className="text-[10px] text-gray-400 font-medium">Costo stimato: {formatEuro(v.costoStimato)}</p>
                       )}
-                      <Badge variant={STATO_VAR_VARIANT[v.stato]}>{STATO_VAR_LABEL[v.stato]}</Badge>
+                      <div className="flex items-center gap-1.5 justify-end mt-1">
+                        {v.visibileCliente ? (
+                          <span className="text-[10px] bg-violet-50 text-violet-700 px-1.5 py-0.5 rounded font-medium border border-violet-100">Visibile al cliente</span>
+                        ) : (
+                          <span className="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded font-medium border border-gray-200">Interna</span>
+                        )}
+                        <Badge variant={STATO_VAR_VARIANT[v.stato]}>{STATO_VAR_LABEL[v.stato]}</Badge>
+                      </div>
                     </div>
                     <span className="text-gray-300 group-hover:text-teal-400">›</span>
                   </div>
@@ -590,6 +597,9 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
                   </div>
                   <div className="text-right shrink-0 flex items-center gap-3 ml-4">
                     <div>
+                      {rp.importo !== null && rp.importo !== undefined && (
+                        <p className="text-sm font-semibold text-gray-900 mb-0.5">{formatEuro(rp.importo)}</p>
+                      )}
                       {rp.dataScadenza && (
                         <p className="text-[10px] text-gray-400">Scadenza: {formatData(rp.dataScadenza)}</p>
                       )}

@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { formatData } from '@/lib/format'
+import { formatData, formatEuro } from '@/lib/format'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -24,6 +24,10 @@ export default async function ClienteCommessaPage({ params }: Props) {
         },
         orderBy: { data: 'desc' },
         take: 30,
+      },
+      varianti: {
+        where: { visibileCliente: true },
+        orderBy: { createdAt: 'desc' },
       },
     },
   })
@@ -77,6 +81,42 @@ export default async function ClienteCommessaPage({ params }: Props) {
               className={`h-full rounded-full ${perc >= 100 ? 'bg-green-500' : perc >= 50 ? 'bg-blue-500' : 'bg-violet-500'}`}
               style={{ width: `${perc}%` }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Varianti lavori */}
+      {c.varianti && c.varianti.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700 mb-2">Varianti lavori (Extra)</h2>
+          <div className="space-y-3">
+            {c.varianti.map(v => (
+              <div key={v.id} className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900">{v.titolo}</p>
+                  {v.descrizione && <p className="text-xs text-gray-500 mt-1">{v.descrizione}</p>}
+                  <p className="text-[10px] text-gray-400 mt-1.5">
+                    Data: {formatData(v.createdAt)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-violet-700">{formatEuro(v.importo)}</p>
+                    <span className={`inline-block text-[10px] rounded-full px-2 py-0.5 font-semibold mt-1 ${
+                      v.stato === 'approvata' ? 'bg-green-100 text-green-800' :
+                      v.stato === 'rifiutata' ? 'bg-red-100 text-red-800' :
+                      v.stato === 'inviata' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {v.stato === 'approvata' ? 'Approvata' :
+                       v.stato === 'rifiutata' ? 'Rifiutata' :
+                       v.stato === 'inviata' ? 'Inviata' :
+                       v.stato === 'bozza' ? 'Bozza' : 'Annullata'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

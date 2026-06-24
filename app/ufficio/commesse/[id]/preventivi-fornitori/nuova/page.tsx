@@ -110,6 +110,17 @@ export default async function NuovaRichiestaPreventivoPage({ params }: Props) {
         </div>
 
         <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">Importo ricevuto (€) (Opzionale)</label>
+          <input
+            name="importo"
+            type="text"
+            placeholder="Es. 1250.00"
+            className="block w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+          />
+          <p className="text-[10px] text-gray-400 mt-0.5">Importo del preventivo ricevuto dal fornitore (lasciare vuoto se non ancora disponibile)</p>
+        </div>
+
+        <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1">Link preventivo / file offerta</label>
           <input
             name="fileUrl"
