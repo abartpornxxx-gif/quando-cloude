@@ -1,5 +1,8 @@
 {
   "buildCommand": "prisma generate && next build",
   "framework": "nextjs",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "env": {
+    "GEMINI_API_KEY": "AIzaSyCDOto6ijBWjUwooGQMSb8vpb9clhXy6oA"
+  }
 }
