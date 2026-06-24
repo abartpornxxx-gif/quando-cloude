@@ -80,13 +80,38 @@ export default async function UfficioLayout({ children }: { children: React.Reac
                 </div>
               </div>
 
-              {NAV.filter(n => n.href !== '/ufficio/dashboard').map(item => (
-                <Link key={item.href} href={item.href}
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-600 hover:text-white">
-                  <item.Icon size={14} />
-                  {item.label}
-                </Link>
-              ))}
+              {NAV.filter(n => n.href !== '/ufficio/dashboard').map(item => {
+                if (item.label === 'Fatture') {
+                  return (
+                    <div key={item.href} className="group relative">
+                      <button className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-600 hover:text-white">
+                        <item.Icon size={14} />
+                        <span>Fatture</span>
+                        <ChevronDown size={12} className="opacity-60 transition-transform group-hover:rotate-180" />
+                      </button>
+                      <div className="absolute top-full left-0 z-50 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-150 pt-1">
+                        <div className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[180px]">
+                          <Link href="/ufficio/fatture"
+                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium">
+                            Fatture Attive (Emesse)
+                          </Link>
+                          <Link href="/ufficio/fatture-passive"
+                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium">
+                            Fatture Passive (Ricevute)
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
+                return (
+                  <Link key={item.href} href={item.href}
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-600 hover:text-white">
+                    <item.Icon size={14} />
+                    {item.label}
+                  </Link>
+                )
+              })}
             </nav>
 
             {/* Actions */}
