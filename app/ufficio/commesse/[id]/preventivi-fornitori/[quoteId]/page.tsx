@@ -58,9 +58,14 @@ export default async function ModificaRichiestaPreventivoPage({ params }: Props)
       <div className="flex items-center justify-between">
         <PageHeader title="Modifica Richiesta Preventivo" backHref={`/ufficio/commesse/${commessaId}`} />
 
-        <form action={eliminaRichiestaAction} onSubmit={
-          `return confirm('Sei sicuro di voler eliminare questa richiesta preventivo? Questa operazione non può essere annullata.')` as any
-        }>
+        <form
+          action={eliminaRichiestaAction}
+          onSubmit={(e) => {
+            if (!confirm('Sei sicuro di voler eliminare questa richiesta preventivo? Questa operazione non può essere annullata.')) {
+              e.preventDefault()
+            }
+          }}
+        >
           <button
             type="submit"
             className="rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 text-xs font-semibold"
@@ -137,6 +142,18 @@ export default async function ModificaRichiestaPreventivoPage({ params }: Props)
               className="block w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">Importo ricevuto (€) (Opzionale)</label>
+          <input
+            name="importo"
+            type="text"
+            defaultValue={request.importo !== null && request.importo !== undefined ? (request.importo / 100).toFixed(2) : ''}
+            placeholder="Es. 1250.00"
+            className="block w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
+          />
+          <p className="text-[10px] text-gray-400 mt-0.5">Importo del preventivo ricevuto dal fornitore (lasciare vuoto se non ancora disponibile)</p>
         </div>
 
         <div>

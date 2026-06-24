@@ -690,6 +690,7 @@ model VarianteLavoro {
   stato        StatoVariante                @default(bozza)
   approvatoAt  DateTime?                    @map("approvato_at") @db.Timestamptz
   note         String?
+  visibileCliente Boolean                    @default(false) @map("visibile_cliente")
   fileUrl      String?                      @map("file_url")
   filePath     String?                      @map("file_path")
   preventiviFornitori RichiestaPreventivoFornitore[]
@@ -717,6 +718,7 @@ model RichiestaPreventivoFornitore {
   descrizione   String
   stato         StatoPreventivoFornitore @default(in_attesa)
   note          String?
+  importo       Int?                     // in centesimi
   fileUrl       String?                  @map("file_url")
   filePath      String?                  @map("file_path")
   dataRichiesta DateTime                 @default(now()) @map("data_richiesta") @db.Timestamptz

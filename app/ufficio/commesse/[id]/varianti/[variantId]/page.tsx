@@ -44,9 +44,14 @@ export default async function ModificaVariantePage({ params }: Props) {
         <PageHeader title={`Modifica: ${variant.titolo}`} backHref={`/ufficio/commesse/${commessaId}`} />
         
         {/* Form di eliminazione rapida */}
-        <form action={eliminaVarianteAction} onSubmit={
-          `return confirm('Sei sicuro di voler eliminare questa variante? Questa operazione non può essere annullata.')` as any
-        }>
+        <form
+          action={eliminaVarianteAction}
+          onSubmit={(e) => {
+            if (!confirm('Sei sicuro di voler eliminare questa variante? Questa operazione non può essere annullata.')) {
+              e.preventDefault()
+            }
+          }}
+        >
           <button
             type="submit"
             className="rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 text-xs font-semibold"
@@ -122,6 +127,19 @@ export default async function ModificaVariantePage({ params }: Props) {
             <option value="rifiutata">Rifiutata</option>
             <option value="annullata">Annullata</option>
           </select>
+        </div>
+
+        <div className="flex items-center gap-2 py-1">
+          <input
+            id="visibileCliente"
+            name="visibileCliente"
+            type="checkbox"
+            defaultChecked={variant.visibileCliente}
+            className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+          />
+          <label htmlFor="visibileCliente" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
+            Visibile al cliente (mostra nel portale cliente)
+          </label>
         </div>
 
         <div>
