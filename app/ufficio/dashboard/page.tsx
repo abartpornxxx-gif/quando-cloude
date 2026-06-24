@@ -1,6 +1,7 @@
 import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { OnboardingGuida } from '@/components/onboarding/OnboardingGuida'
 import { FileText, Package, CalendarDays, Receipt, Users, AlertCircle, Building2 } from 'lucide-react'
 
 export default async function UfficioDashboard() {
@@ -128,6 +129,27 @@ export default async function UfficioDashboard() {
 
   return (
     <div className="space-y-8">
+      <OnboardingGuida
+        role="ufficio"
+        title="💶 Benvenuto nell'Area Amministrativa di QUADRO"
+        subtitle="Il tuo assistente per preventivi, fatturazione e flussi finanziari della CreCas Impianti S.r.l."
+        features={[
+          "Emettere preventivi per nuovi clienti e convertirli direttamente in commesse di cantiere.",
+          "Verificare le fatture attive e gestire gli incassi parziali/totali.",
+          "Registrare e controllare le fatture passive dei fornitori.",
+          "Monitorare in tempo reale lo scadenzario dei debiti/crediti e i saldi pendenti."
+        ]}
+        actions={[
+          "Controlla i Preventivi aperti e le bozze in attesa di essere inviate.",
+          "Esamina le Commesse attive e controlla lo stato dei lavori.",
+          "Verifica i Saldi Pendenti per avviare il recupero dei crediti.",
+          "Registra gli Incassi delle fatture attive e le relative aliquote IVA.",
+          "Verifica le scadenze nello Scadenzario per la pianificazione dei pagamenti passivi."
+        ]}
+        finalMessage="“L'ufficio non deve inseguire le informazioni: QUADRO le raccoglie e le collega al cantiere giusto.”"
+        localStorageKey="quadro_onboarding_seen_ufficio"
+      />
+
       {/* Hero */}
       <div className="rounded-2xl mesh-bg-ufficio border border-teal-850 px-6 py-6 shadow-premium-lg">
         <p className="text-teal-200 text-xs font-semibold uppercase tracking-wider">Area Ufficio</p>
