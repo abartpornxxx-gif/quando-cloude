@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatEuro, formatData } from '@/lib/format'
+import { OnboardingGuida } from '@/components/onboarding/OnboardingGuida'
 import { StatCard } from '@/components/ui/StatCard'
 import { Badge } from '@/components/ui/Badge'
 
@@ -78,6 +79,25 @@ export default async function ClienteDashboardPage() {
 
   return (
     <div className="space-y-7">
+      <OnboardingGuida
+        role="cliente"
+        title="🏗️ Benvenuto nel tuo Portale QUADRO"
+        subtitle="La tua finestra personale sui lavori eseguiti da CreCas Impianti S.r.l."
+        features={[
+          "Consultare l'avanzamento dei lavori dei tuoi cantieri attivi.",
+          "Verificare e scaricare i documenti ufficiali (certificati DiCo, preventivi).",
+          "Visualizzare gli interventi programmati di manutenzione periodica.",
+          "Accettare o rifiutare in tempo reale le nuove proposte di intervento."
+        ]}
+        actions={[
+          "Controlla lo stato e le novità dei tuoi cantieri in corso in 'I miei lavori'.",
+          "Esamina le fatture emesse e lo storico dei tuoi pagamenti.",
+          "Scarica le Dichiarazioni di Conformità e i file caricati per te.",
+          "Controlla le prossime scadenze delle manutenzioni programmate."
+        ]}
+        finalMessage="“Il cliente non deve chiedere sempre aggiornamenti: QUADRO mostra ciò che serve in modo ordinato.”"
+        localStorageKey="quadro_onboarding_seen_cliente"
+      />
       {/* Welcome */}
       <div className="rounded-2xl mesh-bg-cliente text-white px-6 py-6 shadow-premium-lg border border-violet-850 flex items-center justify-between gap-4">
         <div>

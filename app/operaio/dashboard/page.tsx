@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatData } from '@/lib/format'
 import { Badge } from '@/components/ui/Badge'
+import { OnboardingGuida } from '@/components/onboarding/OnboardingGuida'
 import { MeteoBox } from '@/components/operaio/MeteoBox'
 import { PuntiUtili } from '@/components/operaio/PuntiUtili'
 
@@ -84,6 +85,27 @@ export default async function OperaioDashboardPage() {
 
   return (
     <div className="space-y-6">
+      <OnboardingGuida
+        role="operaio"
+        title="🔨 Ciao! Questa è la tua area cantiere in QUADRO"
+        subtitle="La tua guida per la giornata di lavoro in CreCas Impianti S.r.l."
+        features={[
+          "Vedere i cantieri assegnati e le relative istruzioni operative.",
+          "Registrare gli orari di lavoro (Inizio cantiere, Pause, Fine giornata).",
+          "Scattare e caricare foto dell'avanzamento dei lavori.",
+          "Inviare il rapportino di fine giornata ed indicare le note per domani."
+        ]}
+        actions={[
+          "Controlla il Cantiere Assegnato per oggi nella dashboard.",
+          "Fai clic su 'Apri Maps' per navigare con GPS fino al cantiere.",
+          "Leggi attentamente le istruzioni e porta l'attrezzatura necessaria.",
+          "Registra l'inizio del lavoro facendo clic su 'Inizia giornata'.",
+          "Avanza le fasi lavorative e scatta foto dei lavori completati.",
+          "Invia il rapportino prima di andare via dal cantiere."
+        ]}
+        finalMessage="“QUADRO ti evita chiamate inutili: ti dice dove andare, cosa portare e cosa registrare.”"
+        localStorageKey="quadro_onboarding_seen_operaio"
+      />
 
       {/* ── Banner rapportino urgente ── */}
       {giornataRapportinoPendente && (

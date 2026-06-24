@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/format'
+import { OnboardingGuida } from '@/components/onboarding/OnboardingGuida'
 import { StatCard } from '@/components/ui/StatCard'
 import {
   Building2,
@@ -158,6 +159,27 @@ export default async function ImpresaDashboardPage() {
 
   return (
     <div className="space-y-8">
+      <OnboardingGuida
+        role="impresa"
+        title="🏗️ Benvenuto nell'Area Direzionale di QUADRO"
+        subtitle="Il centro di controllo operativo della CreCas Impianti S.r.l."
+        features={[
+          "Monitorare in tempo reale lo stato dei cantieri, dei clienti e delle commesse.",
+          "Analizzare i costi effettivi di manodopera, materiali e mezzi per ciascun cantiere.",
+          "Consultare i margini stimati, maturati ed incassati derivati in tempo reale.",
+          "Coordinare e verificare le giornate e i rapportini compilati dagli operai."
+        ]}
+        actions={[
+          "Verifica o inserisci un nuovo Cliente nell'anagrafica.",
+          "Compila un Preventivo per un nuovo lavoro o cliente.",
+          "Converti il preventivo accettato in una Commessa attiva.",
+          "Assegna operai, materiali e mezzi attraverso il pannello Pianificazione.",
+          "Controlla e valida i rapportini di cantiere a fine giornata.",
+          "Verifica la situazione finanziaria tramite lo Scadenzario e i Saldi Pendenti."
+        ]}
+        finalMessage="“QUADRO non è solo un archivio: è il motore operativo che ottimizza la tua impresa ogni giorno.”"
+        localStorageKey="quadro_onboarding_seen_impresa"
+      />
 
       {/* Hero */}
       <div className="rounded-2xl mesh-bg-impresa border border-slate-800 px-6 py-6 flex items-center justify-between gap-4 shadow-premium-lg">
