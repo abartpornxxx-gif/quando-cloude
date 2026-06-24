@@ -113,3 +113,9 @@ export async function inviaRapportino(
   revalidatePath(`/operaio/giornata/${giornataId}/rapportino`)
   return '/operaio/dashboard'
 }
+
+export async function analizzaRapportinoConIA(testo: string) {
+  await requireOperaio()
+  const { analizzaTestoRapportino } = await import('@/lib/ai')
+  return await analizzaTestoRapportino(testo)
+}

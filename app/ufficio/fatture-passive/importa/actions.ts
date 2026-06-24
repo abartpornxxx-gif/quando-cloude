@@ -47,3 +47,42 @@ export async function importaFatturePassive(items: FatturaImportInput[]): Promis
 
   return { count }
 }
+
+export async function analizzaFatturaPDFConIA(fileBase64: string, mimeType: string) {
+  await requireUfficio()
+  const { analizzaDocumentoFattura } = await import('@/lib/ai')
+  return await analizzaDocumentoFattura(fileBase64, mimeType)
+}
+
+export async function salvaFatturaPassivaSingola(data: {
+  numero?: string
+  data: string
+  fornitoreId?: string
+  commessaId?: string
+  importo: number // in cents
+  dataScadenza?: string
+  stato: 'da_pagare' | 'pagata'
+  controllata: boolean
+  note?: string
+}) {
+  await requireUfficio()
+
+  await prisma.fatturaPassiva.create({
+    data: {
+      data: new Date(data.data),
+      numero: data.numero || null,
+      fornitoreId: data.fornitoreId || null,
+      commessaId: data.commessaId || null,
+      importo: data.importo,
+      dataScadenza: data.dataScadenza ? new Date(data.dataScadenza) : null,
+      stato: data.stato,
+      controllata: data.controllata,
+      note: data.note || null,
+    }
+  })
+
+  revalidatePath('/ufficio/fatture-passive')
+  revalidatePath('/ufficio/commesse')
+  revalidatePath('/ufficio/dashboard')
+  revalidatePath('/ufficio/saldi-pendenti')
+}

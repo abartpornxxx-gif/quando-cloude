@@ -78,7 +78,7 @@ export async function trasformaInCommessaUfficio(preventivoId: string) {
   const nomeCliente = preventivo.cliente?.nome ?? 'Cliente'
   const anno = new Date().getFullYear()
 
-  await prisma.commessa.create({
+  const commessa = await prisma.commessa.create({
     data: {
       nome: `${nomeCliente} — ${anno}`,
       clienteId: preventivo.clienteId,
@@ -88,7 +88,11 @@ export async function trasformaInCommessaUfficio(preventivoId: string) {
     },
   })
 
-  redirect(`/ufficio/preventivi/${preventivoId}`)
+  revalidatePath(`/ufficio/preventivi/${preventivoId}`)
+  revalidatePath('/ufficio/preventivi')
+  revalidatePath('/ufficio/commesse')
+
+  redirect(`/ufficio/commesse/${commessa.id}`)
 }
 
 export async function eliminaPreventivoUfficio(id: string) {

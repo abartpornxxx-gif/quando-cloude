@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { inviaRapportino } from './actions'
+import { inviaRapportino, analizzaRapportinoConIA } from './actions'
 
 type Attrezzatura = { id: string; nome: string }
 type Materiale = { id: string; descrizione: string; unita: string | null }
@@ -38,6 +38,78 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
   const [righeReso, setRigheReso] = useState<RigaReso[]>([])
   const [pending, startTransition] = useTransition()
   const [errore, setErrore] = useState('')
+
+  // Stati per compilazione assistita IA
+  const [showAiModal, setShowAiModal] = useState(false)
+  const [aiInputText, setAiInputText] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+
+  async function handleAiParse() {
+    if (!aiInputText.trim()) return
+    setAiLoading(true)
+    setErrore('')
+    try {
+      const result = await analizzaRapportinoConIA(aiInputText)
+      
+      if (result.lavoroEseguito) {
+        setLavoroEseguito(result.lavoroEseguito)
+      }
+      if (result.lavoriExtra) {
+        setLavoriExtra(result.lavoriExtra)
+      }
+      if (result.noteAttrezzatura) {
+        setNoteAttrezzatura(result.noteAttrezzatura)
+      }
+      if (result.noteGiornoSuccessivo) {
+        setNoteGiornoSuccessivo(result.noteGiornoSuccessivo)
+      }
+      if (result.oreOrdinarie !== undefined && result.oreOrdinarie !== null) {
+        setOreOrdinarie(result.oreOrdinarie.toString())
+      }
+      if (result.oreStraordinarie !== undefined && result.oreStraordinarie !== null) {
+        setOreStraordinarie(result.oreStraordinarie.toString())
+      }
+      if (result.cosaFareDomani) {
+        setCosaFareDomani(result.cosaFareDomani)
+      }
+      if (result.stimaOreDomani !== undefined && result.stimaOreDomani !== null) {
+        setStimeOreDomani(result.stimaOreDomani.toString())
+      }
+
+      // Spunte attrezzatura
+      if (result.attrezzatureRiconsegnate && result.attrezzatureRiconsegnate.length > 0) {
+        const checked = attrezzatureUsate
+          .filter(a => result.attrezzatureRiconsegnate.some(k => 
+            a.nome.toLowerCase().includes(k.toLowerCase()) || 
+            k.toLowerCase().includes(a.nome.toLowerCase())
+          ))
+          .map(a => a.id)
+        setAttrRiconsegnate(checked)
+      }
+
+      // Reso materiali matched
+      if (result.materialiReso && result.materialiReso.length > 0) {
+        const resi = result.materialiReso.map(item => {
+          const matched = materiali.find(m =>
+            m.descrizione.toLowerCase().includes(item.descrizione.toLowerCase()) ||
+            item.descrizione.toLowerCase().includes(m.descrizione.toLowerCase())
+          )
+          return {
+            materialeId: matched?.id ?? '',
+            descrizione: matched?.descrizione ?? item.descrizione,
+            quantita: item.quantita.toString()
+          }
+        })
+        setRigheReso(resi)
+      }
+
+      setShowAiModal(false)
+    } catch (err) {
+      setErrore(err instanceof Error ? err.message : 'Errore durante l\'elaborazione IA. Verifica la chiave API.')
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   function toggleAttr(id: string) {
     setAttrRiconsegnate(prev =>
@@ -104,6 +176,81 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
 
   return (
     <form onSubmit={handleSubmit} className="p-4 max-w-xl mx-auto space-y-5">
+
+      {/* Box Compilazione Assistita IA */}
+      <div className="rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-4 mb-4 flex items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">✨</span>
+          <div>
+            <p className="text-sm font-bold text-emerald-900">Compilazione Assistita</p>
+            <p className="text-xs text-emerald-700/80">Compila l&apos;intero rapportino parlando o scrivendo</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setAiInputText(''); setErrore(''); setShowAiModal(true) }}
+          className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 text-xs font-bold shadow-sm transition-all hover-lift active-press shrink-0"
+        >
+          Avvia IA
+        </button>
+      </div>
+
+      {/* Modal Assistente IA */}
+      {showAiModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-slate-100 p-5 shadow-premium-lg flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
+            <div>
+              <p className="text-base font-black text-slate-800 flex items-center gap-1.5">
+                <span>✨</span> Compila con Intelligenza Artificiale
+              </p>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                Scrivi o detta a voce libera come è andata la giornata. Ad esempio: &quot;Oggi ho lavorato 8 ore installando la nuova caldaia da Rossi. Ho riportato la scala e domani devo tornare per 2 ore per i collaudi&quot;.
+              </p>
+            </div>
+            
+            <textarea
+              value={aiInputText}
+              onChange={e => setAiInputText(e.target.value)}
+              placeholder="Racconta la tua giornata di lavoro..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+              rows={4}
+              disabled={aiLoading}
+              autoFocus
+            />
+
+            {errore && <p className="text-xs font-bold text-red-600">{errore}</p>}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAiModal(false)}
+                disabled={aiLoading}
+                className="flex-1 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 text-sm transition-all"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                onClick={handleAiParse}
+                disabled={aiLoading || !aiInputText.trim()}
+                className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 text-sm transition-all flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                {aiLoading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Elaborazione...
+                  </>
+                ) : (
+                  '✦ Compila Form'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-semibold mb-1">Lavoro eseguito oggi *</label>
