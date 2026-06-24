@@ -42,12 +42,29 @@ export async function registraPagamento(
 ): Promise<void> {
   await requireImpresaOUfficio()
 
+  const fattura = await prisma.fatturaPassiva.findUnique({
+    where: { id: fatturaId }
+  })
+  if (!fattura) throw new Error('Fattura non trovata')
+  
+  const giaPagato = fattura.importoPagato ?? 0
+  const nuovoImportoPagato = giaPagato + importoPagato
+  
+  if (importoPagato <= 0) throw new Error('Importo pagato non valido')
+  if (nuovoImportoPagato > fattura.importo) {
+    const residuo = fattura.importo - giaPagato
+    throw new Error(`Importo superiore al residuo (${(residuo / 100).toFixed(2)} €)`)
+  }
+
+  const completamentePagata = nuovoImportoPagato >= fattura.importo
+  const nuovoStato = completamentePagata ? 'pagata' : 'parzialmente_pagata'
+
   await prisma.fatturaPassiva.update({
     where: { id: fatturaId },
     data: {
-      stato: 'pagata',
+      stato: nuovoStato,
       dataPagamento: new Date(dataPagamento),
-      importoPagato,
+      importoPagato: nuovoImportoPagato,
     },
   })
 
@@ -55,6 +72,8 @@ export async function registraPagamento(
   revalidatePath(`/impresa/fatture-passive/${fatturaId}`)
   revalidatePath('/ufficio/fatture-passive')
   revalidatePath(`/ufficio/fatture-passive/${fatturaId}`)
+  revalidatePath('/ufficio/saldi-pendenti')
+  revalidatePath('/ufficio/dashboard')
 }
 
 export async function eliminaFatturaPassiva(fatturaId: string): Promise<void> {

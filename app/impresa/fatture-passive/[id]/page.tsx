@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
 import RegistraPagamentoForm from './RegistraPagamentoForm'
 import { eliminaFatturaPassiva } from '../actions'
+import { getInvoiceAmounts, deriveInvoiceStatus } from '@/lib/finance'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -24,7 +25,31 @@ export default async function FatturaPassivaPage({ params }: Props) {
   })
   if (!fattura) notFound()
 
-  const isScaduta = fattura.dataScadenza && new Date(fattura.dataScadenza) < new Date() && fattura.stato === 'da_pagare'
+  const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+    type: 'passiva',
+    importo: fattura.importo,
+    importoPagato: fattura.importoPagato,
+  })
+
+  const derivedStatus = deriveInvoiceStatus({
+    type: 'passiva',
+    totalAmount,
+    paidOrCollectedAmount,
+    dataScadenza: fattura.dataScadenza,
+  })
+  const isScaduta = derivedStatus === 'scaduta'
+
+  const badgeCls =
+    derivedStatus === 'pagata' ? 'bg-green-100 text-green-800' :
+    derivedStatus === 'scaduta' ? 'bg-red-100 text-red-800' :
+    derivedStatus === 'parzialmente_pagata' ? 'bg-yellow-100 text-yellow-800' :
+    'bg-orange-100 text-orange-800'
+
+  const badgeLabel =
+    derivedStatus === 'pagata' ? 'Pagata' :
+    derivedStatus === 'scaduta' ? 'Scaduta' :
+    derivedStatus === 'parzialmente_pagata' ? 'Parz. pagata' :
+    'Da pagare'
 
   return (
     <div className="p-4 max-w-3xl mx-auto space-y-5">
@@ -34,8 +59,8 @@ export default async function FatturaPassivaPage({ params }: Props) {
           Fattura {fattura.fornitore?.nome ?? 'Fornitore'}
           {fattura.numero ? ` — n. ${fattura.numero}` : ''}
         </h1>
-        <span className={`text-xs rounded-full px-3 py-1 font-semibold ${fattura.stato === 'pagata' ? 'bg-green-100 text-green-800' : isScaduta ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'}`}>
-          {fattura.stato === 'pagata' ? 'Pagata' : isScaduta ? 'Scaduta' : 'Da pagare'}
+        <span className={`text-xs rounded-full px-3 py-1 font-semibold ${badgeCls}`}>
+          {badgeLabel}
         </span>
       </div>
 
@@ -85,20 +110,28 @@ export default async function FatturaPassivaPage({ params }: Props) {
         {fattura.note && <p className="text-gray-600 border-t pt-3">Note: {fattura.note}</p>}
       </div>
 
-      {fattura.stato === 'pagata' && fattura.dataPagamento && (
-        <div className="rounded-xl bg-green-50 border border-green-200 p-4">
-          <p className="text-green-800 font-semibold">✓ Pagata il {formatData(fattura.dataPagamento)}</p>
-          {fattura.importoPagato && (
-            <p className="text-green-700 text-sm">Importo pagato: {formatEuro(fattura.importoPagato)}</p>
+      {paidOrCollectedAmount > 0 && (
+        <div className="rounded-xl bg-green-50 border border-green-200 p-4 space-y-1">
+          {derivedStatus === 'pagata' && fattura.dataPagamento ? (
+            <p className="text-green-800 font-semibold">✓ Pagata il {formatData(fattura.dataPagamento)}</p>
+          ) : (
+            <p className="text-amber-800 font-semibold">⚠ Pagamento parziale in corso</p>
           )}
+          <p className="text-green-700 text-sm">
+            Importo totale: {formatEuro(totalAmount)} · Pagato: {formatEuro(paidOrCollectedAmount)} · Residuo: {formatEuro(residualAmount)}
+          </p>
         </div>
       )}
 
-      {fattura.stato === 'da_pagare' && (
-        <RegistraPagamentoForm fatturaId={fattura.id} importoFattura={fattura.importo} />
+      {derivedStatus !== 'pagata' && (
+        <RegistraPagamentoForm 
+          fatturaId={fattura.id} 
+          importoFattura={totalAmount} 
+          importoPagato={paidOrCollectedAmount} 
+        />
       )}
 
-      {fattura.stato !== 'pagata' && (
+      {derivedStatus !== 'pagata' && (
         <form action={eliminaFatturaPassiva.bind(null, fattura.id)}>
           <button
             type="submit"

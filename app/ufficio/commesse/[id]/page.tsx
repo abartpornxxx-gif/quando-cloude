@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
 import { Badge } from '@/components/ui/Badge'
+import { calculateCommessaAggregates } from '@/lib/finance'
 
 type BadgeVariant = 'success' | 'warning' | 'neutral' | 'danger' | 'info'
 
@@ -110,35 +111,46 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
 
   if (!c) notFound()
 
-  // ── Fatture ──
-  const totaleFattureAttive = c.fattureAttive.reduce((s, f) => s + totaleRighe(f.righe), 0)
-  const totaleFatturePassive = c.fatturePassive.reduce((s, f) => s + f.importo, 0)
+  // ── KPI finanziari centralizzati ──
+  const ActiveInvoicesMapped = c.fattureAttive.map(fa => ({
+    id: fa.id,
+    numero: fa.numero,
+    anno: fa.anno,
+    data: fa.data,
+    dataScadenza: fa.dataScadenza,
+    aliquotaIva: fa.aliquotaIva,
+    importoIncassato: fa.importoIncassato,
+    stato: fa.stato,
+    righe: fa.righe
+  }))
 
-  // ── Varianti ──
-  const totaleVariantiApprovate = c.varianti.filter(v => v.stato === 'approvata').reduce((s, v) => s + v.importo, 0)
-  const costoStimatoVarianti = c.varianti.filter(v => v.stato === 'approvata').reduce((s, v) => s + v.costoStimato, 0)
+  const aggregates = calculateCommessaAggregates(c, ActiveInvoicesMapped, c.fatturePassive, c.giornate, c.varianti)
+  const {
+    preventivato,
+    fatturato,
+    daFatturare,
+    incassato,
+    daIncassare,
+    costiFornitori,
+    costiManodopera,
+    costiMezzi,
+    costiTotali,
+    margineStimato,
+    margineMaturato,
+    margineIncassato,
+    totaleVariantiApprovate,
+    costoStimatoVarianti,
+  } = aggregates
 
-  // ── Costi Manodopera Dinamici ──
-  const costiManodoperaDinamici = c.giornate.reduce((sum, g) => {
-    const oreOrd = g.ore.filter(o => o.tipo === 'ordinaria').reduce((acc, o) => acc + o.quantita, 0)
-    const oreStr = g.ore.filter(o => o.tipo === 'straordinaria').reduce((acc, o) => acc + o.quantita, 0)
-    const costoOrario = g.operaio.costoOrario ?? 0
-    return sum + Math.round(oreOrd * costoOrario + oreStr * costoOrario * 1.5)
-  }, 0)
-
-  // ── KPI finanziari ──
-  const costiTotali = c.costiMateriali + costiManodoperaDinamici + totaleFatturePassive + costoStimatoVarianti
-  const daIncassare = totaleFattureAttive - c.fatturato
-  const daFatturare = c.preventivato - totaleFattureAttive
-  const riferimento = (totaleFattureAttive > 0 ? totaleFattureAttive : c.preventivato) + totaleVariantiApprovate
-  const margineBase = riferimento - costiTotali
-  const marginePct = riferimento > 0 ? Math.round((margineBase / riferimento) * 100) : null
+  const stimatoPct = preventivato > 0 ? Math.round((margineStimato / preventivato) * 100) : null
+  const maturatoPct = fatturato > 0 ? Math.round((margineMaturato / fatturato) * 100) : null
+  const incassatoPct = incassato > 0 ? Math.round((margineIncassato / incassato) * 100) : null
 
   // Dati incompleti: ci sono giornate ma costi manodopera a 0,
   // oppure ci sono ordini consegnati ma costi materiali a 0
   const ordiniConsegnati = c.ordini.filter(o => o.stato === 'consegnato' || o.stato === 'usato')
   const datiIncompleti =
-    (c.giornate.length > 0 && costiManodoperaDinamici === 0) ||
+    (c.giornate.length > 0 && costiManodopera === 0) ||
     (ordiniConsegnati.length > 0 && c.costiMateriali === 0)
 
   // ── Giornate ──
@@ -208,27 +220,42 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Riepilogo economico</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <KpiCard label="Preventivato" value={formatEuro(c.preventivato)} />
-          <KpiCard label="Fatturato al cliente" value={totaleFattureAttive > 0 ? formatEuro(totaleFattureAttive) : '—'} />
+          <KpiCard label="Preventivato" value={formatEuro(preventivato)} />
+          <KpiCard label="Fatturato" value={formatEuro(fatturato)} />
           <KpiCard
             label="Da fatturare"
             value={daFatturare > 0 ? formatEuro(daFatturare) : '—'}
             accent={daFatturare > 0 ? 'amber' : 'gray'}
           />
-          <KpiCard label="Incassato" value={c.fatturato > 0 ? formatEuro(c.fatturato) : '—'} accent="emerald" />
+          <KpiCard label="Incassato" value={incassato > 0 ? formatEuro(incassato) : '—'} accent="emerald" />
           <KpiCard
             label="Da incassare"
             value={daIncassare > 0 ? formatEuro(daIncassare) : '—'}
             accent={daIncassare > 0 ? 'amber' : 'gray'}
           />
           <KpiCard
-            label={marginePct != null ? `Margine (${marginePct}%)` : 'Margine'}
-            value={riferimento > 0 ? formatEuro(margineBase) : '—'}
-            accent={margineBase >= 0 ? 'emerald' : 'red'}
+            label="Costi Totali"
+            value={formatEuro(costiTotali)}
+            accent={costiTotali > preventivato ? 'red' : 'gray'}
           />
-          <KpiCard label="Costi materiali" value={formatEuro(c.costiMateriali)} />
-          <KpiCard label="Costi manodopera" value={formatEuro(costiManodoperaDinamici)} />
-          <KpiCard label="Costi fornitori" value={formatEuro(totaleFatturePassive)} />
+          <KpiCard
+            label={stimatoPct != null ? `Margine Stimato (${stimatoPct}%)` : 'Margine Stimato'}
+            value={formatEuro(margineStimato)}
+            accent={margineStimato >= 0 ? 'emerald' : 'red'}
+          />
+          <KpiCard
+            label={maturatoPct != null ? `Margine Maturato (${maturatoPct}%)` : 'Margine Maturato'}
+            value={formatEuro(margineMaturato)}
+            accent={margineMaturato >= 0 ? 'emerald' : 'red'}
+          />
+          <KpiCard
+            label={incassatoPct != null ? `Margine Incassato (${incassatoPct}%)` : 'Margine Incassato'}
+            value={formatEuro(margineIncassato)}
+            accent={margineIncassato >= 0 ? 'emerald' : 'red'}
+          />
+          <KpiCard label="Costi Materiali" value={formatEuro(costiFornitori > 0 ? costiFornitori : c.costiMateriali)} />
+          <KpiCard label="Costi Manodopera" value={formatEuro(costiManodopera)} />
+          <KpiCard label="Costi Mezzi" value={formatEuro(costiMezzi)} />
         </div>
         {c.stato === 'aperta' && (
           <p className="mt-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
@@ -240,7 +267,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
             ⚠ Margine non definitivo — alcuni costi non ancora registrati (rapportini mancanti o ordini non consegnati).
           </p>
         )}
-        {riferimento === 0 && (
+        {preventivato === 0 && (
           <p className="mt-2 text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
             Nessun importo preventivato. Il margine non è calcolabile.
           </p>
@@ -390,7 +417,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Fatture attive</p>
           {c.fattureAttive.length > 0 && (
             <div className="flex items-center gap-3">
-              <p className="text-xs text-gray-400">Totale: {formatEuro(totaleFattureAttive)}</p>
+              <p className="text-xs text-gray-400">Totale: {formatEuro(fatturato)}</p>
               <Link href={`/ufficio/fatture?commessaId=${c.id}`} className="text-xs text-teal-600 hover:text-teal-800 font-medium">
                 Lista completa →
               </Link>
@@ -450,7 +477,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Fatture passive (fornitori)</p>
             {c.fatturePassive.length > 0 && (
-              <p className="text-xs text-gray-400">Totale: {formatEuro(totaleFatturePassive)}</p>
+              <p className="text-xs text-gray-400">Totale: {formatEuro(costiFornitori)}</p>
             )}
           </div>
 

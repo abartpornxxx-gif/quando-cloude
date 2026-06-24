@@ -1,6 +1,7 @@
 import { requireMagazziniere } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
+import { OnboardingGuida } from '@/components/onboarding/OnboardingGuida'
 import { StatCard } from '@/components/ui/StatCard'
 import { Badge } from '@/components/ui/Badge'
 
@@ -24,6 +25,26 @@ export default async function MagazziniereDashboard() {
 
   return (
     <div className="space-y-6">
+      <OnboardingGuida
+        role="magazziniere"
+        title="📦 Benvenuto nell'Area Magazzino di QUADRO"
+        subtitle="Il pannello per gestire materiali, richieste e giacenze per CreCas Impianti S.r.l."
+        features={[
+          "Monitorare in tempo reale le richieste di materiali degli operai.",
+          "Prendere in carico e preparare i pacchetti di materiali per le squadre.",
+          "Registrare le consegne e aggiornare l'inventario delle giacenze.",
+          "Tracciare i resi non utilizzati riportati dalle squadre a fine giornata."
+        ]}
+        actions={[
+          "Controlla le richieste aperte in sospeso nella dashboard.",
+          "Clicca su una richiesta per prenderla in carico per la preparazione.",
+          "Prepara i materiali fisici seguendo la lista degli operai.",
+          "Segna la richiesta come 'Consegnata' al momento del ritiro.",
+          "Controlla periodicamente le giacenze e i resi registrati."
+        ]}
+        finalMessage="“Il magazzino diventa tracciabile: ogni richiesta resta collegata a operaio, cantiere e materiale.”"
+        localStorageKey="quadro_onboarding_seen_magazziniere"
+      />
       {/* Hero */}
       <div className="rounded-2xl mesh-bg-magazziniere border border-amber-850 px-6 py-6 shadow-premium-lg">
         <p className="text-amber-100/90 text-xs font-semibold uppercase tracking-wider">Area Magazzino</p>

@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { getInvoiceAmounts, deriveInvoiceStatus } from '@/lib/finance'
+import { FilterDropdown } from '@/components/ui/FilterDropdown'
 
 interface Props {
   searchParams: Promise<Record<string, string | undefined>>
@@ -28,20 +30,42 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
     orderBy: { data: 'desc' },
   })
 
+  // Mappa le fatture calcolando importi e stati derivati
+  const parsedFatture = tutteleFatture.map(f => {
+    const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+      type: 'passiva',
+      importo: f.importo,
+      importoPagato: f.importoPagato,
+    })
+    const derivedStatus = deriveInvoiceStatus({
+      type: 'passiva',
+      totalAmount,
+      paidOrCollectedAmount,
+      dataScadenza: f.dataScadenza,
+    })
+    return {
+      ...f,
+      totalAmount,
+      paidOrCollectedAmount,
+      residualAmount,
+      derivedStatus,
+    }
+  })
+
   // ── Riepilogo debiti (su tutto, non filtrato) ──
   const oggi = new Date()
   oggi.setHours(0, 0, 0, 0)
   const inizioMese = new Date(oggi.getFullYear(), oggi.getMonth(), 1)
   const fineMese = new Date(oggi.getFullYear(), oggi.getMonth() + 1, 0)
 
-  const daPagare = tutteleFatture.filter(f => f.stato === 'da_pagare')
-  const totaleDaPagare = daPagare.reduce((s, f) => s + f.importo, 0)
+  const daPagare = parsedFatture.filter(f => f.derivedStatus !== 'pagata')
+  const totaleDaPagare = daPagare.reduce((s, f) => s + f.residualAmount, 0)
   const totaleScaduto = daPagare
-    .filter(f => f.dataScadenza && new Date(f.dataScadenza) < oggi)
-    .reduce((s, f) => s + f.importo, 0)
+    .filter(f => f.derivedStatus === 'scaduta')
+    .reduce((s, f) => s + f.residualAmount, 0)
   const totaleMeseCorrente = daPagare
     .filter(f => f.dataScadenza && new Date(f.dataScadenza) >= inizioMese && new Date(f.dataScadenza) <= fineMese)
-    .reduce((s, f) => s + f.importo, 0)
+    .reduce((s, f) => s + f.residualAmount, 0)
 
   // Top fornitori per debito
   const debitiPerFornitore: Record<string, { nome: string; importo: number }> = {}
@@ -49,7 +73,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
     const key = f.fornitoreId ?? '__nessuno__'
     const nome = f.fornitore?.nome ?? 'Fornitore n.d.'
     if (!debitiPerFornitore[key]) debitiPerFornitore[key] = { nome, importo: 0 }
-    debitiPerFornitore[key].importo += f.importo
+    debitiPerFornitore[key].importo += f.residualAmount
   }
   const topFornitori = Object.values(debitiPerFornitore)
     .sort((a, b) => b.importo - a.importo)
@@ -62,17 +86,24 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
     const key = f.commessaId
     const nome = f.commessa?.nome ?? 'Commessa n.d.'
     if (!debitiPerCommessa[key]) debitiPerCommessa[key] = { nome, importo: 0 }
-    debitiPerCommessa[key].importo += f.importo
+    debitiPerCommessa[key].importo += f.residualAmount
   }
   const topCommesse = Object.values(debitiPerCommessa)
     .sort((a, b) => b.importo - a.importo)
     .slice(0, 5)
 
   // ── Filtro lista ──
-  let fattureFiltrate = tutteleFatture
+  let fattureFiltrate = parsedFatture
 
-  if (stato === 'da_pagare') fattureFiltrate = fattureFiltrate.filter(f => f.stato === 'da_pagare')
-  else if (stato === 'pagata') fattureFiltrate = fattureFiltrate.filter(f => f.stato === 'pagata')
+  if (stato === 'da_pagare') {
+    fattureFiltrate = fattureFiltrate.filter(f => f.derivedStatus === 'da_pagare')
+  } else if (stato === 'parzialmente_pagata') {
+    fattureFiltrate = fattureFiltrate.filter(f => f.derivedStatus === 'parzialmente_pagata')
+  } else if (stato === 'pagata') {
+    fattureFiltrate = fattureFiltrate.filter(f => f.derivedStatus === 'pagata')
+  } else if (stato === 'scaduta') {
+    fattureFiltrate = fattureFiltrate.filter(f => f.derivedStatus === 'scaduta')
+  }
 
   if (fornitoreId) fattureFiltrate = fattureFiltrate.filter(f => f.fornitoreId === fornitoreId)
   if (commessaId) fattureFiltrate = fattureFiltrate.filter(f => f.commessaId === commessaId)
@@ -184,56 +215,62 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
       <form method="GET" className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 space-y-3">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Filtri</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <select name="stato" defaultValue={stato}
-            className="rounded-xl border border-gray-200 px-3 py-2 text-sm">
-            <option value="">Tutti gli stati</option>
-            <option value="da_pagare">Da pagare</option>
-            <option value="pagata">Pagata</option>
-          </select>
+          <FilterDropdown
+            name="stato"
+            defaultValue={stato}
+            placeholder="Tutti gli stati"
+            options={[
+              { value: 'da_pagare', label: 'Da pagare' },
+              { value: 'parzialmente_pagata', label: 'Parzialmente pagata' },
+              { value: 'pagata', label: 'Pagata' },
+              { value: 'scaduta', label: 'Scaduta' },
+            ]}
+          />
 
-          <select name="fornitoreId" defaultValue={fornitoreId}
-            className="rounded-xl border border-gray-200 px-3 py-2 text-sm">
-            <option value="">Tutti i fornitori</option>
-            {fornitori.map(f => (
-              <option key={f.id} value={f.id}>{f.nome}</option>
-            ))}
-          </select>
+          <FilterDropdown
+            name="fornitoreId"
+            defaultValue={fornitoreId}
+            placeholder="Tutti i fornitori"
+            options={fornitori.map(f => ({ value: f.id, label: f.nome }))}
+          />
 
-          <select name="commessaId" defaultValue={commessaId}
-            className="rounded-xl border border-gray-200 px-3 py-2 text-sm">
-            <option value="">Tutte le commesse</option>
-            {commesse.map(c => (
-              <option key={c.id} value={c.id}>{c.nome}</option>
-            ))}
-          </select>
+          <FilterDropdown
+            name="commessaId"
+            defaultValue={commessaId}
+            placeholder="Tutte le commesse"
+            options={commesse.map(c => ({ value: c.id, label: c.nome }))}
+          />
 
           <input
             name="mese"
             type="month"
             defaultValue={mese}
-            className="rounded-xl border border-gray-200 px-3 py-2 text-sm"
+            className="rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
             placeholder="Mese fattura"
           />
 
-          <select name="controllata" defaultValue={controllata}
-            className="rounded-xl border border-gray-200 px-3 py-2 text-sm">
-            <option value="">Controllata: tutte</option>
-            <option value="si">Controllate</option>
-            <option value="no">Non controllate</option>
-          </select>
+          <FilterDropdown
+            name="controllata"
+            defaultValue={controllata}
+            placeholder="Controllata: tutte"
+            options={[
+              { value: 'si', label: 'Controllate' },
+              { value: 'no', label: 'Non controllate' },
+            ]}
+          />
 
           <input
             name="q"
             type="text"
             defaultValue={q}
             placeholder="Cerca (numero, fornitore, note…)"
-            className="rounded-xl border border-gray-200 px-3 py-2 text-sm"
+            className="rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
           />
         </div>
 
         <div className="flex items-center gap-3">
           <button type="submit"
-            className="rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700">
+            className="rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 cursor-pointer">
             Filtra
           </button>
           {hasFiltri && (
@@ -273,7 +310,18 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-100">
             {fattureFiltrate.map(f => {
-              const isScaduta = f.dataScadenza && new Date(f.dataScadenza) < oggi && f.stato === 'da_pagare'
+              const badgeCls =
+                f.derivedStatus === 'pagata' ? 'bg-green-100 text-green-800' :
+                f.derivedStatus === 'scaduta' ? 'bg-red-100 text-red-800' :
+                f.derivedStatus === 'parzialmente_pagata' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-orange-100 text-orange-800'
+
+              const badgeLabel =
+                f.derivedStatus === 'pagata' ? 'Pagata' :
+                f.derivedStatus === 'scaduta' ? 'Scaduta' :
+                f.derivedStatus === 'parzialmente_pagata' ? 'Parz. pagata' :
+                'Da pagare'
+
               return (
                 <Link key={f.id} href={`/ufficio/fatture-passive/${f.id}`}
                   className="flex items-center justify-between px-5 py-4 hover:bg-gray-50/70 transition-colors group">
@@ -282,12 +330,8 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
                       <p className="font-semibold text-sm text-gray-900 group-hover:text-teal-700 transition-colors">
                         {f.fornitore?.nome ?? 'Fornitore n.d.'}{f.numero ? ` — n. ${f.numero}` : ''}
                       </p>
-                      <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-                        f.stato === 'pagata' ? 'bg-green-100 text-green-800'
-                        : isScaduta ? 'bg-red-100 text-red-800'
-                        : 'bg-orange-100 text-orange-800'
-                      }`}>
-                        {f.stato === 'pagata' ? 'Pagata' : isScaduta ? 'Scaduta' : 'Da pagare'}
+                      <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${badgeCls}`}>
+                        {badgeLabel}
                       </span>
                       {f.controllata && (
                         <span className="text-xs rounded-full px-2 py-0.5 font-medium bg-blue-100 text-blue-800">
@@ -303,7 +347,10 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-4">
-                    <p className="font-semibold text-gray-900">{formatEuro(f.importo)}</p>
+                    <p className="font-semibold text-gray-900">{formatEuro(f.totalAmount)}</p>
+                    {f.derivedStatus === 'parzialmente_pagata' && (
+                      <p className="text-xs text-orange-600 font-medium">Residuo: {formatEuro(f.residualAmount)}</p>
+                    )}
                   </div>
                 </Link>
               )

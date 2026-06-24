@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
 import { AlertCircle, Phone, Mail, Receipt, MessageCircle } from 'lucide-react'
+import { calculateCommessaAggregates, getInvoiceAmounts, deriveInvoiceStatus } from '@/lib/finance'
 
 function eur(cents: number) {
   return (cents / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })
@@ -35,27 +36,45 @@ export default async function SaldiPendentiPage() {
     include: {
       cliente: { select: { nome: true, telefono: true, email: true } },
       fattureAttive: {
-        where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] } },
         select: {
           id: true,
           numero: true,
+          data: true,
           anno: true,
           stato: true,
           dataScadenza: true,
+          aliquotaIva: true,
           importoIncassato: true,
           righe: { select: { quantita: true, prezzoUnitario: true } },
         },
         orderBy: [{ anno: 'desc' }, { numero: 'desc' }],
       },
+      varianti: {
+        select: {
+          importo: true,
+          costoStimato: true,
+          stato: true,
+        }
+      }
     },
     orderBy: { updatedAt: 'desc' },
   })
 
-  // Filtra solo commesse non saldate: fatture aperte oppure preventivato > fatturato
-  const pendenti = commessefinite.filter(c => {
-    const hasFattureAperte = c.fattureAttive.length > 0
-    const nonSaldatoDaFatturato = c.preventivato > 0 && c.fatturato < c.preventivato
-    return hasFattureAperte || nonSaldatoDaFatturato
+  // Filtra solo commesse non saldate usando il calcolo centralizzato
+  const pendenti = commessefinite.map(c => {
+    const aggregates = calculateCommessaAggregates(
+      c,
+      c.fattureAttive,
+      [],
+      [],
+      c.varianti
+    )
+    return {
+      ...c,
+      aggregates,
+    }
+  }).filter(c => {
+    return c.aggregates.daIncassare > 0 || c.aggregates.daFatturare > 0
   })
 
   return (
@@ -90,8 +109,8 @@ export default async function SaldiPendentiPage() {
       {pendenti.length > 0 && (
         <div className="space-y-4">
           {pendenti.map(c => {
-            const delta = c.preventivato - c.fatturato
-            const isScopertoFatturato = c.preventivato > 0 && delta > 0
+            const { preventivato, incassato, daIncassare, daFatturare } = c.aggregates
+            const saldoPendente = preventivato - incassato
 
             return (
               <div
@@ -144,31 +163,43 @@ export default async function SaldiPendentiPage() {
                   </div>
 
                   {/* Importo da saldare */}
-                  {isScopertoFatturato && (
+                  {saldoPendente > 0 && (
                     <div className="text-right shrink-0">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Da saldare</p>
-                      <p className="text-xl font-bold text-red-600">{eur(delta)}</p>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Saldo Pendente</p>
+                      <p className="text-xl font-bold text-red-600">{eur(saldoPendente)}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Riepilogo finanziario */}
-                {c.preventivato > 0 && (
+                {preventivato > 0 && (
                   <div className="grid grid-cols-3 gap-px bg-gray-100 border-t border-gray-100">
                     <div className="bg-white px-4 py-3">
                       <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Preventivato</p>
-                      <p className="text-sm font-bold text-gray-900 mt-0.5">{eur(c.preventivato)}</p>
+                      <p className="text-sm font-bold text-gray-900 mt-0.5">{eur(preventivato)}</p>
                     </div>
                     <div className="bg-white px-4 py-3">
                       <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Incassato</p>
-                      <p className="text-sm font-bold text-gray-900 mt-0.5">{eur(c.fatturato)}</p>
+                      <p className="text-sm font-bold text-gray-900 mt-0.5">{eur(incassato)}</p>
                     </div>
                     <div className="bg-white px-4 py-3">
-                      <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Residuo</p>
-                      <p className={`text-sm font-bold mt-0.5 ${delta > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                        {eur(Math.max(0, delta))}
+                      <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Da Incassare / Fatturare</p>
+                      <p className={`text-sm font-bold mt-0.5 ${saldoPendente > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {eur(saldoPendente)}
                       </p>
                     </div>
+                  </div>
+                )}
+
+                {/* Dettaglio quote */}
+                {(daIncassare > 0 || daFatturare > 0) && (
+                  <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-4 text-xs font-medium text-gray-500">
+                    {daIncassare > 0 && (
+                      <span>Da incassare (Fatturato): <strong className="text-gray-900">{eur(daIncassare)}</strong></span>
+                    )}
+                    {daFatturare > 0 && (
+                      <span>Da fatturare (Residuo preventivo): <strong className="text-gray-900">{eur(daFatturare)}</strong></span>
+                    )}
                   </div>
                 )}
 
@@ -177,7 +208,7 @@ export default async function SaldiPendentiPage() {
                   <div className="px-6 py-4 border-t border-gray-100">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                        Fatture aperte ({c.fattureAttive.length})
+                        Fatture collegate ({c.fattureAttive.length})
                       </p>
                       <Link
                         href={`/ufficio/fatture?commessaId=${c.id}`}
@@ -188,11 +219,25 @@ export default async function SaldiPendentiPage() {
                     </div>
                     <div className="space-y-2">
                       {c.fattureAttive.map(f => {
-                        const totFattura = totaleFattura(f.righe)
-                        const giaIncassato = f.importoIncassato ?? 0
-                        const residuoFattura = totFattura - giaIncassato
-                        const isScaduta = f.stato === 'scaduta'
-                        const isParziale = f.stato === 'parzialmente_incassata'
+                        const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+                          type: 'attiva',
+                          aliquotaIva: f.aliquotaIva,
+                          importoIncassato: f.importoIncassato,
+                          righe: f.righe
+                        })
+                        const isOpen = residualAmount > 0
+                        if (!isOpen) return null
+
+                        const derivedStatus = deriveInvoiceStatus({
+                          type: 'attiva',
+                          totalAmount,
+                          paidOrCollectedAmount,
+                          dataScadenza: f.dataScadenza
+                        })
+
+                        const isScaduta = derivedStatus === 'scaduta'
+                        const isParziale = derivedStatus === 'parzialmente_incassata'
+
                         return (
                           <div
                             key={f.id}
@@ -214,10 +259,10 @@ export default async function SaldiPendentiPage() {
                             <div className="flex items-center gap-3">
                               <div className="text-right">
                                 <span className={`text-sm font-bold ${isScaduta ? 'text-red-600' : 'text-gray-900'}`}>
-                                  {eur(residuoFattura)}
+                                  {eur(residualAmount)}
                                 </span>
                                 {isParziale && (
-                                  <p className="text-xs text-gray-400">residuo su {eur(totFattura)}</p>
+                                  <p className="text-xs text-gray-400 font-normal">residuo su {eur(totalAmount)}</p>
                                 )}
                               </div>
                               <Badge variant={isScaduta ? 'danger' : isParziale ? 'warning' : 'warning'}>
@@ -277,3 +322,4 @@ export default async function SaldiPendentiPage() {
     </div>
   )
 }
+

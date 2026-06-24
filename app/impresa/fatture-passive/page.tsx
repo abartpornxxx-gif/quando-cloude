@@ -2,6 +2,7 @@ import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
+import { getInvoiceAmounts, deriveInvoiceStatus } from '@/lib/finance'
 
 export default async function FatturePassivePage() {
   await requireImpresa()
@@ -15,9 +16,30 @@ export default async function FatturePassivePage() {
     orderBy: { data: 'desc' },
   })
 
-  const totaleDaPagare = fatture
-    .filter(f => f.stato === 'da_pagare')
-    .reduce((acc, f) => acc + f.importo, 0)
+  const parsedFatture = fatture.map(f => {
+    const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+      type: 'passiva',
+      importo: f.importo,
+      importoPagato: f.importoPagato,
+    })
+    const derivedStatus = deriveInvoiceStatus({
+      type: 'passiva',
+      totalAmount,
+      paidOrCollectedAmount,
+      dataScadenza: f.dataScadenza,
+    })
+    return {
+      ...f,
+      totalAmount,
+      paidOrCollectedAmount,
+      residualAmount,
+      derivedStatus,
+    }
+  })
+
+  const totaleDaPagare = parsedFatture
+    .filter(f => f.derivedStatus !== 'pagata')
+    .reduce((acc, f) => acc + f.residualAmount, 0)
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
@@ -39,41 +61,58 @@ export default async function FatturePassivePage() {
         </div>
       )}
 
-      {fatture.length === 0 && (
+      {parsedFatture.length === 0 && (
         <p className="text-gray-400 text-sm">Nessuna fattura passiva registrata.</p>
       )}
 
       <div className="bg-white rounded-xl border divide-y">
-        {fatture.map(f => (
-          <Link
-            key={f.id}
-            href={`/impresa/fatture-passive/${f.id}`}
-            className="flex items-center justify-between p-4 hover:bg-gray-50"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-sm">
-                  {f.fornitore?.nome ?? 'Fornitore n.d.'}
-                  {f.numero ? ` — n. ${f.numero}` : ''}
+        {parsedFatture.map(f => {
+          const badgeCls =
+            f.derivedStatus === 'pagata' ? 'bg-green-100 text-green-800' :
+            f.derivedStatus === 'scaduta' ? 'bg-red-100 text-red-800' :
+            f.derivedStatus === 'parzialmente_pagata' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-orange-100 text-orange-800'
+
+          const badgeLabel =
+            f.derivedStatus === 'pagata' ? 'Pagata' :
+            f.derivedStatus === 'scaduta' ? 'Scaduta' :
+            f.derivedStatus === 'parzialmente_pagata' ? 'Parz. pagata' :
+            'Da pagare'
+
+          return (
+            <Link
+              key={f.id}
+              href={`/impresa/fatture-passive/${f.id}`}
+              className="flex items-center justify-between p-4 hover:bg-gray-50"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-sm">
+                    {f.fornitore?.nome ?? 'Fornitore n.d.'}
+                    {f.numero ? ` — n. ${f.numero}` : ''}
+                  </p>
+                  <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${badgeCls}`}>
+                    {badgeLabel}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {f.commessa?.nome ? `Commessa: ${f.commessa.nome}` : ''}
+                  {f.ordine ? ' · collegata a ordine' : ''}
                 </p>
-                <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${f.stato === 'pagata' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                  {f.stato === 'pagata' ? 'Pagata' : 'Da pagare'}
-                </span>
+                <p className="text-xs text-gray-400">
+                  Data: {formatData(f.data)}
+                  {f.dataScadenza ? ` · Scadenza: ${formatData(f.dataScadenza)}` : ''}
+                </p>
               </div>
-              <p className="text-xs text-gray-500">
-                {f.commessa?.nome ? `Commessa: ${f.commessa.nome}` : ''}
-                {f.ordine ? ' · collegata a ordine' : ''}
-              </p>
-              <p className="text-xs text-gray-400">
-                Data: {formatData(f.data)}
-                {f.dataScadenza ? ` · Scadenza: ${formatData(f.dataScadenza)}` : ''}
-              </p>
-            </div>
-            <div className="text-right shrink-0 ml-4">
-              <p className="font-semibold">{formatEuro(f.importo)}</p>
-            </div>
-          </Link>
-        ))}
+              <div className="text-right shrink-0 ml-4">
+                <p className="font-semibold">{formatEuro(f.totalAmount)}</p>
+                {f.derivedStatus === 'parzialmente_pagata' && (
+                  <p className="text-xs text-orange-600 font-medium">Residuo: {formatEuro(f.residualAmount)}</p>
+                )}
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </div>
   )

@@ -10,6 +10,9 @@ interface Props {
 
 export default async function RapportinoPage({ params }: Props) {
   const { id } = await params
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidRegex.test(id)) notFound()
+
   const { operaio } = await requireOperaio()
 
   const giornata = await prisma.giornata.findUnique({

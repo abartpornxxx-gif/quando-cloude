@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { formatEuro } from '@/lib/format'
 import { Badge } from '@/components/ui/Badge'
+import { ChevronDown, Check } from 'lucide-react'
 
 type BadgeVariant = 'success' | 'warning' | 'neutral'
 
@@ -25,6 +26,18 @@ type Commessa = {
 export default function CommesseUfficioList({ commesse }: { commesse: Commessa[] }) {
   const [query, setQuery] = useState('')
   const [filtroStato, setFiltroStato] = useState('')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const q = query.trim().toLowerCase()
   const filtered = commesse.filter(c => {
@@ -44,16 +57,40 @@ export default function CommesseUfficioList({ commesse }: { commesse: Commessa[]
           placeholder="Cerca nome cantiere o cliente..."
           className="flex-1 min-w-[200px] rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
         />
-        <select
-          value={filtroStato}
-          onChange={e => setFiltroStato(e.target.value)}
-          className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 focus:border-teal-500 focus:outline-none"
-        >
-          <option value="">Tutti gli stati</option>
-          <option value="aperta">Aperta</option>
-          <option value="finita">Finita</option>
-          <option value="chiusa">Chiusa</option>
-        </select>
+        
+        <div className="relative" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none min-w-[150px] cursor-pointer"
+          >
+            <span>{STATO_LABEL[filtroStato] || 'Tutti gli stati'}</span>
+            <ChevronDown size={16} className={`ml-2 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute right-0 z-50 mt-1 w-full min-w-[150px] rounded-xl border border-gray-200 bg-white shadow-xl py-1 animate-in fade-in slide-in-from-top-1 duration-150">
+              <button
+                type="button"
+                onClick={() => { setFiltroStato(''); setIsDropdownOpen(false) }}
+                className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-gray-50 cursor-pointer ${filtroStato === '' ? 'text-teal-600 font-semibold bg-teal-50' : 'text-gray-700'}`}
+              >
+                <span>Tutti gli stati</span>
+                {filtroStato === '' && <Check size={14} className="text-teal-600" />}
+              </button>
+              {['aperta', 'finita', 'chiusa'].map(st => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => { setFiltroStato(st); setIsDropdownOpen(false) }}
+                  className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-gray-50 cursor-pointer ${filtroStato === st ? 'text-teal-600 font-semibold bg-teal-50' : 'text-gray-700'}`}
+                >
+                  <span>{STATO_LABEL[st]}</span>
+                  {filtroStato === st && <Check size={14} className="text-teal-600" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         {(query || filtroStato) && (
           <button
             onClick={() => { setQuery(''); setFiltroStato('') }}

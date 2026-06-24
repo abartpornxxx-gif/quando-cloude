@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
 import { LogoutButton } from '@/components/LogoutButton'
 import { listaNotificheCliente } from '@/lib/notifiche'
+import { ClienteNav } from '@/components/ClienteNav'
 
 export default async function ClienteLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -26,18 +27,10 @@ export default async function ClienteLayout({ children }: { children: React.Reac
     }
   }
 
-  const NAV = [
-    { label: 'I miei lavori', href: '/cliente/lavori' },
-    { label: 'Pagamenti', href: '/cliente/pagamenti' },
-    { label: 'Documenti', href: '/cliente/documenti' },
-    { label: 'Servizi', href: '/cliente/servizi' },
-    { label: 'Manutenzioni', href: '/cliente/manutenzioni' },
-  ]
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-40 bg-violet-700 shadow-lg">
-        <div className="mx-auto max-w-3xl px-4">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-3">
             {/* Logo */}
             <Link href="/cliente/dashboard" className="flex items-center gap-2.5 shrink-0">
@@ -50,16 +43,6 @@ export default async function ClienteLayout({ children }: { children: React.Reac
               </div>
             </Link>
 
-            {/* Nav desktop */}
-            <nav className="hidden sm:flex items-center gap-0.5">
-              {NAV.map(item => (
-                <Link key={item.href} href={item.href}
-                  className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-violet-200 hover:bg-violet-600 hover:text-white">
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
             {/* Actions */}
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="hidden lg:block text-sm text-violet-300 truncate max-w-32">{nome.split(' ')[0]}</span>
@@ -69,22 +52,10 @@ export default async function ClienteLayout({ children }: { children: React.Reac
           </div>
         </div>
 
-        {/* Nav mobile */}
-        <div className="sm:hidden border-t border-violet-600/50">
-          <div className="mx-auto max-w-3xl px-4">
-            <div className="flex overflow-x-auto scrollbar-none">
-              {NAV.map(item => (
-                <Link key={item.href} href={item.href}
-                  className="shrink-0 whitespace-nowrap px-3 py-2.5 text-sm font-medium text-violet-200 hover:text-white">
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
+        <ClienteNav />
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
     </div>
   )
 }

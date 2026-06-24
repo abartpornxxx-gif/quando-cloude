@@ -6,6 +6,7 @@ import { salvaCommessa, assegnaOperaio, rimuoviAssegnazione, segnaCantierefinito
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Badge } from '@/components/ui/Badge'
 import { CommessaTabs } from './CommessaTabs'
+import { calculateCommessaAggregates } from '@/lib/finance'
 
 export default async function CommessaDettPage({
   params,
@@ -18,7 +19,7 @@ export default async function CommessaDettPage({
   const { id } = await params
   const { errore } = await searchParams
 
-  const [c, tuttiOperai, tipiLavoro, clienti, giornate, fatture, dico, piano] = await Promise.all([
+  const [c, tuttiOperai, tipiLavoro, clienti, giornate, fatture, dico, piano, fatturePassive, varianti] = await Promise.all([
     prisma.commessa.findUnique({
       where: { id },
       include: {
@@ -47,7 +48,7 @@ export default async function CommessaDettPage({
       select: {
         id: true,
         data: true,
-        operaio: { select: { nome: true } },
+        operaio: { select: { nome: true, costoOrario: true } },
         ore: { select: { tipo: true, quantita: true } },
         foto: { select: { id: true } },
         rapportino: { select: { lavoroEseguito: true } },
@@ -62,6 +63,8 @@ export default async function CommessaDettPage({
         anno: true,
         stato: true,
         data: true,
+        aliquotaIva: true,
+        importoIncassato: true,
         righe: { select: { quantita: true, prezzoUnitario: true } },
       },
       orderBy: { data: 'desc' },
@@ -83,14 +86,47 @@ export default async function CommessaDettPage({
       },
       orderBy: { data: 'desc' },
     }),
+    prisma.fatturaPassiva.findMany({
+      where: { commessaId: id },
+      select: {
+        id: true,
+        importo: true,
+        importoPagato: true,
+      },
+    }),
+    prisma.varianteLavoro.findMany({
+      where: { commessaId: id },
+      select: {
+        id: true,
+        importo: true,
+        costoStimato: true,
+        stato: true,
+      },
+    }),
   ])
 
   if (!c) notFound()
 
-  // KPI finanziari
-  const costiTotali = c.costiMateriali + c.costiManodopera + c.costiMezzi
-  const margineEuro = c.preventivato - costiTotali
-  const marginePct = c.preventivato > 0 ? Math.round((margineEuro / c.preventivato) * 100) : null
+  // KPI finanziari centralizzati
+  const aggregates = calculateCommessaAggregates(c, fatture, fatturePassive, giornate, varianti)
+  const {
+    preventivato,
+    fatturato,
+    daFatturare,
+    incassato,
+    daIncassare,
+    costiFornitori,
+    costiManodopera,
+    costiMezzi,
+    costiTotali,
+    margineStimato,
+    margineMaturato,
+    margineIncassato,
+  } = aggregates
+
+  const stimatoPct = preventivato > 0 ? Math.round((margineStimato / preventivato) * 100) : null
+  const maturatoPct = fatturato > 0 ? Math.round((margineMaturato / fatturato) * 100) : null
+  const incassatoPct = incassato > 0 ? Math.round((margineIncassato / incassato) * 100) : null
 
   // Adempimenti counter
   const adem = c.adempimenti
@@ -170,7 +206,7 @@ export default async function CommessaDettPage({
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
+    <div className="max-w-3xl mx-auto space-y-5">
       {/* Intestazione fissa — sempre visibile sopra i tab */}
       <PageHeader
         backHref="/impresa/commesse"
@@ -234,25 +270,64 @@ export default async function CommessaDettPage({
       )}
 
       {/* KPI finanziari — sempre visibili, riservati all'impresa */}
-      {c.preventivato > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Preventivato</p>
-            <p className="text-lg font-bold text-gray-900 mt-1">{formatEuro(c.preventivato)}</p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Costi</p>
-            <p className={`text-lg font-bold mt-1 ${costiTotali > c.preventivato ? 'text-red-600' : 'text-gray-900'}`}>
-              {formatEuro(costiTotali)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Margine</p>
-            <p className={`text-lg font-bold mt-1 ${margineEuro >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-              {marginePct !== null
-                ? `${margineEuro >= 0 ? '+' : ''}${marginePct}%`
-                : formatEuro(margineEuro)}
-            </p>
+      {preventivato > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Riepilogo Economico</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Preventivato</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{formatEuro(preventivato)}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Fatturato</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{formatEuro(fatturato)}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Da Fatturare</p>
+              <p className={`text-lg font-bold mt-1 ${daFatturare > 0 ? 'text-amber-600' : 'text-gray-900'}`}>{formatEuro(daFatturare)}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Incassato</p>
+              <p className="text-lg font-bold text-emerald-600 mt-1">{formatEuro(incassato)}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Da Incassare</p>
+              <p className={`text-lg font-bold mt-1 ${daIncassare > 0 ? 'text-amber-600' : 'text-gray-900'}`}>{formatEuro(daIncassare)}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Costi Totali</p>
+              <p className={`text-lg font-bold mt-1 ${costiTotali > preventivato ? 'text-red-600' : 'text-gray-900'}`}>{formatEuro(costiTotali)}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Margine Stimato</p>
+              <p className={`text-lg font-bold mt-1 ${margineStimato >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                {formatEuro(margineStimato)} {stimatoPct !== null ? `(${stimatoPct}%)` : ''}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Margine Maturato</p>
+              <p className={`text-lg font-bold mt-1 ${margineMaturato >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                {formatEuro(margineMaturato)} {maturatoPct !== null ? `(${maturatoPct}%)` : ''}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Margine Incassato</p>
+              <p className={`text-lg font-bold mt-1 ${margineIncassato >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                {formatEuro(margineIncassato)} {incassatoPct !== null ? `(${incassatoPct}%)` : ''}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Costo Materiali</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{formatEuro(costiFornitori > 0 ? costiFornitori : c.costiMateriali)}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Costo Manodopera</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{formatEuro(costiManodopera)}</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 text-center">
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Costo Mezzi</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{formatEuro(costiMezzi)}</p>
+            </div>
           </div>
         </div>
       )}

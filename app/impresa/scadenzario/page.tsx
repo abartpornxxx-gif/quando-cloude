@@ -2,6 +2,7 @@ import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
+import { getInvoiceAmounts } from '@/lib/finance'
 
 export default async function ScadenzarioPage() {
   await requireImpresa()
@@ -14,27 +15,19 @@ export default async function ScadenzarioPage() {
     return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
   }
 
-  const [attive, passive] = await Promise.all([
+  const [attiveDb, passiveDb] = await Promise.all([
     prisma.fatturaAttiva.findMany({
-      where: {
-        stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] },
-        dataScadenza: { not: null },
-      },
       include: {
         cliente: { select: { nome: true } },
         righe: true,
       },
-      orderBy: { dataScadenza: 'asc' },
+      orderBy: { data: 'desc' },
     }),
     prisma.fatturaPassiva.findMany({
-      where: {
-        stato: 'da_pagare',
-        dataScadenza: { not: null },
-      },
       include: {
         fornitore: { select: { nome: true } },
       },
-      orderBy: { dataScadenza: 'asc' },
+      orderBy: { data: 'desc' },
     }),
   ])
 
@@ -43,16 +36,12 @@ export default async function ScadenzarioPage() {
     tipo: 'attiva' | 'passiva'
     descrizione: string
     scadenza: Date
+    hasScadenza: boolean
     importo: number
     scaduta: boolean
     oggi: boolean
     inScadenza: boolean
     href: string
-  }
-
-  function totaleAttiva(righe: { quantita: number; prezzoUnitario: number }[], iva: number) {
-    const imp = righe.reduce((acc, r) => acc + Math.round(r.quantita * r.prezzoUnitario), 0)
-    return imp + Math.round(imp * iva / 100)
   }
 
   function classificaData(d: Date): { scaduta: boolean; oggi: boolean; inScadenza: boolean } {
@@ -64,39 +53,61 @@ export default async function ScadenzarioPage() {
     }
   }
 
-  const voci: Voce[] = [
-    ...attive
-      .filter(f => f.dataScadenza)
-      .map(f => {
-        const cl = classificaData(f.dataScadenza!)
-        const totFattura = totaleAttiva(f.righe, f.aliquotaIva)
-        const residuo = totFattura - (f.importoIncassato ?? 0)
-        const isParziale = f.stato === 'parzialmente_incassata'
-        return {
-          id: f.id,
-          tipo: 'attiva' as const,
-          descrizione: `${isParziale ? 'Parz. incassata' : 'Da incassare'}: ${f.cliente?.nome ?? '?'} — n. ${f.numero}/${f.anno}`,
-          scadenza: f.dataScadenza!,
-          importo: residuo,
-          ...cl,
-          href: `/impresa/fatture/${f.id}`,
-        }
-      }),
-    ...passive
-      .filter(f => f.dataScadenza)
-      .map(f => {
-        const cl = classificaData(f.dataScadenza!)
-        return {
-          id: f.id,
-          tipo: 'passiva' as const,
-          descrizione: `Da pagare: ${f.fornitore?.nome ?? '?'}${f.numero ? ` — n. ${f.numero}` : ''}`,
-          scadenza: f.dataScadenza!,
-          importo: f.importo,
-          ...cl,
-          href: `/impresa/fatture-passive/${f.id}`,
-        }
-      }),
-  ].sort((a, b) => dataUtcMs(a.scadenza) - dataUtcMs(b.scadenza))
+  const voci: Voce[] = []
+
+  // Elabora attive
+  for (const f of attiveDb) {
+    const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+      type: 'attiva',
+      aliquotaIva: f.aliquotaIva,
+      importoIncassato: f.importoIncassato,
+      righe: f.righe,
+    })
+
+    if (residualAmount > 0) {
+      const targetDate = f.dataScadenza || f.data
+      const cl = classificaData(targetDate)
+      const isParziale = f.importoIncassato && f.importoIncassato > 0
+      voci.push({
+        id: f.id,
+        tipo: 'attiva',
+        descrizione: `${isParziale ? 'Parz. incassata' : 'Da incassare'}: ${f.cliente?.nome ?? '?'} — n. ${f.numero}/${f.anno}`,
+        scadenza: targetDate,
+        hasScadenza: !!f.dataScadenza,
+        importo: residualAmount,
+        ...cl,
+        href: `/impresa/fatture/${f.id}`,
+      })
+    }
+  }
+
+  // Elabora passive
+  for (const f of passiveDb) {
+    const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+      type: 'passiva',
+      importo: f.importo,
+      importoPagato: f.importoPagato,
+    })
+
+    if (residualAmount > 0) {
+      const targetDate = f.dataScadenza || f.data
+      const cl = classificaData(targetDate)
+      const isParziale = f.importoPagato && f.importoPagato > 0
+      voci.push({
+        id: f.id,
+        tipo: 'passiva',
+        descrizione: `${isParziale ? 'Parz. pagata' : 'Da pagare'}: ${f.fornitore?.nome ?? '?'}${f.numero ? ` — n. ${f.numero}` : ''}`,
+        scadenza: targetDate,
+        hasScadenza: !!f.dataScadenza,
+        importo: residualAmount,
+        ...cl,
+        href: `/impresa/fatture-passive/${f.id}`,
+      })
+    }
+  }
+
+  // Ordina per scadenza
+  voci.sort((a, b) => dataUtcMs(a.scadenza) - dataUtcMs(b.scadenza))
 
   const scadute    = voci.filter(v => v.scaduta)
   const oggiVoci   = voci.filter(v => v.oggi)
@@ -114,7 +125,7 @@ export default async function ScadenzarioPage() {
             <p className="text-sm font-medium truncate">{v.descrizione}</p>
           </div>
           <p className={`text-xs mt-0.5 ${v.scaduta ? 'text-red-500 font-medium' : v.oggi ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
-            Scadenza: {formatData(v.scadenza)}
+            {v.hasScadenza ? `Scadenza: ${formatData(v.scadenza)}` : `Senza scadenza (Fattura del ${formatData(v.scadenza)})`}
             {v.scaduta ? ' — SCADUTA' : v.oggi ? ' — OGGI' : ''}
           </p>
         </div>
@@ -137,8 +148,8 @@ export default async function ScadenzarioPage() {
     )
   }
 
-  const totDaIncassare = attive.reduce((acc, f) => acc + (totaleAttiva(f.righe, f.aliquotaIva) - (f.importoIncassato ?? 0)), 0)
-  const totDaPagare    = passive.reduce((acc, f) => acc + f.importo, 0)
+  const totDaIncassare = voci.filter(v => v.tipo === 'attiva').reduce((acc, v) => acc + v.importo, 0)
+  const totDaPagare    = voci.filter(v => v.tipo === 'passiva').reduce((acc, v) => acc + v.importo, 0)
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

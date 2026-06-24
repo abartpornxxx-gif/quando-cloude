@@ -7,9 +7,11 @@ import { euroToCents } from '@/lib/format'
 export default function RegistraPagamentoForm({
   fatturaId,
   importoFattura,
+  importoPagato = 0,
 }: {
   fatturaId: string
   importoFattura: number
+  importoPagato?: number
 }) {
   const [pending, startTransition] = useTransition()
   const [errore, setErrore] = useState('')
@@ -17,7 +19,8 @@ export default function RegistraPagamentoForm({
 
   const oggi = new Date().toISOString().slice(0, 10)
   const [dataPagamento, setDataPagamento] = useState(oggi)
-  const [importo, setImporto] = useState((importoFattura / 100).toFixed(2))
+  const residuo = importoFattura - importoPagato
+  const [importo, setImporto] = useState((residuo / 100).toFixed(2))
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
 import RegistraIncassoForm from '@/app/impresa/fatture/[id]/RegistraIncassoForm'
 import { eliminaFatturaAttivaUfficio, segnaScadutaUfficio } from '../actions'
+import { getInvoiceAmounts, deriveInvoiceStatus, calculateActiveInvoiceTotals } from '@/lib/finance'
 
 const BADGE: Record<string, string> = {
   da_incassare: 'bg-yellow-100 text-yellow-800',
@@ -29,20 +30,32 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
   })
   if (!fattura) notFound()
 
-  const imponibile = fattura.righe.reduce((acc, r) => acc + Math.round(r.quantita * r.prezzoUnitario), 0)
-  const iva = Math.round(imponibile * fattura.aliquotaIva / 100)
-  const totale = imponibile + iva
-  const giaIncassato = fattura.importoIncassato ?? 0
-  const residuo = totale - giaIncassato
-  const isParziale = fattura.stato === 'parzialmente_incassata'
-  const canRegisterIncasso = fattura.stato === 'da_incassare' || isParziale
+  const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+    type: 'attiva',
+    aliquotaIva: fattura.aliquotaIva,
+    importoIncassato: fattura.importoIncassato,
+    righe: fattura.righe,
+  })
+
+  const { imponibile, iva } = calculateActiveInvoiceTotals(fattura.righe, fattura.aliquotaIva)
+
+  const derivedStatus = deriveInvoiceStatus({
+    type: 'attiva',
+    totalAmount,
+    paidOrCollectedAmount,
+    dataScadenza: fattura.dataScadenza,
+  })
+
+  const isScaduta = derivedStatus === 'scaduta'
+  const isParziale = derivedStatus === 'parzialmente_incassata'
+  const canRegisterIncasso = derivedStatus === 'da_incassare' || isParziale || isScaduta
 
   return (
     <div className="p-4 max-w-3xl mx-auto space-y-5">
       <div className="flex items-center gap-3">
         <Link href="/ufficio/fatture" className="text-teal-600 hover:text-teal-800 text-sm">‹ Fatture</Link>
         <h1 className="text-xl font-bold flex-1">Fattura n. {fattura.numero}/{fattura.anno}</h1>
-        <span className={`text-xs rounded-full px-3 py-1 font-semibold ${BADGE[fattura.stato]}`}>{LABEL[fattura.stato]}</span>
+        <span className={`text-xs rounded-full px-3 py-1 font-semibold ${BADGE[derivedStatus]}`}>{LABEL[derivedStatus]}</span>
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5 space-y-3">
@@ -61,7 +74,7 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
             {fattura.dataScadenza && (
               <div>
                 <p className="text-gray-500 text-xs">Scadenza</p>
-                <p className={`font-medium ${new Date(fattura.dataScadenza) < new Date() && fattura.stato === 'da_incassare' ? 'text-red-600' : ''}`}>
+                <p className={`font-medium ${isScaduta ? 'text-red-600' : ''}`}>
                   {formatData(fattura.dataScadenza)}
                 </p>
               </div>
@@ -110,7 +123,7 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
             </tr>
             <tr>
               <td colSpan={3} className="px-4 py-2 text-right font-bold">Totale</td>
-              <td className="px-4 py-2 text-right font-bold text-lg">{formatEuro(totale)}</td>
+              <td className="px-4 py-2 text-right font-bold text-lg">{formatEuro(totalAmount)}</td>
             </tr>
           </tfoot>
         </table>
@@ -123,22 +136,22 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div>
               <p className="text-xs text-amber-600 uppercase tracking-wider font-semibold">Totale fattura</p>
-              <p className="font-bold text-gray-900">{formatEuro(totale)}</p>
+              <p className="font-bold text-gray-900">{formatEuro(totalAmount)}</p>
             </div>
             <div>
               <p className="text-xs text-amber-600 uppercase tracking-wider font-semibold">Già incassato</p>
-              <p className="font-bold text-green-700">{formatEuro(giaIncassato)}</p>
+              <p className="font-bold text-green-700">{formatEuro(paidOrCollectedAmount)}</p>
             </div>
             <div>
               <p className="text-xs text-amber-600 uppercase tracking-wider font-semibold">Residuo</p>
-              <p className="font-bold text-red-600">{formatEuro(residuo)}</p>
+              <p className="font-bold text-red-600">{formatEuro(residualAmount)}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Stato incasso — completo */}
-      {fattura.stato === 'incassata' && fattura.dataIncasso && (
+      {derivedStatus === 'incassata' && fattura.dataIncasso && (
         <div className="rounded-xl bg-green-50 border border-green-200 p-4">
           <p className="text-green-800 font-semibold">✓ Incassata il {formatData(fattura.dataIncasso)}</p>
           {fattura.importoIncassato && (
@@ -148,11 +161,11 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
       )}
 
       {canRegisterIncasso && (
-        <RegistraIncassoForm fatturaId={fattura.id} totaleFattura={totale} giaIncassato={giaIncassato} />
+        <RegistraIncassoForm fatturaId={fattura.id} totaleFattura={totalAmount} giaIncassato={paidOrCollectedAmount} />
       )}
 
       <div className="flex flex-wrap gap-3">
-        {fattura.stato === 'da_incassare' && fattura.dataScadenza && new Date(fattura.dataScadenza) < new Date() && (
+        {derivedStatus === 'da_incassare' && fattura.dataScadenza && new Date(fattura.dataScadenza) < new Date() && (
           <form action={segnaScadutaUfficio.bind(null, fattura.id)}>
             <button type="submit" className="rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 hover:bg-orange-100">
               Segna come scaduta

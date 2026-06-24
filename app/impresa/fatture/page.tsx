@@ -5,6 +5,7 @@ import { formatEuro, formatData } from '@/lib/format'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Badge } from '@/components/ui/Badge'
+import { getInvoiceAmounts, deriveInvoiceStatus } from '@/lib/finance'
 
 type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'purple'
 
@@ -60,19 +61,33 @@ export default async function FattureAttivePage({
     orderBy: [{ anno: 'desc' }, { numero: 'desc' }],
   })
 
-  function totaleImponibile(righe: { quantita: number; prezzoUnitario: number }[]) {
-    return righe.reduce((acc, r) => acc + Math.round(r.quantita * r.prezzoUnitario), 0)
-  }
+  const parsedFatture = fatture.map(f => {
+    const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+      type: 'attiva',
+      aliquotaIva: f.aliquotaIva,
+      importoIncassato: f.importoIncassato,
+      righe: f.righe,
+    })
+    const derivedStatus = deriveInvoiceStatus({
+      type: 'attiva',
+      totalAmount,
+      paidOrCollectedAmount,
+      dataScadenza: f.dataScadenza,
+    })
+    return {
+      ...f,
+      totalAmount,
+      paidOrCollectedAmount,
+      residualAmount,
+      derivedStatus,
+    }
+  })
 
-  const totaleDaIncassare = fatture
-    .filter(f => f.stato === 'da_incassare' || f.stato === 'parzialmente_incassata' || f.stato === 'scaduta')
-    .reduce((acc, f) => {
-      const imp = totaleImponibile(f.righe)
-      const iva = Math.round(imp * f.aliquotaIva / 100)
-      return acc + (imp + iva) - (f.importoIncassato ?? 0)
-    }, 0)
+  const totaleDaIncassare = parsedFatture
+    .filter(f => f.derivedStatus !== 'incassata')
+    .reduce((acc, f) => acc + f.residualAmount, 0)
 
-  const scadute = fatture.filter(f => f.stato === 'scaduta').length
+  const scadute = parsedFatture.filter(f => f.derivedStatus === 'scaduta').length
 
   return (
     <div>
@@ -124,7 +139,7 @@ export default async function FattureAttivePage({
         </div>
       )}
 
-      {fatture.length === 0 ? (
+      {parsedFatture.length === 0 ? (
         <EmptyState
           icon="/immagini/icona-finanza.png"
           title={filtroLabel ? 'Nessuna fattura per questo filtro' : 'Nessuna fattura'}
@@ -141,9 +156,7 @@ export default async function FattureAttivePage({
       ) : (
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="divide-y divide-gray-100">
-            {fatture.map(f => {
-              const imponibile = totaleImponibile(f.righe)
-              const iva = Math.round(imponibile * f.aliquotaIva / 100)
+            {parsedFatture.map(f => {
               return (
                 <Link
                   key={f.id}
@@ -164,8 +177,8 @@ export default async function FattureAttivePage({
                       <span className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate">
                         {f.cliente?.nome ?? '—'}
                       </span>
-                      <Badge variant={BADGE_VARIANT[f.stato] ?? 'neutral'}>
-                        {LABEL[f.stato] ?? f.stato}
+                      <Badge variant={BADGE_VARIANT[f.derivedStatus] ?? 'neutral'}>
+                        {LABEL[f.derivedStatus] ?? f.derivedStatus}
                       </Badge>
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">
@@ -177,9 +190,11 @@ export default async function FattureAttivePage({
                   {/* Totale */}
                   <div className="shrink-0 text-right">
                     <p className="text-sm font-semibold text-gray-900">
-                      {formatEuro(imponibile + iva)}
+                      {formatEuro(f.totalAmount)}
                     </p>
-                    <p className="text-xs text-gray-400">IVA {f.aliquotaIva}%</p>
+                    {f.derivedStatus === 'parzialmente_incassata' && (
+                      <p className="text-xs text-orange-600 font-medium">Residuo: {formatEuro(f.residualAmount)}</p>
+                    )}
                   </div>
                 </Link>
               )

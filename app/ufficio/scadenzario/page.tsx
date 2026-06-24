@@ -2,6 +2,7 @@ import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
+import { getInvoiceAmounts, deriveInvoiceStatus } from '@/lib/finance'
 
 export default async function UfficioScadenzarioPage() {
   await requireUfficio()
@@ -14,27 +15,20 @@ export default async function UfficioScadenzarioPage() {
     return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
   }
 
-  const [attive, passive] = await Promise.all([
+  // Recupera tutte le fatture
+  const [attiveDb, passiveDb] = await Promise.all([
     prisma.fatturaAttiva.findMany({
-      where: {
-        stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] },
-        dataScadenza: { not: null },
-      },
       include: {
         cliente: { select: { nome: true } },
         righe: true,
       },
-      orderBy: { dataScadenza: 'asc' },
+      orderBy: { data: 'desc' },
     }),
     prisma.fatturaPassiva.findMany({
-      where: {
-        stato: 'da_pagare',
-        dataScadenza: { not: null },
-      },
       include: {
         fornitore: { select: { nome: true } },
       },
-      orderBy: { dataScadenza: 'asc' },
+      orderBy: { data: 'desc' },
     }),
   ])
 
@@ -42,7 +36,8 @@ export default async function UfficioScadenzarioPage() {
     id: string
     tipo: 'attiva' | 'passiva'
     descrizione: string
-    scadenza: Date
+    scadenzaReal: Date | null
+    scadenzaOrData: Date
     importo: number
     scaduta: boolean
     oggi: boolean
@@ -50,13 +45,9 @@ export default async function UfficioScadenzarioPage() {
     href: string
   }
 
-  function totaleAttiva(righe: { quantita: number; prezzoUnitario: number }[], iva: number) {
-    const imp = righe.reduce((acc, r) => acc + Math.round(r.quantita * r.prezzoUnitario), 0)
-    return imp + Math.round(imp * iva / 100)
-  }
-
-  function classificaData(d: Date): { scaduta: boolean; oggi: boolean; inScadenza: boolean } {
-    const dUtc = dataUtcMs(d)
+  function classificaData(d: Date | null, dataFattura: Date): { scaduta: boolean; oggi: boolean; inScadenza: boolean } {
+    const targetDate = d || dataFattura
+    const dUtc = dataUtcMs(targetDate)
     return {
       scaduta:    dUtc < oggiUtc,
       oggi:       dUtc === oggiUtc,
@@ -64,39 +55,59 @@ export default async function UfficioScadenzarioPage() {
     }
   }
 
-  const voci: Voce[] = [
-    ...attive
-      .filter(f => f.dataScadenza)
-      .map(f => {
-        const cl = classificaData(f.dataScadenza!)
-        const totFattura = totaleAttiva(f.righe, f.aliquotaIva)
-        const residuo = totFattura - (f.importoIncassato ?? 0)
-        const isParziale = f.stato === 'parzialmente_incassata'
-        return {
-          id: f.id,
-          tipo: 'attiva' as const,
-          descrizione: `${isParziale ? 'Parz. incassata' : 'Da incassare'}: ${f.cliente?.nome ?? '?'} — n. ${f.numero}/${f.anno}`,
-          scadenza: f.dataScadenza!,
-          importo: residuo,
-          ...cl,
-          href: `/ufficio/fatture/${f.id}`,
-        }
-      }),
-    ...passive
-      .filter(f => f.dataScadenza)
-      .map(f => {
-        const cl = classificaData(f.dataScadenza!)
-        return {
-          id: f.id,
-          tipo: 'passiva' as const,
-          descrizione: `Da pagare: ${f.fornitore?.nome ?? '?'}${f.numero ? ` — n. ${f.numero}` : ''}`,
-          scadenza: f.dataScadenza!,
-          importo: f.importo,
-          ...cl,
-          href: `/ufficio/fatture-passive/${f.id}`,
-        }
-      }),
-  ].sort((a, b) => dataUtcMs(a.scadenza) - dataUtcMs(b.scadenza))
+  const voci: Voce[] = []
+
+  // Elabora attive
+  for (const f of attiveDb) {
+    const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+      type: 'attiva',
+      aliquotaIva: f.aliquotaIva,
+      importoIncassato: f.importoIncassato,
+      righe: f.righe,
+    })
+
+    if (residualAmount > 0) {
+      const cl = classificaData(f.dataScadenza, f.data)
+      const isParziale = f.importoIncassato && f.importoIncassato > 0
+      voci.push({
+        id: f.id,
+        tipo: 'attiva',
+        descrizione: `${isParziale ? 'Incasso parziale in corso' : 'Da incassare'}: ${f.cliente?.nome ?? '?'} — n. ${f.numero}/${f.anno}`,
+        scadenzaReal: f.dataScadenza,
+        scadenzaOrData: f.dataScadenza || f.data,
+        importo: residualAmount,
+        ...cl,
+        href: `/ufficio/fatture/${f.id}`,
+      })
+    }
+  }
+
+  // Elabora passive
+  for (const f of passiveDb) {
+    const { totalAmount, paidOrCollectedAmount, residualAmount } = getInvoiceAmounts({
+      type: 'passiva',
+      importo: f.importo,
+      importoPagato: f.importoPagato,
+    })
+
+    if (residualAmount > 0) {
+      const cl = classificaData(f.dataScadenza, f.data)
+      const isParziale = f.importoPagato && f.importoPagato > 0
+      voci.push({
+        id: f.id,
+        tipo: 'passiva',
+        descrizione: `${isParziale ? 'Pagamento parziale in corso' : 'Da pagare'}: ${f.fornitore?.nome ?? '?'}${f.numero ? ` — n. ${f.numero}` : ''}`,
+        scadenzaReal: f.dataScadenza,
+        scadenzaOrData: f.dataScadenza || f.data,
+        importo: residualAmount,
+        ...cl,
+        href: `/ufficio/fatture-passive/${f.id}`,
+      })
+    }
+  }
+
+  // Ordina per scadenza o data fattura
+  voci.sort((a, b) => dataUtcMs(a.scadenzaOrData) - dataUtcMs(b.scadenzaOrData))
 
   const scadute    = voci.filter(v => v.scaduta)
   const oggiVoci   = voci.filter(v => v.oggi)
@@ -116,7 +127,7 @@ export default async function UfficioScadenzarioPage() {
             <p className="text-sm font-semibold truncate text-gray-900 group-hover:text-teal-700">{v.descrizione}</p>
           </div>
           <p className={`text-xs mt-0.5 ${v.scaduta ? 'text-red-500 font-medium' : v.oggi ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
-            Scadenza: {formatData(v.scadenza)}
+            {v.scadenzaReal ? `Scadenza: ${formatData(v.scadenzaReal)}` : `Scadenza non specificata (Fattura del ${formatData(v.scadenzaOrData)})`}
             {v.scaduta ? ' — SCADUTA' : v.oggi ? ' — OGGI' : ''}
           </p>
         </div>
@@ -139,14 +150,14 @@ export default async function UfficioScadenzarioPage() {
     )
   }
 
-  const totDaIncassare = attive.reduce((acc, f) => acc + (totaleAttiva(f.righe, f.aliquotaIva) - (f.importoIncassato ?? 0)), 0)
-  const totDaPagare    = passive.reduce((acc, f) => acc + f.importo, 0)
+  const totDaIncassare = voci.filter(v => v.tipo === 'attiva').reduce((acc, v) => acc + v.importo, 0)
+  const totDaPagare    = voci.filter(v => v.tipo === 'passiva').reduce((acc, v) => acc + v.importo, 0)
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Intestazione */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Scadenzario Scadenze</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Scadenzario</h1>
         <p className="mt-1 text-sm text-gray-500">Monitoraggio dei crediti attivi e debiti verso i fornitori dell'ufficio</p>
       </div>
 
