@@ -4,6 +4,7 @@ import { ImpresaNav } from '@/components/ImpresaNav'
 import { NotificheBell } from '@/components/NotificheBell'
 import { LogoutButton } from '@/components/LogoutButton'
 import { listaNotificheImpresa } from '@/lib/notifiche'
+import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -54,6 +55,7 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
         <ImpresaNav />
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+      <AssistenteContestuale role="impresa" />
     </div>
   )
 }
