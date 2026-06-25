@@ -3,7 +3,7 @@
  * Interazione diretta via REST per massimizzare la stabilità ed evitare dipendenze pesanti.
  */
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
 
 function getApiKey() {
   const key = process.env.GEMINI_API_KEY
