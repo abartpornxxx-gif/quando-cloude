@@ -1,4 +1,4 @@
-import { requireImpresa } from '@/lib/auth'
+﻿import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -52,7 +52,7 @@ export default async function FatturaAttivaPage({ params }: Props) {
     <div className="p-4 max-w-3xl mx-auto space-y-5">
       <div className="flex items-center gap-3">
         <Link href="/impresa/fatture" className="text-blue-600 hover:text-blue-800 text-sm">‹ Fatture</Link>
-        <h1 className="text-xl font-bold flex-1">
+        <h1 className="text-2xl font-bold text-gray-900 flex-1">
           Fattura n. {fattura.numero}/{fattura.anno}
         </h1>
         <span className={`text-xs rounded-full px-3 py-1 font-semibold ${BADGE[fattura.stato]}`}>

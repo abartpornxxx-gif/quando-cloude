@@ -1,4 +1,4 @@
-import { requireImpresa } from '@/lib/auth'
+﻿import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
@@ -39,7 +39,7 @@ export default async function RichiestaDettaglioPage({ params }: Props) {
       <div className="flex items-center gap-3">
         <Link href="/impresa/richieste-offerte" className="text-sm text-gray-500 hover:text-gray-700">← Richieste</Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold flex-1 truncate">{r.offerta.titolo}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex-1 truncate">{r.offerta.titolo}</h1>
         <span className={`text-xs rounded-full px-2 py-1 font-medium ${s.cls}`}>{s.label}</span>
       </div>
 

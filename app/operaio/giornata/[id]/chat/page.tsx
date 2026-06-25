@@ -1,6 +1,7 @@
 import { requireOperaio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
 import ChatGiornata from './ChatGiornata'
 
 interface Props {
@@ -26,7 +27,7 @@ export default async function ChatPage({ params }: Props) {
   return (
     <div className="h-screen flex flex-col">
       <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
-        <a href={`/operaio/giornata/${id}/lavori`} className="text-blue-600">‹</a>
+        <Link href={`/operaio/giornata/${id}/lavori`} className="text-emerald-600 font-bold text-lg hover:text-emerald-700">‹</Link>
         <h1 className="text-base font-bold">Chat — {giornata.commessa.nome}</h1>
       </div>
       <ChatGiornata giornataId={id} messaggi={messaggi} />

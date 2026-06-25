@@ -1,4 +1,4 @@
-import { requireImpresa } from '@/lib/auth'
+﻿import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -23,7 +23,7 @@ export default async function DiCoDetailPage({ params }: Props) {
     <div className="p-4 max-w-3xl mx-auto space-y-5">
       <div className="flex items-center gap-3">
         <Link href="/impresa/dico" className="text-blue-600 hover:text-blue-800 text-sm">‹ DiCo</Link>
-        <h1 className="text-xl font-bold flex-1">Dichiarazione di Conformità</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex-1">Dichiarazione di Conformità</h1>
         <Link
           href={`/impresa/dico/${dico.id}/stampa`}
           target="_blank"

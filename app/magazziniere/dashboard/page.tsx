@@ -1,6 +1,7 @@
 import { requireMagazziniere } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
+import Link from 'next/link'
 import { OnboardingGuida } from '@/components/onboarding/OnboardingGuida'
 import { StatCard } from '@/components/ui/StatCard'
 import { Badge } from '@/components/ui/Badge'
@@ -78,9 +79,9 @@ export default async function MagazziniereDashboard() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Richieste in attesa</h2>
-          <a href="/magazziniere/richieste" className="text-xs text-amber-700 font-bold hover:text-amber-800 transition-colors">
+          <Link href="/magazziniere/richieste" className="text-xs text-amber-700 font-bold hover:text-amber-800 transition-colors">
             Vedi tutte →
-          </a>
+          </Link>
         </div>
 
         {recenti.length === 0 ? (

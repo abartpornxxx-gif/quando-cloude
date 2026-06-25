@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { requireImpresa } from '@/lib/auth'
 import Link from 'next/link'
 import NuovoOrdineForm from './NuovoOrdineForm'
@@ -26,7 +26,7 @@ export default async function NuovoOrdinePage() {
           ← Ordini
         </Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">Nuovo ordine</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Nuovo ordine</h1>
       </div>
 
       <NuovoOrdineForm fornitori={fornitori} commesse={commesse} materiali={materiali} />

@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { requireImpresa } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -88,7 +88,7 @@ export default async function CommessaMaterialiPage({
           ← {commessa.nome}
         </Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">Materiali</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Materiali</h1>
       </div>
 
       {/* Riepilogo finanziario */}

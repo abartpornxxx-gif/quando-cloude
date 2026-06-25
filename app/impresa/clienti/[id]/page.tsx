@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { requireImpresa } from '@/lib/auth'
@@ -38,7 +38,7 @@ export default async function ModificaClientePage({ params }: { params: Promise<
           ← Clienti
         </Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">{cliente.nome}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{cliente.nome}</h1>
       </div>
 
       {/* Link rapidi */}

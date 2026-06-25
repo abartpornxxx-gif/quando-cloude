@@ -1,4 +1,4 @@
-import { requireImpresa } from '@/lib/auth'
+﻿import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { approvaAssenza, rifiutaAssenza, eliminaAssenza } from './actions'
 import { formatData } from '@/lib/format'
@@ -35,7 +35,7 @@ export default async function AssenzePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold text-gray-900">Assenze operai</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Assenze operai</h1>
 
       {inAttesa.length > 0 && (
         <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">

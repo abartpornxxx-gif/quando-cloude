@@ -1,4 +1,4 @@
-import { salvaFornitore } from '../actions'
+﻿import { salvaFornitore } from '../actions'
 import Link from 'next/link'
 
 export default function NuovoFornitorePage() {
@@ -7,7 +7,7 @@ export default function NuovoFornitorePage() {
       <div className="mb-6 flex items-center gap-3">
         <Link href="/impresa/fornitori" className="text-sm text-gray-500 hover:text-gray-700">← Fornitori</Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">Nuovo fornitore</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Nuovo fornitore</h1>
       </div>
       <form action={salvaFornitore} className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <Field label="Nome / Ragione sociale *" name="nome" required />

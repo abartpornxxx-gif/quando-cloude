@@ -1,4 +1,4 @@
-import { salvaAttrezzatura } from '../actions'
+﻿import { salvaAttrezzatura } from '../actions'
 import Link from 'next/link'
 
 export default function NuovaAttrezzaturaPage() {
@@ -7,7 +7,7 @@ export default function NuovaAttrezzaturaPage() {
       <div className="mb-6 flex items-center gap-3">
         <Link href="/impresa/attrezzature" className="text-sm text-gray-500 hover:text-gray-700">← Attrezzature</Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">Nuova attrezzatura</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Nuova attrezzatura</h1>
       </div>
       <AttrezzaturaForm action={salvaAttrezzatura} />
     </div>

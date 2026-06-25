@@ -1,4 +1,4 @@
-import { requireImpresa } from '@/lib/auth'
+﻿import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -30,7 +30,7 @@ export default async function FatturaPassivaPage({ params }: Props) {
     <div className="p-4 max-w-3xl mx-auto space-y-5">
       <div className="flex items-center gap-3">
         <Link href="/impresa/fatture-passive" className="text-blue-600 hover:text-blue-800 text-sm">‹ Fatture passive</Link>
-        <h1 className="text-xl font-bold flex-1">
+        <h1 className="text-2xl font-bold text-gray-900 flex-1">
           Fattura {fattura.fornitore?.nome ?? 'Fornitore'}
           {fattura.numero ? ` — n. ${fattura.numero}` : ''}
         </h1>

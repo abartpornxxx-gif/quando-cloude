@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -67,7 +67,7 @@ export default function NuovoMagazzinierePage() {
           ← Magazzinieri
         </Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">Nuovo magazziniere</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Nuovo magazziniere</h1>
       </div>
       
       <form onSubmit={handleSubmit} className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 space-y-4">

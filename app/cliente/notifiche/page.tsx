@@ -29,7 +29,7 @@ export default async function NotificheClientePage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">I miei avvisi</h1>
+          <h1 className="text-2xl font-bold text-gray-900">I miei avvisi</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {nonLette.length > 0 ? `${nonLette.length} non letti` : 'Tutto letto'}
           </p>
@@ -52,7 +52,7 @@ export default async function NotificheClientePage() {
       )}
 
       {nonLette.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-200 divide-y shadow-premium overflow-hidden">
           {nonLette.map(item => (
             <Link key={`${item.tipo}-${item.id}`} href={item.href}
               className={`flex items-center gap-3 p-4 hover:bg-violet-50 ${item.urgente ? 'bg-red-50' : ''}`}>
@@ -82,7 +82,7 @@ export default async function NotificheClientePage() {
             <svg className="h-3 w-3 transition-transform group-open:rotate-90" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 2l4 4-4 4"/></svg>
             Già letti ({lette.length})
           </summary>
-          <div className="bg-white rounded-xl border border-gray-100 divide-y opacity-60 mt-2">
+          <div className="bg-white rounded-2xl border border-gray-100 divide-y opacity-60 overflow-hidden mt-2">
             {lette.map(item => (
               <Link key={`${item.tipo}-${item.id}`} href={item.href}
                 className="flex items-center gap-3 p-4 hover:bg-gray-50">

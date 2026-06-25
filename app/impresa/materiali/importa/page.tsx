@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -52,7 +52,7 @@ export default function ImportaCSVPage() {
       <div className="mb-6 flex items-center gap-3">
         <Link href="/impresa/materiali" className="text-sm text-gray-500 hover:text-gray-700">← Materiali</Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">Import da CSV</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Import da CSV</h1>
       </div>
 
       <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">

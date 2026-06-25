@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { salvaMagazziniere } from '../actions'
@@ -20,7 +20,7 @@ export default async function ModificaMagazzinierePage({ params }: { params: Pro
           ← Magazzinieri
         </Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">{m.nome}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{m.nome}</h1>
       </div>
 
       <GestioneAccesso

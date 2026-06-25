@@ -1,4 +1,4 @@
-import { salvaMateriale } from '../actions'
+﻿import { salvaMateriale } from '../actions'
 import Link from 'next/link'
 
 export default function NuovoMaterialePage() {
@@ -7,7 +7,7 @@ export default function NuovoMaterialePage() {
       <div className="mb-6 flex items-center gap-3">
         <Link href="/impresa/materiali" className="text-sm text-gray-500 hover:text-gray-700">← Materiali</Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">Nuovo articolo</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Nuovo articolo</h1>
       </div>
       <MaterialeForm action={salvaMateriale} />
     </div>

@@ -1,4 +1,4 @@
-import { requireCliente } from '@/lib/auth'
+﻿import { requireCliente } from '@/lib/auth'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
@@ -56,7 +56,7 @@ export default async function ClienteCommessaPage({ params }: Props) {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <Link href="/cliente/lavori" className="text-violet-600 hover:text-violet-800 text-sm">‹ Lavori</Link>
-        <h1 className="text-xl font-bold flex-1 truncate">{c.nome}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex-1 truncate">{c.nome}</h1>
         <span className={`shrink-0 text-xs rounded-full px-2 py-1 font-medium ${c.stato === 'chiusa' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
           {c.stato === 'chiusa' ? '✓ Completato' : 'In corso'}
         </span>

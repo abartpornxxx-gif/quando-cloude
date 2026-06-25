@@ -2,6 +2,7 @@ import { requireMagazziniere } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import { formatData } from '@/lib/format'
+import Link from 'next/link'
 import ChatMagazziniere from './ChatMagazziniere'
 
 interface Props {
@@ -29,7 +30,7 @@ export default async function ChatMagazzinierePage({ params }: Props) {
   return (
     <div className="flex flex-col h-screen">
       <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
-        <a href="/magazziniere/richieste" className="text-yellow-700 font-bold text-lg">‹</a>
+        <Link href="/magazziniere/richieste" className="text-amber-700 font-bold text-lg hover:text-amber-900">‹</Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-base font-bold truncate">
             Chat — {giornata.operaio.nome}

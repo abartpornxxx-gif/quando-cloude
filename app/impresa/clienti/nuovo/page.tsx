@@ -1,4 +1,4 @@
-import { salvaCliente } from '../actions'
+﻿import { salvaCliente } from '../actions'
 import Link from 'next/link'
 
 export default function NuovoClientePage() {
@@ -9,7 +9,7 @@ export default function NuovoClientePage() {
           ← Clienti
         </Link>
         <span className="text-gray-300">/</span>
-        <h1 className="text-xl font-bold text-gray-900">Nuovo cliente</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Nuovo cliente</h1>
       </div>
       <ClienteForm action={salvaCliente} />
     </div>

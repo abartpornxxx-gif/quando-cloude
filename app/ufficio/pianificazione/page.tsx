@@ -1,4 +1,4 @@
-import { requireUfficio } from '@/lib/auth'
+﻿import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PianificazioneBoard } from '@/app/impresa/pianificazione/PianificazioneBoard'
 
@@ -65,7 +65,7 @@ export default async function UfficioPianificazionePage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Pianificazione settimanale</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Pianificazione settimanale</h1>
         <p className="mt-0.5 text-sm text-gray-500">Trascina un operaio dal pannello sinistro sul cantiere desiderato</p>
       </div>
       <PianificazioneBoard

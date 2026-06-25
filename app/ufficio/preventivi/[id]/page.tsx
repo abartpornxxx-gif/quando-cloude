@@ -1,4 +1,4 @@
-import { requireUfficio } from '@/lib/auth'
+﻿import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -42,7 +42,7 @@ export default async function PreventivoUfficioDettaglioPage({ params }: { param
         <div className="flex items-center gap-3">
           <Link href="/ufficio/preventivi" className="text-sm text-gray-500 hover:text-gray-700">← Preventivi</Link>
           <span className="text-gray-300">/</span>
-          <h1 className="text-xl font-bold text-gray-900">{p.cliente?.nome ?? 'Senza cliente'} — {formatData(p.data)}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{p.cliente?.nome ?? 'Senza cliente'} — {formatData(p.data)}</h1>
         </div>
       </div>
 

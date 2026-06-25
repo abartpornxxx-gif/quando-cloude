@@ -1,4 +1,4 @@
-import { requireOperaio } from '@/lib/auth'
+﻿import { requireOperaio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CalendarioMensile } from '@/components/CalendarioMensile'
 import type { CalEvent } from '@/components/CalendarioMensile'
@@ -67,7 +67,7 @@ export default async function OperaioCalendarioPage({
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold text-gray-900">Il mio calendario</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Il mio calendario</h1>
       <CalendarioMensile
         anno={anno}
         mese={mese}

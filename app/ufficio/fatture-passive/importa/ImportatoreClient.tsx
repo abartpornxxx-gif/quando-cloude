@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -454,7 +454,7 @@ export default function ImportatoreClient({ fornitori, commesse }: Props) {
               <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-5 space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900">Anteprima ed editing dati</h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Anteprima ed editing dati</h1>
                     <p className="text-xs text-gray-500 mt-0.5">
                       Verifica l&#39;associazione automatica con fornitori e cantieri, modifica gli importi se necessario ed escludi le righe che non vuoi salvare.
                     </p>

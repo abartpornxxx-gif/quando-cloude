@@ -1,4 +1,4 @@
-import { requireCliente } from '@/lib/auth'
+﻿import { requireCliente } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -60,7 +60,7 @@ export default async function ClienteFatturaPage({ params }: Props) {
           {/* Header */}
           <div className="flex justify-between gap-4">
             <div>
-              <h1 className="text-xl font-bold">FATTURA</h1>
+              <h1 className="text-2xl font-bold text-gray-900">FATTURA</h1>
               <p className="text-sm text-gray-600">n. {fattura.numero}/{fattura.anno}</p>
             </div>
             <div className="text-right text-sm">
