@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/Badge'
 import { OnboardingGuida } from '@/components/onboarding/OnboardingGuida'
 import { MeteoBox } from '@/components/operaio/MeteoBox'
 import { PuntiUtili } from '@/components/operaio/PuntiUtili'
+import { Clock, MapPin } from 'lucide-react'
+
 
 export default async function OperaioDashboardPage() {
   const { operaio } = await requireOperaio()
@@ -14,7 +16,7 @@ export default async function OperaioDashboardPage() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const [assegnazioni, giornataAttiva, giornataRapportinoPendente, pianificazioneOggi] = await Promise.all([
+  const [assegnazioni, giornataAttiva, giornataRapportinoPendente, pianificazioneOggi, promemoriaOggi] = await Promise.all([
     prisma.commessaOperaio.findMany({
       where: { operaioId: operaio.id },
       include: {
@@ -59,6 +61,19 @@ export default async function OperaioDashboardPage() {
           },
         },
         mezzo: { select: { nome: true, targa: true } },
+      },
+    }),
+    prisma.promemoria.findMany({
+      where: {
+        assegnatoAOperaioId: operaio.id,
+        dataOra: {
+          gte: today,
+          lte: new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1),
+        },
+        stato: 'attivo',
+      },
+      orderBy: {
+        dataOra: 'asc',
       },
     }),
   ])
@@ -135,6 +150,53 @@ export default async function OperaioDashboardPage() {
         </h1>
         <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mt-1 capitalize">{dataOggiLabel}</p>
       </div>
+
+      {/* ── Promemoria / Appuntamenti di Oggi ── */}
+      {promemoriaOggi.length > 0 && (
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-premium space-y-3.5">
+          <p className="text-[10px] font-bold text-teal-600 uppercase tracking-widest flex items-center gap-1.5">
+            <span className="text-sm">📅</span> I tuoi Appuntamenti di Oggi
+          </p>
+          <div className="space-y-3">
+            {promemoriaOggi.map((p) => {
+              const ora = new Date(p.dataOra).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+              const cleanTitolo = p.titolo.replace(/^TEST_AI_FULL_QUADRO:\s*/, '')
+              return (
+                <div key={p.id} className="border border-slate-100 bg-slate-50/50 rounded-xl p-3.5 flex flex-col justify-between gap-2.5 transition-all">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 uppercase tracking-wide">
+                        <Clock size={10} />
+                        {ora}
+                      </span>
+                      <h3 className="text-xs font-bold text-slate-800 leading-snug">{cleanTitolo}</h3>
+                      {p.descrizione && (
+                        <p className="text-[11px] text-gray-500 leading-normal">{p.descrizione}</p>
+                      )}
+                    </div>
+                  </div>
+                  {p.luogo && (
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100/60 text-[11px]">
+                      <span className="text-gray-500 flex items-center gap-1 truncate max-w-[70%]">
+                        <MapPin size={11} className="shrink-0 text-teal-500" />
+                        {p.luogo}
+                      </span>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.luogo)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 rounded-lg bg-teal-600 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-teal-700 active-press transition-all duration-300"
+                      >
+                        Apri Maps
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── 2. Card "Cantiere di oggi" ── */}
       {pianificazioneOggi ? (

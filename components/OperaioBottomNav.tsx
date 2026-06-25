@@ -16,10 +16,10 @@ type NavItem = {
 }
 
 const NAV: NavItem[] = [
-  { href: '/operaio/dashboard', Icon: HardHat, label: 'Cantieri' },
+  { href: '/operaio/dashboard', Icon: HardHat, label: 'Lavori' },
   { href: '/operaio/giornata/nuova', Icon: null, label: 'Giornata', isNew: true },
   { href: '/operaio/domani', Icon: Calendar, label: 'Domani' },
-  { href: '/operaio/calendario', Icon: CalendarDays, label: 'Storico' },
+  { href: '/operaio/calendario', Icon: CalendarDays, label: 'Calendario' },
   { href: '/operaio/notifiche', Icon: Bell, label: 'Avvisi', isAlert: true },
   { href: '/operaio/profilo', Icon: UserCircle, label: 'Profilo' },
 ]

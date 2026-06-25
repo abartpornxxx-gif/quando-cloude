@@ -30,3 +30,25 @@ export async function richiediAssenza(formData: FormData): Promise<void> {
   revalidatePath('/impresa/assenze')
   redirect('/operaio/profilo')
 }
+
+export async function salvaPersonalizzazioneOperaio(data: {
+  avatarMascotte: string | null
+  descrizione: string | null
+  fraseDivertente: string | null
+  hobbies: string | null
+}): Promise<{ success: boolean }> {
+  const { operaio } = await requireOperaio()
+  
+  await prisma.operaio.update({
+    where: { id: operaio.id },
+    data: {
+      avatarMascotte: data.avatarMascotte,
+      descrizione: data.descrizione,
+      fraseDivertente: data.fraseDivertente,
+      hobbies: data.hobbies,
+    },
+  })
+  
+  revalidatePath('/operaio/profilo')
+  return { success: true }
+}

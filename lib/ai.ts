@@ -3,10 +3,13 @@
  * Interazione diretta via REST per massimizzare la stabilità ed evitare dipendenze pesanti.
  */
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+function getApiUrl() {
+  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+}
 
 function getApiKey() {
-  const key = process.env.GEMINI_API_KEY
+  const key = process.env.GEMINI_API_KEY || process.env.AI_API_KEY
   if (!key) {
     throw new Error('GEMINI_API_KEY non configurata nel file .env.local')
   }
@@ -61,7 +64,7 @@ Compila i seguenti campi basandoti esclusivamente sul testo fornito (usa null se
 
 Restituisci ESCLUSIVAMENTE un oggetto JSON valido con questi campi.`
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+  const response = await fetch(`${getApiUrl()}?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -137,7 +140,7 @@ Estrai questi campi:
 
 Restituisci ESCLUSIVAMENTE un oggetto JSON valido.`
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+  const response = await fetch(`${getApiUrl()}?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

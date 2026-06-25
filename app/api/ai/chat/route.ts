@@ -52,7 +52,16 @@ export async function POST(req: Request) {
           notConfigured: true 
         }, { status: 200 })
       }
-      throw apiErr
+      if (apiErr.message === 'GEMINI_MODEL_NOT_FOUND' || apiErr.message.includes('GEMINI_API_ERROR')) {
+        return NextResponse.json({
+          error: 'Assistente AI momentaneamente non disponibile. Verifica la configurazione del modello AI o riprova più tardi.',
+          notAvailable: true
+        }, { status: 200 })
+      }
+      return NextResponse.json({
+        error: 'Assistente AI momentaneamente non disponibile. Verifica la configurazione del modello AI o riprova più tardi.',
+        notAvailable: true
+      }, { status: 200 })
     }
 
   } catch (err: any) {

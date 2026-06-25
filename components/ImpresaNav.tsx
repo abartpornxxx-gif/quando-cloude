@@ -106,9 +106,10 @@ const MACRO: MacroEntry[] = [
     iconBg: 'bg-slate-100',
     iconCls: 'text-slate-500',
     dot: 'bg-slate-400',
-    prefixes: ['/impresa/configurazione', '/impresa/checklist'],
+    prefixes: ['/impresa/configurazione', '/impresa/checklist', '/impresa/personalizzazione'],
     items: [
       { label: 'Configurazione', href: '/impresa/configurazione', desc: 'Orari e opzioni' },
+      { label: 'Personalizzazione', href: '/impresa/personalizzazione', desc: 'Mascotte e stile' },
       { label: 'Promemoria', href: '/impresa/checklist', desc: 'Suggerimenti operai' },
     ],
   },

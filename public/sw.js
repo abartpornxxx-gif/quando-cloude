@@ -59,6 +59,7 @@ self.addEventListener('push', event => {
       icon: '/manifest-icon-192.png',
       badge: '/manifest-icon-72.png',
       data: { url: data.url },
+      vibrate: [200, 100, 200],
       requireInteraction: true,  // notifica non sparisce finché l'utente non clicca
     })
   )

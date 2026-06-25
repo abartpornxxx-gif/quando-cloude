@@ -13,6 +13,10 @@ import {
   AlertTriangle,
   MessageSquare,
   Bell,
+  Clock,
+  MapPin,
+  Calendar,
+  User,
 } from 'lucide-react'
 
 // ─── Grafici SVG (Server Component, nessuna libreria) ─────────────────────────
@@ -89,6 +93,11 @@ export default async function ImpresaDashboardPage() {
   const tra30 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   const settimanaFa = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
+  const inizioOggi = new Date()
+  inizioOggi.setHours(0, 0, 0, 0)
+  const fineOggi = new Date()
+  fineOggi.setHours(23, 59, 59, 999)
+
   const [
     commesseTotali,
     commesseAperte,
@@ -103,6 +112,7 @@ export default async function ImpresaDashboardPage() {
     commesseConMargine,
     commesseRecenti,
     commesseAdempimenti,
+    promemoriaOggi,
   ] = await Promise.all([
     prisma.commessa.count(),
     prisma.commessa.count({ where: { stato: 'aperta' } }),
@@ -137,6 +147,25 @@ export default async function ImpresaDashboardPage() {
       },
       orderBy: { updatedAt: 'desc' },
       take: 5,
+    }),
+    prisma.promemoria.findMany({
+      where: {
+        dataOra: {
+          gte: inizioOggi,
+          lte: fineOggi,
+        },
+        stato: 'attivo',
+      },
+      include: {
+        operaio: {
+          select: {
+            nome: true,
+          },
+        },
+      },
+      orderBy: {
+        dataOra: 'asc',
+      },
     }),
   ])
 
@@ -242,6 +271,75 @@ export default async function ImpresaDashboardPage() {
             icon={Boxes}
           />
         </div>
+      </div>
+
+      {/* Promemoria & Interventi di Oggi */}
+      <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-premium">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📅</span>
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pianificazione</p>
+              <h2 className="text-base font-extrabold text-gray-950 mt-0.5">Promemoria &amp; Interventi di Oggi</h2>
+            </div>
+          </div>
+          <Link href="/ufficio/promemoria" className="text-xs font-bold text-teal-600 hover:text-teal-700 transition-colors">
+            Gestisci promemoria →
+          </Link>
+        </div>
+
+        {promemoriaOggi.length === 0 ? (
+          <p className="text-xs text-gray-400 py-3 italic">Nessun promemoria o intervento programmato per oggi.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {promemoriaOggi.map((p) => {
+              const ora = new Date(p.dataOra).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+              const cleanTitolo = p.titolo.replace(/^TEST_AI_FULL_QUADRO:\s*/, '')
+              return (
+                <div key={p.id} className="border border-slate-100 bg-slate-50/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all group">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 uppercase tracking-wide">
+                        <Clock size={10} />
+                        {ora}
+                      </span>
+                      {p.perImpresa ? (
+                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Impresa</span>
+                      ) : p.operaio ? (
+                        <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full flex items-center gap-0.5 max-w-[120px] truncate">
+                          <User size={10} className="shrink-0" />
+                          {p.operaio.nome}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-800 line-clamp-1">{cleanTitolo}</h3>
+                      {p.descrizione && (
+                        <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{p.descrizione}</p>
+                      )}
+                    </div>
+                  </div>
+                  {p.luogo && (
+                    <div className="mt-3 pt-2.5 border-t border-slate-100/60 flex items-center justify-between text-[11px]">
+                      <span className="text-gray-400 flex items-center gap-1 truncate max-w-[75%]">
+                        <MapPin size={11} className="shrink-0 text-gray-400" />
+                        {p.luogo}
+                      </span>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.luogo)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold text-teal-600 hover:text-teal-700 shrink-0"
+                      >
+                        Mappa →
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Sezione principale: grafici + cantieri */}
