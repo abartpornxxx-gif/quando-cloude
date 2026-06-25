@@ -4,9 +4,13 @@
  */
 
 function getApiUrl() {
-  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+  let model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+  if (model.startsWith('models/')) {
+    model = model.substring('models/'.length)
+  }
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
 }
+
 
 function getApiKey() {
   const key = process.env.GEMINI_API_KEY || process.env.AI_API_KEY

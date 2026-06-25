@@ -4,8 +4,12 @@ export async function callGemini(systemPrompt: string, userMessage: string): Pro
     throw new Error('API_KEY_MISSING')
   }
 
-  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+  let model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+  if (model.startsWith('models/')) {
+    model = model.substring('models/'.length)
+  }
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+
 
   const payload = {
     contents: [
