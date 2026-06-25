@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
 import { LogoutButton } from '@/components/LogoutButton'
 import { listaNotificheMagazziniere } from '@/lib/notifiche'
+import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
 import { LayoutDashboard, Inbox, Warehouse, type LucideIcon } from 'lucide-react'
 
 export default async function MagazzinoLayout({ children }: { children: ReactNode }) {
@@ -60,6 +61,7 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
         </div>
       </header>
       <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
+      <AssistenteContestuale role="magazziniere" />
     </div>
   )
 }

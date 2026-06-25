@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { NotificheBell } from '@/components/NotificheBell'
 import { LogoutButton } from '@/components/LogoutButton'
 import { listaNotificheCliente } from '@/lib/notifiche'
+import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
 
 export default async function ClienteLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -85,6 +86,7 @@ export default async function ClienteLayout({ children }: { children: React.Reac
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
+      <AssistenteContestuale role="cliente" />
     </div>
   )
 }

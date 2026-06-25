@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { NotificheBell } from '@/components/NotificheBell'
 import { listaNotificheOperaio } from '@/lib/notifiche'
+import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
 
 import { OperaioBottomNav } from '@/components/OperaioBottomNav'
 import { LogoutButton } from '@/components/LogoutButton'
@@ -86,6 +87,7 @@ export default async function OperaioLayout({ children }: { children: React.Reac
       <OfflineBanner />
 
       <main className="mx-auto max-w-2xl px-4 py-5 pb-24 sm:px-6">{children}</main>
+      <AssistenteContestuale role="operaio" />
 
       <OperaioBottomNav alertCount={alertCount} />
     </div>

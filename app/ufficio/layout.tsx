@@ -5,6 +5,7 @@ import { NotificheBell } from '@/components/NotificheBell'
 import Link from 'next/link'
 import { LogoutButton } from '@/components/LogoutButton'
 import { alertUfficio } from '@/lib/notifiche'
+import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
 import {
   LayoutDashboard,
   Users,
@@ -144,6 +145,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+      <AssistenteContestuale role="ufficio" />
     </div>
   )
 }
