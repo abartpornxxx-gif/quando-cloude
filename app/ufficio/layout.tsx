@@ -7,6 +7,9 @@ import { LogoutButton } from '@/components/LogoutButton'
 import { alertUfficio } from '@/lib/notifiche'
 import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
 import { UfficioNav } from '@/components/UfficioNav'
+import { prisma } from '@/lib/prisma'
+import { FirstAccessModal } from '@/components/FirstAccessModal'
+
 
 export default async function UfficioLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -16,6 +19,21 @@ export default async function UfficioLayout({ children }: { children: React.Reac
 
   const nome = user.user_metadata?.full_name ?? user.email ?? 'Ufficio'
   const alertCount = await alertUfficio(user.id)
+
+  let showFirstAccess = false
+  let dbNome = ''
+
+  if (user.email) {
+    const col = await prisma.collaboratoreUfficio.findFirst({
+      where: { email: user.email },
+      select: { nome: true, primoAccesso: true }
+    })
+    if (col) {
+      dbNome = col.nome
+      showFirstAccess = col.primoAccesso
+    }
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -48,6 +66,10 @@ export default async function UfficioLayout({ children }: { children: React.Reac
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       <AssistenteContestuale role="ufficio" />
+      {showFirstAccess && (
+        <FirstAccessModal userRole="ufficio" userEmail={user.email!} userName={dbNome} />
+      )}
     </div>
   )
 }
+

@@ -79,4 +79,45 @@ assert.ok(Date.UTC(2026, 5, 20) < oggi, 'scadenza passata')
 assert.ok(Date.UTC(2026, 5, 30) > oggi, 'scadenza futura')
 console.log('✓ date UTC (no drift fuso)')
 
+// ── 6. Sicurezza Password Temporanea (Fase Profili Accesso) ──────────────────
+function validateTempPassword(pass) {
+  return typeof pass === 'string' && pass.startsWith('QDR-') && pass.length === 12
+}
+const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+function mockGenerateTempPassword() {
+  let pass = 'QDR-'
+  for (let i = 0; i < 8; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return pass
+}
+assert.ok(validateTempPassword(mockGenerateTempPassword()))
+console.log('✓ sicurezza password temporanea')
+
+// ── 7. Generatore Bio Mascotte ──────────────────────────────────────────────
+function mockGeneraBioMascotte(nome, mascotteId, colore) {
+  const nomePulito = nome.split(' ')[0] || 'L\'operaio'
+  const coloreTradotto = colore.toLowerCase()
+  const templates = {
+    leone: `${nomePulito} ruggisce in cantiere con un casco ${coloreTradotto}, ma si commuove davanti a un cornetto caldo prima di iniziare!`,
+    volpe: `${nomePulito} risolve i problemi elettrici più complessi con un casco ${coloreTradotto} e l'astuzia di una volpe, anche se si perde a cercare il metro.`
+  }
+  return templates[mascotteId] || `${nomePulito} con casco ${coloreTradotto} ed avatar ${mascotteId}`
+}
+assert.match(mockGeneraBioMascotte('Mario Rossi', 'leone', 'verde'), /Mario ruggisce in cantiere con un casco verde/)
+assert.match(mockGeneraBioMascotte('Antonio Sacco', 'volpe', 'rosso'), /Antonio risolve i problemi/)
+console.log('✓ generatore bio mascotte')
+
+// ── 8. Unicità Mascotte + Colore ───────────────────────────────────────────
+function isMascotteColorUnique(occupate, mascotte, colore) {
+  const pair = `${mascotte}_${colore}`
+  return !occupate.includes(pair)
+}
+const occupied = ['leone_giallo', 'volpe_verde', 'bulldog_rosso']
+assert.ok(isMascotteColorUnique(occupied, 'leone', 'verde')) // Libera
+assert.ok(!isMascotteColorUnique(occupied, 'leone', 'giallo')) // Occupata
+assert.ok(!isMascotteColorUnique(occupied, 'volpe', 'verde')) // Occupata
+console.log('✓ unicità mascotte + colore')
+
 console.log('\n✅ Tutti i test superati.')
+

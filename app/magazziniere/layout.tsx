@@ -7,6 +7,9 @@ import { LogoutButton } from '@/components/LogoutButton'
 import { listaNotificheMagazziniere } from '@/lib/notifiche'
 import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
 import { LayoutDashboard, Inbox, Warehouse, type LucideIcon } from 'lucide-react'
+import { prisma } from '@/lib/prisma'
+import { FirstAccessModal } from '@/components/FirstAccessModal'
+
 
 export default async function MagazzinoLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
@@ -15,6 +18,21 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
 
   const notifiche = await listaNotificheMagazziniere(user.id)
   const alertCount = notifiche.filter(n => !n.letta).length
+
+  let showFirstAccess = false
+  let dbNome = ''
+
+  if (user.email) {
+    const mag = await prisma.magazziniere.findFirst({
+      where: { email: user.email },
+      select: { nome: true, primoAccesso: true }
+    })
+    if (mag) {
+      dbNome = mag.nome
+      showFirstAccess = mag.primoAccesso
+    }
+  }
+
 
   const NAV_ITEMS: { label: string; href: string; Icon: LucideIcon }[] = [
     { label: 'Dashboard', href: '/magazziniere/dashboard', Icon: LayoutDashboard },
@@ -62,6 +80,10 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
       </header>
       <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
       <AssistenteContestuale role="magazziniere" />
+      {showFirstAccess && (
+        <FirstAccessModal userRole="magazziniere" userEmail={user.email!} userName={dbNome} />
+      )}
     </div>
   )
 }
+

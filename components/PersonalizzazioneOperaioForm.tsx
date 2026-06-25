@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Sparkles, Save, CheckCircle, Smile } from 'lucide-react'
-import { MASCOTTE } from '@/lib/mascotte'
+import { Sparkles, Save, CheckCircle, Smile, AlertTriangle } from 'lucide-react'
+import { MASCOTTE, generaBioMascotte } from '@/lib/mascotte'
 import { salvaPersonalizzazioneOperaio } from '@/app/operaio/profilo/actions'
+import { getMascotteOccupate } from '@/app/actions/first-access'
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -20,6 +21,7 @@ function urlBase64ToUint8Array(base64String: string) {
 interface Props {
   initialData: {
     avatarMascotte: string | null
+    coloreMascotte: string | null
     descrizione: string | null
     fraseDivertente: string | null
     hobbies: string | null
@@ -30,17 +32,32 @@ interface Props {
 
 export function PersonalizzazioneOperaioForm({ initialData }: Props) {
   const [avatarMascotte, setAvatarMascotte] = useState(initialData.avatarMascotte || 'leone')
+  const [coloreMascotte, setColoreMascotte] = useState(initialData.coloreMascotte || 'giallo')
   const [descrizione, setDescrizione] = useState(initialData.descrizione || '')
   const [fraseDivertente, setFraseDivertente] = useState(initialData.fraseDivertente || '')
   const [hobbies, setHobbies] = useState(initialData.hobbies || '')
   
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   // Push notifications PWA state
   const [pushPermission, setPushPermission] = useState<string>('default')
   const [subscribing, setSubscribing] = useState(false)
   const [pushMessage, setPushMessage] = useState('')
+
+  // Occupied combinations state
+  const [occupiedMascots, setOccupiedMascots] = useState<string[]>([])
+
+  useEffect(() => {
+    // Carica le combinazioni occupate
+    getMascotteOccupate().then(res => {
+      const currentComb = `${initialData.avatarMascotte}_${initialData.coloreMascotte}`
+      setOccupiedMascots(res.filter(c => c !== currentComb))
+    }).catch(err => {
+      console.error(err)
+    })
+  }, [initialData.avatarMascotte, initialData.coloreMascotte])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -60,6 +77,22 @@ export function PersonalizzazioneOperaioForm({ initialData }: Props) {
       }
     }
   }, [])
+
+  const colors = [
+    { id: 'giallo', label: 'Giallo', bg: 'bg-yellow-400', ring: 'ring-yellow-400' },
+    { id: 'verde', label: 'Verde', bg: 'bg-green-500', ring: 'ring-green-500' },
+    { id: 'blu', label: 'Blu', bg: 'bg-blue-600', ring: 'ring-blue-600' },
+    { id: 'rosso', label: 'Rosso', bg: 'bg-red-500', ring: 'ring-red-500' }
+  ]
+
+  const checkInUso = (mascot: string, color: string) => {
+    return occupiedMascots.includes(`${mascot}_${color}`)
+  }
+
+  function handleGenerateBio() {
+    const funny = generaBioMascotte(initialData.nome, avatarMascotte, coloreMascotte)
+    setDescrizione(funny)
+  }
 
   async function handleSubscribe() {
     setSubscribing(true)
@@ -114,18 +147,31 @@ export function PersonalizzazioneOperaioForm({ initialData }: Props) {
     e.preventDefault()
     setSaving(true)
     setMessage('')
+    setErrorMessage('')
+
+    if (checkInUso(avatarMascotte, coloreMascotte)) {
+      setErrorMessage('❌ Questa combinazione di mascotte e colore è già in uso. Scegline un\'altra!')
+      setSaving(false)
+      return
+    }
+
     try {
-      await salvaPersonalizzazioneOperaio({
+      const res = await salvaPersonalizzazioneOperaio({
         avatarMascotte,
+        coloreMascotte,
         descrizione: descrizione.trim() || null,
         fraseDivertente: fraseDivertente.trim() || null,
         hobbies: hobbies.trim() || null,
       })
-      setMessage('✅ Profilo aggiornato con successo!')
-      setTimeout(() => setMessage(''), 3000)
+      if (res.error) {
+        setErrorMessage(`❌ ${res.error}`)
+      } else {
+        setMessage('✅ Profilo aggiornato con successo!')
+        setTimeout(() => setMessage(''), 3000)
+      }
     } catch (err) {
       console.error(err)
-      setMessage('❌ Errore durante il salvataggio.')
+      setErrorMessage('❌ Errore durante il salvataggio.')
     } finally {
       setSaving(false)
     }
@@ -148,17 +194,21 @@ export function PersonalizzazioneOperaioForm({ initialData }: Props) {
                 alt={selectedMascotte.nome}
                 fill
                 sizes="64px"
-                className="object-cover"
+                className="object-contain"
               />
             </div>
             <div>
               <h4 className="text-sm font-bold text-slate-800">{initialData.nome}</h4>
               <p className="text-xs text-emerald-600 font-medium">{initialData.ruolo || 'Operaio Specializzato'}</p>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[10px] text-gray-500 font-semibold">Casco:</span>
+                <span className="text-[10px] uppercase font-bold text-slate-700">{coloreMascotte}</span>
+              </div>
             </div>
           </div>
 
           {descrizione && (
-            <p className="text-xs text-slate-600 italic bg-white/60 p-2.5 rounded-xl border border-slate-100/50">
+            <p className="text-xs text-slate-600 italic bg-white/60 p-2.5 rounded-xl border border-slate-100/50 leading-relaxed">
               &ldquo;{descrizione}&rdquo;
             </p>
           )}
@@ -181,8 +231,57 @@ export function PersonalizzazioneOperaioForm({ initialData }: Props) {
 
         {/* Input Fields */}
         <form onSubmit={handleSubmit} className="space-y-4 bg-white rounded-2xl border border-gray-200 p-4 shadow-xs">
+          {errorMessage && (
+            <div className="bg-red-50 text-red-700 text-xs p-3 rounded-xl border border-red-100 flex items-center gap-2">
+              <AlertTriangle size={14} className="shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Selettore Colore Casco */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">Descriviti in breve (Bio)</label>
+            <label className="block text-xs font-bold text-gray-500 mb-1.5">Colore del Casco (Unico per Mascotte)</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {colors.map(col => {
+                const inUso = checkInUso(avatarMascotte, col.id)
+                const isSelected = col.id === coloreMascotte
+                return (
+                  <button
+                    key={col.id}
+                    type="button"
+                    disabled={inUso}
+                    onClick={() => setColoreMascotte(col.id)}
+                    className={`relative flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl border text-[11px] font-bold transition-all ${
+                      inUso 
+                        ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
+                        : isSelected
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                          : 'border-gray-200 bg-transparent text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span className={`w-2.5 h-2.5 rounded-full ${col.bg}`}></span>
+                      {col.label}
+                    </span>
+                    {inUso && <span className="text-[8px] bg-red-550 text-red-500 px-1 py-0.5 rounded uppercase font-black">Uso</span>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-xs font-bold text-gray-500">Descriviti in breve (Bio)</label>
+              <button
+                type="button"
+                onClick={handleGenerateBio}
+                className="text-[10px] text-emerald-600 font-bold hover:underline flex items-center gap-1"
+              >
+                <Sparkles size={10} />
+                Genera Bio Divertente
+              </button>
+            </div>
             <textarea
               value={descrizione}
               onChange={e => setDescrizione(e.target.value)}

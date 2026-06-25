@@ -10,6 +10,8 @@ import { OperaioBottomNav } from '@/components/OperaioBottomNav'
 import { LogoutButton } from '@/components/LogoutButton'
 import Image from 'next/image'
 import { AlertTriangle } from 'lucide-react'
+import { FirstAccessModal } from '@/components/FirstAccessModal'
+
 
 export default async function OperaioLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -19,10 +21,17 @@ export default async function OperaioLayout({ children }: { children: React.Reac
 
   let rapportinoPendente: { id: string; commessaNome: string } | null = null
   let alertCount = 0
+  let showFirstAccess = false
+  let dbNome = ''
 
   if (user.email) {
-    const operaio = await prisma.operaio.findFirst({ where: { email: user.email }, select: { id: true } })
+    const operaio = await prisma.operaio.findFirst({
+      where: { email: user.email },
+      select: { id: true, nome: true, primoAccesso: true }
+    })
     if (operaio) {
+      dbNome = operaio.nome
+      showFirstAccess = operaio.primoAccesso
       const [g, notifiche] = await Promise.all([
         prisma.giornata.findFirst({
           where: { operaioId: operaio.id, fase: 'fine', stato: 'bozza', rapportino: null },
@@ -35,6 +44,7 @@ export default async function OperaioLayout({ children }: { children: React.Reac
       alertCount = notifiche.filter(n => !n.letta).length
     }
   }
+
 
   return (
     <div className="min-h-full bg-gray-50">
@@ -89,7 +99,12 @@ export default async function OperaioLayout({ children }: { children: React.Reac
       <main className="mx-auto max-w-2xl px-4 py-5 pb-24 sm:px-6">{children}</main>
       <AssistenteContestuale role="operaio" />
 
+      {showFirstAccess && (
+        <FirstAccessModal userRole="operaio" userEmail={user.email!} userName={dbNome} />
+      )}
+
       <OperaioBottomNav alertCount={alertCount} />
     </div>
   )
 }
+

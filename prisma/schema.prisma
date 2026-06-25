@@ -93,6 +93,12 @@ model Operaio {
   descrizione String?
   fraseDivertente String?       @map("frase_divertente")
   hobbies     String?
+  coloreMascotte String?        @default("giallo") @map("colore_mascotte")
+  authUserId  String?           @map("auth_user_id") @db.Uuid
+  primoAccesso Boolean          @default(true) @map("primo_accesso")
+  passwordResetRichiesto Boolean @default(false) @map("password_reset_richiesto")
+  ultimoResetPasswordAt DateTime? @map("ultimo_reset_password_at")
+  ultimoResetPasswordBy String?  @map("ultimo_reset_password_by")
   createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz
   commesse          CommessaOperaio[]
@@ -112,6 +118,11 @@ model Magazziniere {
   nome      String
   email     String?  @unique
   note      String?
+  authUserId  String?           @map("auth_user_id") @db.Uuid
+  primoAccesso Boolean          @default(true) @map("primo_accesso")
+  passwordResetRichiesto Boolean @default(false) @map("password_reset_richiesto")
+  ultimoResetPasswordAt DateTime? @map("ultimo_reset_password_at")
+  ultimoResetPasswordBy String?  @map("ultimo_reset_password_by")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -123,6 +134,11 @@ model CollaboratoreUfficio {
   nome      String
   email     String?  @unique
   note      String?
+  authUserId  String?           @map("auth_user_id") @db.Uuid
+  primoAccesso Boolean          @default(true) @map("primo_accesso")
+  passwordResetRichiesto Boolean @default(false) @map("password_reset_richiesto")
+  ultimoResetPasswordAt DateTime? @map("ultimo_reset_password_at")
+  ultimoResetPasswordBy String?  @map("ultimo_reset_password_by")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 

@@ -214,6 +214,7 @@ export default async function ProfiloOperaioPage() {
         <PersonalizzazioneOperaioForm
           initialData={{
             avatarMascotte: operaio.avatarMascotte,
+            coloreMascotte: operaio.coloreMascotte,
             descrizione: operaio.descrizione,
             fraseDivertente: operaio.fraseDivertente,
             hobbies: operaio.hobbies,
@@ -221,6 +222,7 @@ export default async function ProfiloOperaioPage() {
             ruolo: operaio.ruolo,
           }}
         />
+
       </div>
     </div>
   )

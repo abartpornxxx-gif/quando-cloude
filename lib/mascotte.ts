@@ -38,3 +38,28 @@ export const MASCOTTE: Mascotte[] = [
   { id: 'toro', nome: 'Toro vigoroso', file: '/mascotte/mascotte_toro.png', descrizione: 'Potenza pura nelle tracce e nelle demolizioni.', categoria: 'entrambi' },
   { id: 'camaleonte', nome: 'Camaleonte adattabile', file: '/mascotte/mascotte_camaleonte.png', descrizione: 'Si adatta a ogni tipologia di cantiere e impianto.', categoria: 'entrambi' }
 ]
+
+export function generaBioMascotte(nome: string, mascotteId: string, colore: string): string {
+  const nomePulito = nome.split(' ')[0] || 'L\'operaio'
+  const coloreTradotto = colore.toLowerCase()
+  
+  const templates: Record<string, string> = {
+    leone: `${nomePulito} ruggisce in cantiere con un casco ${coloreTradotto}, ma si commuove davanti a un cornetto caldo prima di iniziare!`,
+    volpe: `${nomePulito} risolve i problemi elettrici più complessi con un casco ${coloreTradotto} e l'astuzia di una volpe, anche se si perde a cercare il metro.`,
+    bulldog: `${nomePulito} non molla mai il cantiere con il suo casco ${coloreTradotto}, tranne quando sente profumo di caffè appena fatto!`,
+    gufo: `${nomePulito} scruta la planimetria dall'alto con il suo casco ${coloreTradotto}, pronto a correggere anche i millimetri sfuggiti al progettista.`,
+    orso: `${nomePulito} solleva quintali di tubi con un casco ${coloreTradotto} e la solidità di un grizzly, ma ha un cuore d'oro.`,
+    castoro: `${nomePulito} modella raccordi idraulici a tempo di record con un casco ${coloreTradotto}, praticamente una diga umana!`,
+    riccio: `${nomePulito} sistema i cavi di rete con precisione millimetrica e un casco ${coloreTradotto}, attento a non pungersi con i cablaggi!`,
+    tartaruga: `${nomePulito} posa i mattoni con calma olimpica e un casco ${coloreTradotto}, lento ma inesorabile fino alla fine della giornata.`,
+  }
+
+  if (templates[mascotteId]) {
+    return templates[mascotteId]
+  }
+
+  const masc = MASCOTTE.find(m => m.id === mascotteId)
+  const nomeAnimale = masc ? masc.nome.split(' ').slice(0, 2).join(' ') : 'simpatico compagno'
+  return `${nomePulito} affronta ogni sfida con il casco ${coloreTradotto} e lo spirito di ${nomeAnimale}, sempre pronto a strappare una risata al team!`
+}
+
