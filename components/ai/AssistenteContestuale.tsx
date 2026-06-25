@@ -116,11 +116,11 @@ export function AssistenteContestuale({ role }: Props) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 rounded-full bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-xl hover:bg-teal-700 active:scale-95 transition-all cursor-pointer"
+        className="fixed bottom-[80px] right-4 sm:bottom-6 sm:right-6 z-40 flex h-12 w-12 sm:h-auto sm:w-auto items-center justify-center gap-2 rounded-full bg-teal-600 p-0 sm:px-4 sm:py-3 text-sm font-semibold text-white shadow-xl hover:bg-teal-700 active:scale-95 transition-all cursor-pointer shrink-0"
         aria-label="Apri Assistente AI"
       >
         <Sparkles size={16} className="animate-pulse shrink-0" />
-        <span>Assistente AI</span>
+        <span className="hidden sm:inline">Assistente AI</span>
       </button>
 
       {isOpen && (

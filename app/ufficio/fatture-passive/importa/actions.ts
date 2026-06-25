@@ -49,9 +49,14 @@ export async function importaFatturePassive(items: FatturaImportInput[]): Promis
 }
 
 export async function analizzaFatturaPDFConIA(fileBase64: string, mimeType: string) {
-  await requireUfficio()
-  const { analizzaDocumentoFattura } = await import('@/lib/ai')
-  return await analizzaDocumentoFattura(fileBase64, mimeType)
+  try {
+    await requireUfficio()
+    const { analizzaDocumentoFattura } = await import('@/lib/ai')
+    return await analizzaDocumentoFattura(fileBase64, mimeType)
+  } catch (err: any) {
+    console.error('SERVER_ERROR: analizzaFatturaPDFConIA error:', err)
+    throw new Error('Assistente AI momentaneamente non disponibile. Verifica la configurazione o riprova più tardi.')
+  }
 }
 
 export async function salvaFatturaPassivaSingola(data: {

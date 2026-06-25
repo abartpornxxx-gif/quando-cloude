@@ -15,7 +15,8 @@ function getApiUrl() {
 function getApiKey() {
   const key = process.env.GEMINI_API_KEY || process.env.AI_API_KEY
   if (!key) {
-    throw new Error('GEMINI_API_KEY non configurata nel file .env.local')
+    console.error('SERVER_ERROR: GEMINI_API_KEY non configurata nel file .env.local')
+    throw new Error('Assistente AI momentaneamente non disponibile. Verifica la configurazione o riprova più tardi.')
   }
   return key
 }
@@ -114,7 +115,8 @@ Restituisci ESCLUSIVAMENTE un oggetto JSON valido con questi campi.`
 
   if (!response.ok) {
     const errorText = await response.text()
-    throw new Error(`Errore chiamata Gemini API: ${response.status} - ${errorText}`)
+    console.error(`SERVER_ERROR: Errore chiamata Gemini API: ${response.status} - ${errorText}`)
+    throw new Error('Assistente AI momentaneamente non disponibile. Verifica la configurazione o riprova più tardi.')
   }
 
   const result = await response.json()
@@ -179,7 +181,8 @@ Restituisci ESCLUSIVAMENTE un oggetto JSON valido.`
 
   if (!response.ok) {
     const errorText = await response.text()
-    throw new Error(`Errore chiamata Gemini API per documento: ${response.status} - ${errorText}`)
+    console.error(`SERVER_ERROR: Errore chiamata Gemini API per documento: ${response.status} - ${errorText}`)
+    throw new Error('Assistente AI momentaneamente non disponibile. Verifica la configurazione o riprova più tardi.')
   }
 
   const result = await response.json()

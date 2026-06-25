@@ -21,7 +21,7 @@ export function ClienteNav() {
   return (
     <>
       {/* Nav desktop */}
-      <nav className="hidden sm:flex items-center gap-0.5">
+      <nav className="hidden md:flex items-center gap-0.5">
         {NAV.map(item => {
           const active = pathname.startsWith(item.href)
           return (
@@ -44,7 +44,7 @@ export function ClienteNav() {
       <button
         type="button"
         onClick={() => setMenuAperto(v => !v)}
-        className="sm:hidden rounded-lg p-2 text-violet-100 hover:bg-violet-600 hover:text-white transition-colors"
+        className="md:hidden rounded-lg p-2 text-violet-100 hover:bg-violet-600 hover:text-white transition-colors"
         aria-label="Apri menu"
       >
         <Menu size={20} />
@@ -52,7 +52,7 @@ export function ClienteNav() {
 
       {/* Mobile Drawer Overlay */}
       {menuAperto && (
-        <div className="fixed inset-0 z-50 sm:hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-xs"

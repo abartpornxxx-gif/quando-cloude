@@ -31,7 +31,7 @@ export default async function ClienteLayout({ children }: { children: React.Reac
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-40 bg-violet-700 shadow-lg">
-        <div className="mx-auto max-w-3xl px-4">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-3">
             {/* Logo */}
             <Link href="/cliente/dashboard" className="flex items-center gap-2.5 shrink-0">

@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { requireUfficio } from '@/lib/auth'
+import { requireImpresaOUfficio } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 
 export async function creaPromemoria(data: {
@@ -12,7 +12,8 @@ export async function creaPromemoria(data: {
   assegnatoAOperaioId?: string
   perImpresa: boolean
 }) {
-  await requireUfficio()
+  const user = await requireImpresaOUfficio()
+  const role = user.user_metadata?.role || 'ufficio'
 
   const promemoria = await prisma.promemoria.create({
     data: {
@@ -24,7 +25,7 @@ export async function creaPromemoria(data: {
       perImpresa: data.perImpresa,
       tipo: 'intervento',
       stato: 'attivo',
-      creatoDa: 'Ufficio',
+      creatoDa: role === 'impresa' ? 'Impresa' : 'Ufficio',
     },
   })
 
@@ -55,6 +56,7 @@ export async function creaPromemoria(data: {
 }
 
 export async function completaPromemoria(id: string, completato: boolean) {
+  await requireImpresaOUfficio()
   await prisma.promemoria.update({
     where: { id },
     data: {
@@ -70,6 +72,7 @@ export async function completaPromemoria(id: string, completato: boolean) {
 }
 
 export async function eliminaPromemoria(id: string) {
+  await requireImpresaOUfficio()
   await prisma.promemoria.delete({
     where: { id },
   })
@@ -81,6 +84,7 @@ export async function eliminaPromemoria(id: string) {
 }
 
 export async function getPromemoriaFiltro(filtro: 'oggi' | 'futuri' | 'completati') {
+  await requireImpresaOUfficio()
   const now = new Date()
   const inizioOggi = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
   const fineOggi = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)

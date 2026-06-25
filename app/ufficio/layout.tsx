@@ -51,9 +51,6 @@ export default async function UfficioLayout({ children }: { children: React.Reac
               </div>
             </Link>
 
-            {/* Nav component (Desktop & Mobile Drawer) */}
-            <UfficioNav />
-
             {/* Actions */}
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="hidden lg:block text-sm text-teal-200 truncate max-w-32">{nome.split(' ')[0]}</span>
@@ -62,6 +59,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
             </div>
           </div>
         </div>
+        <UfficioNav />
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>

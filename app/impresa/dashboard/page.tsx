@@ -283,7 +283,7 @@ export default async function ImpresaDashboardPage() {
               <h2 className="text-base font-extrabold text-gray-950 mt-0.5">Promemoria &amp; Interventi di Oggi</h2>
             </div>
           </div>
-          <Link href="/ufficio/promemoria" className="text-xs font-bold text-teal-600 hover:text-teal-700 transition-colors">
+          <Link href="/impresa/promemoria" className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors">
             Gestisci promemoria →
           </Link>
         </div>
