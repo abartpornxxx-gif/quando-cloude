@@ -9,6 +9,7 @@ import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
 import { OperaioBottomNav } from '@/components/OperaioBottomNav'
 import { LogoutButton } from '@/components/LogoutButton'
 import Image from 'next/image'
+import Link from 'next/link'
 import { AlertTriangle } from 'lucide-react'
 import { FirstAccessModal } from '@/components/FirstAccessModal'
 
@@ -49,10 +50,10 @@ export default async function OperaioLayout({ children }: { children: React.Reac
   return (
     <div className="min-h-full bg-gray-50">
       {/* Header */}
-      <nav className="bg-emerald-900 text-white shadow-lg">
+      <nav className="sticky top-0 z-40 bg-emerald-900 text-white shadow-lg">
         <div className="mx-auto max-w-2xl px-4">
           <div className="flex h-14 items-center justify-between">
-            <a href="/operaio/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+            <Link href="/operaio/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 shrink-0">
                 <Image src="/immagini/logo-quadro.png" width={28} height={28} alt="QUADRO" className="rounded-lg" priority />
               </div>
@@ -60,16 +61,16 @@ export default async function OperaioLayout({ children }: { children: React.Reac
                 <p className="font-bold text-sm leading-tight">QUADRO</p>
                 <p className="text-emerald-300 text-xs leading-tight">Cantiere</p>
               </div>
-            </a>
+            </Link>
             <div className="flex items-center gap-2">
               {rapportinoPendente && (
-                <a
+                <Link
                   href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`}
                   className="flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white"
                 >
                   <AlertTriangle size={12} className="text-white shrink-0" />
                   Rapportino
-                </a>
+                </Link>
               )}
               <NotificheBell count={alertCount} href="/operaio/notifiche" colore="emerald" />
               <LogoutButton className="rounded-lg px-3 py-1.5 text-sm font-medium text-emerald-200 hover:bg-emerald-800" />
@@ -88,9 +89,9 @@ export default async function OperaioLayout({ children }: { children: React.Reac
           {' '}
           <span className="text-red-100">{rapportinoPendente.commessaNome}</span>
           {' · '}
-          <a href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`} className="underline font-bold">
+          <Link href={`/operaio/giornata/${rapportinoPendente.id}/rapportino`} className="underline font-bold">
             Compila ora →
-          </a>
+          </Link>
         </div>
       )}
 
@@ -107,4 +108,3 @@ export default async function OperaioLayout({ children }: { children: React.Reac
     </div>
   )
 }
-

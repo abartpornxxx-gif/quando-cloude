@@ -5,7 +5,7 @@ import { AudioNotifica } from './AudioNotifica'
 interface Props {
   count: number
   href: string
-  colore?: 'blue' | 'emerald' | 'yellow' | 'violet'
+  colore?: 'blue' | 'emerald' | 'yellow' | 'amber' | 'violet' | 'teal'
 }
 
 export function NotificheBell({ count, href, colore = 'blue' }: Props) {
@@ -13,7 +13,9 @@ export function NotificheBell({ count, href, colore = 'blue' }: Props) {
     blue: 'hover:bg-blue-600',
     emerald: 'hover:bg-emerald-600',
     yellow: 'hover:bg-yellow-500',
+    amber: 'hover:bg-amber-700',
     violet: 'hover:bg-violet-600',
+    teal: 'hover:bg-teal-600',
   }[colore]
 
   return (

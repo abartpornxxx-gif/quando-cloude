@@ -27,13 +27,5 @@ export default async function RichiestaPage({ params }: Props) {
   ])
   if (!richiesta) notFound()
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
-        <a href="/magazziniere/richieste" className="text-blue-600">‹</a>
-        <h1 className="text-base font-bold">Dettaglio richiesta</h1>
-      </div>
-      <RichiestaDettaglio richiesta={richiesta} materiali={materiali} />
-    </div>
-  )
+  return <RichiestaDettaglio richiesta={richiesta} materiali={materiali} />
 }

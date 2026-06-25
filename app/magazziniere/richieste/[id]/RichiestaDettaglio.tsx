@@ -2,8 +2,10 @@
 
 import { useState, useRef, useTransition } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { aggiornaStatoRichiesta, uploadFotoConsegna } from '../actions'
 import { useRouter } from 'next/navigation'
+import { Badge } from '@/components/ui/Badge'
 
 type Richiesta = {
   id: string
@@ -43,7 +45,6 @@ export default function RichiestaDettaglio({
         setErrore(err instanceof Error ? err.message : 'Errore')
         return
       }
-      // router.refresh() fuori dal try-catch: errori di re-render gestiti da React, non da setErrore
       router.refresh()
     })
   }
@@ -70,6 +71,11 @@ export default function RichiestaDettaglio({
     if (uploadOk) router.refresh()
   }
 
+  const statoVariant: Record<string, 'danger' | 'warning' | 'success'> = {
+    richiesta: 'danger',
+    in_preparazione: 'warning',
+    consegnata: 'success',
+  }
   const statoLabel: Record<string, string> = {
     richiesta: 'Aperta',
     in_preparazione: 'In preparazione',
@@ -77,41 +83,69 @@ export default function RichiestaDettaglio({
   }
 
   return (
-    <div className="p-4 max-w-xl mx-auto space-y-4">
-      <div className="bg-white rounded-xl border p-4 space-y-2">
-        {richiesta.urgente && (
-          <p className="text-red-600 font-bold text-sm flex items-center gap-1.5">
-            <Image src="/immagini/icona-urgente.png" width={14} height={14} alt="" className="shrink-0" />
-            URGENTE
+    <div className="space-y-4 py-6">
+      {/* Back link */}
+      <Link
+        href="/magazziniere/richieste"
+        className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 font-semibold uppercase tracking-wider transition-all group"
+      >
+        <span className="transition-transform duration-300 group-hover:-translate-x-0.5">←</span> Tutte le richieste
+      </Link>
+
+      {/* Card principale */}
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-premium p-5 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            {richiesta.urgente && (
+              <div className="flex items-center gap-1.5 mb-2">
+                <Image src="/immagini/icona-urgente.png" width={14} height={14} alt="" className="shrink-0" />
+                <span className="text-xs font-bold text-red-700 uppercase tracking-wide">Urgente</span>
+              </div>
+            )}
+            <h1 className="text-lg font-bold text-gray-900">{richiesta.descrizione}</h1>
+          </div>
+          <Badge variant={statoVariant[richiesta.stato] ?? 'neutral'}>
+            {statoLabel[richiesta.stato] ?? richiesta.stato}
+          </Badge>
+        </div>
+
+        <div className="space-y-1.5 pt-1 border-t border-gray-100">
+          <p className="text-sm text-gray-600">
+            <span className="font-semibold text-gray-700">Operaio:</span> {richiesta.operaio.nome}
           </p>
-        )}
-        <p className="font-semibold text-lg">{richiesta.descrizione}</p>
-        <p className="text-sm text-gray-500">Operaio: {richiesta.operaio.nome}</p>
-        <p className="text-sm text-gray-500">Cantiere: {richiesta.commessa.nome}</p>
-        {richiesta.commessa.indirizzoCantiere && (
-          <p className="text-sm text-gray-500 flex items-center gap-1">
-            <Image src="/immagini/icona-posizione.png" width={13} height={13} alt="" className="shrink-0 opacity-60" />
-            {richiesta.commessa.indirizzoCantiere}
+          <p className="text-sm text-gray-600">
+            <span className="font-semibold text-gray-700">Cantiere:</span> {richiesta.commessa.nome}
           </p>
-        )}
-        <p className="text-sm text-gray-400">{new Date(richiesta.createdAt).toLocaleString('it-IT')}</p>
-        <p className="text-sm">
-          Stato: <strong>{statoLabel[richiesta.stato] ?? richiesta.stato}</strong>
-        </p>
-        {richiesta.note && <p className="text-sm text-gray-600">Note: {richiesta.note}</p>}
+          {richiesta.commessa.indirizzoCantiere && (
+            <p className="text-sm text-gray-500 flex items-center gap-1.5">
+              <Image src="/immagini/icona-posizione.png" width={13} height={13} alt="" className="shrink-0 opacity-60" />
+              {richiesta.commessa.indirizzoCantiere}
+            </p>
+          )}
+          <p className="text-xs text-gray-400">
+            {new Date(richiesta.createdAt).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </p>
+          {richiesta.note && (
+            <p className="text-sm text-gray-600 bg-gray-50 rounded-xl px-3 py-2">
+              <span className="font-semibold">Note:</span> {richiesta.note}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Collegamento al listino materiali (tracciamento magazzino) */}
+      {/* Collegamento al listino materiali */}
       {richiesta.stato !== 'consegnata' && (
-        <div className="bg-white rounded-xl border p-4 space-y-2">
-          <p className="text-sm font-semibold">Collega al listino materiali</p>
-          <p className="text-xs text-gray-500">
-            Seleziona il materiale dal listino per aggiornare automaticamente la giacenza del magazzino.
-          </p>
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-premium p-5 space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Collega al listino materiali</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Seleziona il materiale per aggiornare automaticamente la giacenza alla consegna.
+            </p>
+          </div>
           <select
             value={materialeId}
             onChange={e => setMaterialeId(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-amber-500 focus:outline-none"
           >
             <option value="">— Nessun collegamento (materiale non in listino) —</option>
             {materiali.map(m => (
@@ -121,33 +155,44 @@ export default function RichiestaDettaglio({
             ))}
           </select>
           {materialeId && (
-            <p className="text-xs text-green-600">
-              La consegna creerà uno scarico in magazzino per questo materiale.
+            <p className="text-xs text-emerald-600 font-medium">
+              ✓ La consegna creerà uno scarico automatico per questo materiale.
             </p>
           )}
         </div>
       )}
 
+      {/* Materiale collegato (stato consegnata) */}
       {richiesta.materiale && richiesta.stato === 'consegnata' && (
-        <div className="bg-gray-50 rounded-xl border p-3 text-sm">
-          <p className="text-gray-600">Materiale collegato: <strong>{richiesta.materiale.descrizione}</strong></p>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-sm text-emerald-700">
+            <span className="font-semibold">Materiale collegato:</span> {richiesta.materiale.descrizione}
+          </p>
+          <p className="text-xs text-emerald-600 mt-0.5">Giacenza aggiornata automaticamente</p>
         </div>
       )}
 
+      {/* Foto consegna */}
       {richiesta.fotoUrl && (
-        <div className="bg-white rounded-xl border p-4">
-          <p className="text-sm font-semibold mb-2">Foto consegna</p>
-          <img src={richiesta.fotoUrl} alt="foto consegna" className="rounded-xl max-w-full" />
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-premium p-5">
+          <p className="text-sm font-semibold text-gray-900 mb-3">Foto consegna</p>
+          <img src={richiesta.fotoUrl} alt="foto consegna" className="rounded-xl w-full object-cover" />
         </div>
       )}
 
-      {errore && <p className="text-red-600 text-sm">{errore}</p>}
+      {/* Errore */}
+      {errore && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-700 font-medium">{errore}</p>
+        </div>
+      )}
 
+      {/* Azioni stato */}
       {richiesta.stato === 'richiesta' && (
         <button
           onClick={() => aggiornaStato('in_preparazione')}
           disabled={pending}
-          className="w-full bg-yellow-500 text-white font-bold py-3 rounded-xl disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 rounded-xl shadow-sm disabled:opacity-50 transition-colors"
         >
           <Image src="/immagini/icona-materiale.png" width={16} height={16} alt="" className="brightness-0 invert shrink-0" />
           Prendo in carico
@@ -156,7 +201,7 @@ export default function RichiestaDettaglio({
 
       {richiesta.stato === 'in_preparazione' && (
         <div className="space-y-3">
-          <p className="text-sm font-semibold">Scatta una foto del materiale prima di consegnarlo:</p>
+          <p className="text-sm font-semibold text-gray-700">Scatta una foto del materiale prima di consegnarlo:</p>
           <input
             ref={fileRef}
             type="file"
@@ -164,36 +209,33 @@ export default function RichiestaDettaglio({
             capture="environment"
             onChange={handleFoto}
             disabled={uploading}
-            className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-yellow-50 file:text-yellow-700"
+            className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-amber-50 file:text-amber-700 file:font-semibold file:cursor-pointer"
           />
           {uploading && <p className="text-xs text-gray-400">Upload in corso…</p>}
           <button
             onClick={() => aggiornaStato('consegnata')}
             disabled={pending || uploading}
-            className="w-full bg-green-600 text-white font-bold py-3 rounded-xl disabled:opacity-50"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-sm disabled:opacity-50 transition-colors"
           >
-            ✅ Segna come consegnata
+            ✓ Segna come consegnata
           </button>
         </div>
       )}
 
       {richiesta.stato === 'consegnata' && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-          <p className="text-green-700 font-semibold">✅ Materiale consegnato</p>
-          {richiesta.materiale && (
-            <p className="text-green-600 text-sm mt-1">Giacenza aggiornata automaticamente</p>
-          )}
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center">
+          <p className="text-emerald-700 font-bold text-base">✓ Materiale consegnato</p>
         </div>
       )}
 
-      {/* Link alla chat della giornata */}
-      <a
+      {/* Chat operaio */}
+      <Link
         href={`/magazziniere/chat/${richiesta.giornataId}`}
-        className="flex items-center justify-center gap-2 w-full border border-yellow-300 bg-yellow-50 text-yellow-800 font-semibold py-3 rounded-xl hover:bg-yellow-100"
+        className="flex items-center justify-center gap-2 w-full rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-semibold py-3 hover:bg-amber-100 transition-colors"
       >
         <Image src="/immagini/icona-chat.png" width={16} height={16} alt="" className="opacity-80" />
         Apri chat con l&apos;operaio
-      </a>
+      </Link>
     </div>
   )
 }

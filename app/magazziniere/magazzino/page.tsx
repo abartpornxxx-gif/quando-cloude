@@ -1,8 +1,11 @@
 import { requireMagazziniere } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Image from 'next/image'
-import { formatData } from '@/lib/format'
 import Link from 'next/link'
+import { formatData } from '@/lib/format'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Badge } from '@/components/ui/Badge'
 
 export default async function MagazzinoPage() {
   await requireMagazziniere()
@@ -33,40 +36,51 @@ export default async function MagazzinoPage() {
   })
 
   const TIPO_LABEL: Record<string, string> = { carico: 'Carico', scarico: 'Scarico', reso: 'Reso' }
-  const TIPO_COLOR: Record<string, string> = {
-    carico:  'bg-green-100 text-green-700',
-    scarico: 'bg-red-100 text-red-700',
-    reso:    'bg-yellow-100 text-yellow-700',
+  const TIPO_VARIANT: Record<string, 'success' | 'danger' | 'warning'> = {
+    carico: 'success',
+    scarico: 'danger',
+    reso: 'warning',
   }
   const TIPO_SIGN: Record<string, string> = { carico: '+', scarico: '−', reso: '+' }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto space-y-6">
-      <h1 className="text-xl font-bold">Giacenza magazzino</h1>
+    <div className="space-y-6">
+      <PageHeader
+        title="Giacenza magazzino"
+        subtitle={`${righe.length} materiali con movimenti`}
+        backHref="/magazziniere/richieste"
+        backLabel="Richieste"
+      />
 
       {righe.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
-          <Image src="/immagini/icona-magazzino.png" width={64} height={64} alt="" className="mx-auto mb-3 opacity-60" />
-          <p className="text-gray-400 text-sm">Nessun movimento registrato ancora.</p>
-        </div>
+        <EmptyState
+          icon="/immagini/icona-magazzino.png"
+          title="Nessun movimento"
+          description="Nessun movimento di magazzino registrato ancora."
+          action={
+            <Link href="/magazziniere/richieste" className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-amber-700">
+              Vai alle richieste
+            </Link>
+          }
+        />
       ) : (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-premium overflow-hidden">
           <table className="w-full text-sm">
             <thead className="text-xs text-gray-500 border-b border-gray-100 bg-gray-50">
               <tr>
-                <th className="px-3 py-2 text-left">Materiale</th>
-                <th className="px-3 py-2 text-right">Giacenza</th>
+                <th className="px-4 py-3 text-left font-semibold">Materiale</th>
+                <th className="px-4 py-3 text-right font-semibold">Giacenza</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {righe.map(m => (
-                <tr key={m.id} className={m.giacenza < 0 ? 'bg-red-50' : ''}>
-                  <td className="px-3 py-3">
-                    <p className="font-medium text-gray-900">{m.descrizione}</p>
-                    {m.codice && <p className="text-xs text-gray-400">Cod. {m.codice}</p>}
+                <tr key={m.id} className={m.giacenza < 0 ? 'bg-red-50/60' : ''}>
+                  <td className="px-4 py-3">
+                    <p className="font-semibold text-gray-900">{m.descrizione}</p>
+                    {m.codice && <p className="text-xs text-gray-400 mt-0.5">Cod. {m.codice}</p>}
                   </td>
-                  <td className="px-3 py-3 text-right">
-                    <span className={`font-bold ${m.giacenza < 0 ? 'text-red-600' : m.giacenza === 0 ? 'text-gray-400' : 'text-green-700'}`}>
+                  <td className="px-4 py-3 text-right">
+                    <span className={`text-sm font-bold ${m.giacenza < 0 ? 'text-red-600' : m.giacenza === 0 ? 'text-gray-400' : 'text-emerald-700'}`}>
                       {m.giacenza} {m.unita ?? 'pz'}
                     </span>
                   </td>
@@ -78,24 +92,24 @@ export default async function MagazzinoPage() {
       )}
 
       {ultimi.length > 0 && (
-        <div className="bg-white rounded-xl border overflow-hidden">
-          <div className="border-b border-gray-100 px-4 py-3 bg-gray-50">
-            <p className="text-sm font-semibold text-gray-700">Ultimi movimenti</p>
-          </div>
-          <div className="divide-y divide-gray-50">
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ultimi movimenti</p>
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-premium overflow-hidden divide-y divide-gray-100">
             {ultimi.map(mv => (
               <div key={mv.id} className="px-4 py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-semibold text-gray-900 truncate">
                     {mv.descrizione ?? mv.materiale?.descrizione ?? '—'}
                   </p>
-                  {mv.commessa && <p className="text-xs text-gray-400">Commessa: {mv.commessa.nome}</p>}
+                  {mv.commessa && (
+                    <p className="text-xs text-gray-400 mt-0.5">{mv.commessa.nome}</p>
+                  )}
                   <p className="text-xs text-gray-400">{formatData(mv.data)}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${TIPO_COLOR[mv.tipo]}`}>
+                  <Badge variant={TIPO_VARIANT[mv.tipo] ?? 'neutral'}>
                     {TIPO_LABEL[mv.tipo]}
-                  </span>
+                  </Badge>
                   <span className="text-sm font-semibold text-gray-700">
                     {TIPO_SIGN[mv.tipo]}{mv.quantita} {mv.materiale?.unita ?? 'pz'}
                   </span>
@@ -105,13 +119,6 @@ export default async function MagazzinoPage() {
           </div>
         </div>
       )}
-
-      <Link
-        href="/magazziniere/richieste"
-        className="block text-center text-blue-600 text-sm py-2"
-      >
-        ← Vai alle richieste
-      </Link>
     </div>
   )
 }

@@ -1,6 +1,10 @@
 import { requireMagazziniere } from '@/lib/auth'
-import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
+import Image from 'next/image'
+import Link from 'next/link'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Badge } from '@/components/ui/Badge'
 
 export default async function RichiestePage() {
   await requireMagazziniere()
@@ -13,40 +17,56 @@ export default async function RichiestePage() {
     orderBy: [{ stato: 'asc' }, { urgente: 'desc' }, { createdAt: 'asc' }],
   })
 
-  const statoLabel: Record<string, string> = {
-    richiesta: 'Aperta',
-    in_preparazione: 'In prep.',
-    consegnata: 'Consegnata',
-  }
-  const statoBg: Record<string, string> = {
-    richiesta: 'bg-red-100 text-red-700',
-    in_preparazione: 'bg-yellow-100 text-yellow-700',
-    consegnata: 'bg-green-100 text-green-700',
-  }
+  const aperte = richieste.filter(r => r.stato === 'richiesta').length
+  const inPrep = richieste.filter(r => r.stato === 'in_preparazione').length
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-xl font-bold mb-4">Tutte le richieste</h1>
-      <div className="bg-white rounded-xl border divide-y">
-        {richieste.length === 0 ? (
-          <p className="p-4 text-gray-400 text-sm">Nessuna richiesta</p>
-        ) : richieste.map(r => (
-          <a key={r.id} href={`/magazziniere/richieste/${r.id}`} className="block p-4 hover:bg-gray-50">
-            <div className="flex items-start justify-between gap-2">
+    <div className="space-y-6">
+      <PageHeader
+        title="Richieste materiale"
+        subtitle={`${aperte} da evadere · ${inPrep} in preparazione`}
+      />
+
+      {richieste.length === 0 ? (
+        <EmptyState
+          icon="/immagini/successo.png"
+          title="Tutto evaso"
+          description="Nessuna richiesta in attesa al momento."
+        />
+      ) : (
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-premium overflow-hidden divide-y divide-gray-100">
+          {richieste.map(r => (
+            <Link
+              key={r.id}
+              href={`/magazziniere/richieste/${r.id}`}
+              className="flex items-start justify-between gap-3 px-5 py-4 hover:bg-gray-50/60 hover-lift active-press transition-all duration-200"
+            >
               <div className="flex-1 min-w-0">
-                {r.urgente && <Image src="/immagini/icona-urgente.png" width={13} height={13} alt="urgente" className="shrink-0 inline-block mr-1" />}
-                <span className="text-sm font-medium">{r.descrizione}</span>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {r.operaio.nome} · {r.commessa.nome} · {new Date(r.createdAt).toLocaleString('it-IT')}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {r.urgente && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-xs font-bold text-red-700">
+                      <Image src="/immagini/icona-urgente.png" width={12} height={12} alt="" className="shrink-0" />
+                      URGENTE
+                    </span>
+                  )}
+                  <p className="text-sm font-semibold text-gray-900 truncate">{r.descrizione}</p>
+                </div>
+                <p className="text-xs text-gray-400 mt-1 font-medium">
+                  {r.operaio.nome} · {r.commessa.nome}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {new Date(r.createdAt).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
-              <span className={['text-xs px-2 py-1 rounded-full shrink-0', statoBg[r.stato] ?? ''].join(' ')}>
-                {statoLabel[r.stato] ?? r.stato}
-              </span>
-            </div>
-          </a>
-        ))}
-      </div>
+              <div className="shrink-0 pt-0.5">
+                {r.stato === 'richiesta' && <Badge variant="danger">Da fare</Badge>}
+                {r.stato === 'in_preparazione' && <Badge variant="warning">In prep.</Badge>}
+                {r.stato === 'consegnata' && <Badge variant="success">Consegnata</Badge>}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
