@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
@@ -14,23 +14,33 @@ import {
   Undo2,
   Save,
   Sparkles,
+  Upload,
+  Camera,
+  Trash2,
+  Eye,
+  Check,
 } from 'lucide-react'
 import { MASCOTTE } from '@/lib/mascotte'
+import { createClient } from '@/lib/supabase/client'
 import { getImpresaProfilo, salvaImpresaProfilo, ripristinaDefaultProfilo } from './actions'
 
 const PALETTE = [
-  { name: 'Teal', hex: '#0f766e' },
+  { name: 'Teal (Default)', hex: '#0f766e' },
   { name: 'Blue', hex: '#2563eb' },
   { name: 'Purple', hex: '#7c3aed' },
   { name: 'Orange', hex: '#ea580c' },
   { name: 'Red', hex: '#dc2626' },
-  { name: 'Gray', hex: '#4b5563' },
+  { name: 'Slate', hex: '#4b5563' },
 ]
 
 export default function PersonalizzazionePage() {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'info' | 'stile'>('info')
 
   // Profile State
   const [nomeImpresa, setNomeImpresa] = useState('CreCas Impianti S.r.l.')
@@ -146,135 +156,189 @@ export default function PersonalizzazionePage() {
     }
   }
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    setMessage('')
+    try {
+      const supabase = createClient()
+      
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+      const filePath = `impresa-avatars/${fileName}`
+
+      const { error } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (error) throw error
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      setMascotteAvatar(publicUrl)
+      setMessage('✅ Immagine caricata correttamente!')
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err: any) {
+      console.error(err)
+      setMessage(`❌ Errore durante il caricamento: ${err.message || err}`)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function handleRemoveCustomAvatar() {
+    setMascotteAvatar('leone')
+    setMessage('✅ Avatar personalizzato rimosso.')
+    setTimeout(() => setMessage(''), 3000)
+  }
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
       </div>
     )
   }
 
+  const isCustomAvatar = mascotteAvatar.startsWith('http') || mascotteAvatar.startsWith('/')
   const selectedMascotte = MASCOTTE.find(m => m.id === mascotteAvatar) || MASCOTTE[0]
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Breadcrumbs */}
-      <div className="text-xs text-gray-500 flex items-center gap-2">
-        <span>Impostazioni</span>
-        <span>&gt;</span>
-        <span>Profilo impresa</span>
-        <span>&gt;</span>
-        <span className="text-gray-900 font-medium">Personalizza il profilo impresa</span>
-      </div>
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-            <Sparkles className="text-amber-500" size={24} />
-            Personalizza il profilo impresa
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+      
+      {/* Header Banner - MATCHING THEME FORMAT */}
+      <div className="rounded-2xl mesh-bg-impresa border border-slate-800 px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-premium-lg relative overflow-hidden">
+        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-600/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="space-y-2 relative z-10">
+          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Impostazioni &gt; Profilo Impresa</p>
+          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+            <Sparkles className="text-amber-400" size={24} />
+            Personalizza il Profilo Impresa
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Configura l&apos;aspetto e le informazioni che vuoi mostrare ai tuoi clienti, partner e collaboratori.
+          <p className="text-xs text-slate-300 max-w-xl">
+            Configura l&apos;aspetto, le informazioni e le immagini che vuoi mostrare ai tuoi clienti, partner e dipendenti su QUADRO.
           </p>
+        </div>
+        
+        {/* Generated Tech Illustration */}
+        <div className="relative w-28 h-28 shrink-0 hidden md:block z-10">
+          <Image
+            src="/immagini/personalizza_hero.png"
+            alt="Personalizza"
+            fill
+            sizes="112px"
+            className="object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
+            priority
+          />
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200">
-        <button type="button" className="px-4 py-2 text-sm font-semibold border-b-2 border-emerald-600 text-emerald-700">
-          Profilo pubblico
-        </button>
-        <button type="button" className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
-          Impostazioni interne
-        </button>
-      </div>
-
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Column 1: Anteprima */}
-        <div className="space-y-4">
-          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Anteprima profilo impresa</h2>
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden transition-all duration-300">
+        {/* Column 1 (Left): Anteprima Card (4 cols) */}
+        <div className="lg:col-span-4 space-y-4">
+          <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+            <Eye size={14} className="text-emerald-600" />
+            Anteprima Profilo Real-Time
+          </h2>
+          
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300">
             {/* Card Content */}
-            <div className="p-5 space-y-4">
+            <div className="p-6 space-y-5">
               {/* Mascot & Brand Header */}
               <div className="flex items-center gap-4">
                 {mostraMascotte && (
-                  <div className="relative h-20 w-20 rounded-full border-4 overflow-hidden bg-slate-50 shrink-0" style={{ borderColor: colorePrimario }}>
+                  <div className="relative h-20 w-20 rounded-2xl border-2 overflow-hidden bg-slate-50 shrink-0 shadow-sm" style={{ borderColor: colorePrimario }}>
                     <Image
-                      src={selectedMascotte.file}
-                      alt={selectedMascotte.nome}
+                      src={isCustomAvatar ? mascotteAvatar : selectedMascotte.file}
+                      alt={isCustomAvatar ? "Logo Azienda" : selectedMascotte.nome}
                       fill
                       sizes="80px"
                       className="object-cover"
                     />
                   </div>
                 )}
-                <div>
+                <div className="min-w-0 flex-1">
                   {mostraNome && (
-                    <h3 className="text-lg font-black text-slate-800 leading-tight" style={{ color: stileCard === 'Minimal' ? '#1e293b' : colorePrimario }}>
+                    <h3 className="text-lg font-black text-slate-900 leading-tight truncate" style={{ color: stileCard === 'Minimal' ? '#1e293b' : colorePrimario }}>
                       {nomeImpresa}
                     </h3>
                   )}
                   {mostraSettore && (
-                    <p className="text-xs font-semibold text-emerald-600 mt-0.5">{settore}</p>
+                    <p className="text-xs font-bold text-emerald-600 mt-1 uppercase tracking-wide">{settore}</p>
                   )}
                 </div>
               </div>
 
               {/* Descrizione */}
               {mostraDescrizione && descrizione && (
-                <p className="text-xs text-gray-600 leading-relaxed border-t border-gray-100 pt-3">
-                  {descrizione}
-                </p>
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {descrizione}
+                  </p>
+                </div>
               )}
 
               {/* Informazioni di Contatto */}
-              <div className="space-y-2.5 text-xs text-gray-600 border-t border-gray-100 pt-3">
+              <div className="space-y-3 text-xs text-gray-600 border-t border-gray-100 pt-4">
                 {mostraIndirizzo && indirizzo && (
-                  <div className="flex items-center gap-2">
-                    <MapPin size={14} style={{ color: colorePrimario }} className="shrink-0" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+                      <MapPin size={13} style={{ color: colorePrimario }} />
+                    </div>
                     <span className="truncate">{indirizzo}</span>
                   </div>
                 )}
                 {mostraTelefono && telefono && (
-                  <div className="flex items-center gap-2">
-                    <Phone size={14} style={{ color: colorePrimario }} className="shrink-0" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+                      <Phone size={13} style={{ color: colorePrimario }} />
+                    </div>
                     <span>{telefono}</span>
                   </div>
                 )}
                 {mostraEmail && email && (
-                  <div className="flex items-center gap-2">
-                    <Mail size={14} style={{ color: colorePrimario }} className="shrink-0" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+                      <Mail size={13} style={{ color: colorePrimario }} />
+                    </div>
                     <span className="truncate">{email}</span>
                   </div>
                 )}
                 {mostraSitoWeb && sitoWeb && (
-                  <div className="flex items-center gap-2">
-                    <Globe size={14} style={{ color: colorePrimario }} className="shrink-0" />
-                    <span>{sitoWeb}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+                      <Globe size={13} style={{ color: colorePrimario }} />
+                    </div>
+                    <span className="truncate">{sitoWeb}</span>
                   </div>
                 )}
               </div>
 
               {/* Servizi & Certificazioni (Only in Classico style) */}
               {stileCard === 'Classico' && (
-                <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-[11px]">
+                <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-4 text-[11px]">
                   {mostraServizi && (
-                    <div>
-                      <p className="font-bold text-gray-700 mb-1">Servizi principali</p>
-                      <ul className="space-y-1 text-gray-500">
+                    <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                      <p className="font-bold text-gray-800 mb-1">Servizi principali</p>
+                      <ul className="space-y-1 text-gray-500 font-medium">
                         <li className="flex items-center gap-1">✔ Impianti Civili</li>
                         <li className="flex items-center gap-1">✔ Manutenzioni</li>
                       </ul>
                     </div>
                   )}
                   {mostraCertificazioni && (
-                    <div>
-                      <p className="font-bold text-gray-700 mb-1">Certificazioni</p>
-                      <ul className="space-y-1 text-gray-500">
+                    <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                      <p className="font-bold text-gray-800 mb-1">Certificazioni</p>
+                      <ul className="space-y-1 text-gray-500 font-medium">
                         <li className="flex items-center gap-1">✔ ISO 9001</li>
                         <li className="flex items-center gap-1">✔ FGAS</li>
                       </ul>
@@ -285,189 +349,357 @@ export default function PersonalizzazionePage() {
 
               {/* Mascot Details / Motto */}
               {mostraMascotte && mottoTeam && (
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-start gap-2.5 mt-2">
-                  <div className="text-base shrink-0">💬</div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-700">{selectedMascotte.nome}</p>
-                    <p className="text-[11px] italic text-slate-500 mt-0.5">&quot;{mottoTeam}&quot;</p>
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-start gap-3">
+                  <div className="text-xl shrink-0 mt-0.5">💬</div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold text-slate-800">{isCustomAvatar ? "Il nostro team" : selectedMascotte.nome}</p>
+                    <p className="text-xs italic text-slate-500 mt-1 font-medium leading-relaxed">&quot;{mottoTeam}&quot;</p>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Card Footer for visual style review */}
-            <div className="bg-gray-50 px-4 py-2.5 border-t border-gray-100 text-[10px] text-gray-400 text-center uppercase tracking-wider font-bold">
+            {/* Card Footer */}
+            <div className="bg-slate-50 px-5 py-3 border-t border-gray-100 text-[10px] text-gray-400 text-center uppercase tracking-widest font-extrabold">
               Stile Card: {stileCard}
             </div>
           </div>
         </div>
 
-        {/* Column 2: Mascotte Chooser */}
-        <div className="space-y-4">
-          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Scegli la mascotte del profilo</h2>
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-md max-h-[560px] overflow-y-auto space-y-3">
-            <p className="text-xs text-gray-400">La mascotte rappresenterà la tua impresa nelle intestazioni, nei documenti e nel portale clienti.</p>
-            
-            <div className="grid grid-cols-4 gap-2">
-              {MASCOTTE.map(m => {
-                const isSelected = m.id === mascotteAvatar
-                return (
+        {/* Column 2 & 3: Avatar Chooser & Form Controls (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
+          
+          {/* Avatar Caricamento & Selezione */}
+          <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-800">Immagine Profilo & Mascotte</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Gestisci l&apos;immagine caricando una tua foto o scegliendo una mascotte unica.</p>
+              </div>
+            </div>
+
+            {/* UPLOAD FOTO SECTION */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center bg-slate-50 p-5 rounded-2xl border border-slate-100">
+              <div className="md:col-span-4 flex justify-center">
+                <div className="relative h-24 w-24 rounded-2xl overflow-hidden bg-white border-2 border-slate-200 shadow-md shrink-0 flex items-center justify-center">
+                  <Image
+                    src={isCustomAvatar ? mascotteAvatar : selectedMascotte.file}
+                    alt="Corrente"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+              <div className="md:col-span-8 space-y-3 text-center md:text-left">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Foto Personalizzata (Fotocamera / Galleria)</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Carica un logo aziendale o una foto reale per sostituire la mascotte. Puoi scattare direttamente dal cellulare o scegliere un file.
+                </p>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-1">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
                   <button
-                    key={m.id}
                     type="button"
-                    onClick={() => setMascotteAvatar(m.id)}
-                    className={`relative aspect-square rounded-xl overflow-hidden bg-slate-50 border-2 transition-all p-1 flex items-center justify-center hover:scale-105 ${
-                      isSelected ? 'border-emerald-500 bg-emerald-50/50 shadow-sm' : 'border-gray-100'
-                    }`}
-                    title={m.nome}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
                   >
-                    <div className="relative w-full h-full">
-                      <Image
-                        src={m.file}
-                        alt={m.nome}
-                        fill
-                        sizes="60px"
-                        className="object-contain"
+                    <Upload size={13} />
+                    {uploading ? 'Caricamento...' : 'Seleziona Foto'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fileInputRef.current?.setAttribute('capture', 'environment')
+                      fileInputRef.current?.click()
+                    }}
+                    disabled={uploading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                  >
+                    <Camera size={13} />
+                    Scatta Foto
+                  </button>
+                  {isCustomAvatar && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveCustomAvatar}
+                      className="bg-red-50 hover:bg-red-100 text-red-600 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                    >
+                      <Trash2 size={13} />
+                      Rimuovi
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* MASCOTTE PICKER */}
+            {!isCustomAvatar && (
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Oppure scegli una mascotte</h4>
+                <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 max-h-[300px] overflow-y-auto p-2 bg-slate-50 border border-slate-100 rounded-2xl">
+                  {MASCOTTE.map(m => {
+                    const isSelected = m.id === mascotteAvatar
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setMascotteAvatar(m.id)}
+                        className={`relative aspect-square rounded-xl overflow-hidden bg-white border transition-all p-1.5 flex items-center justify-center hover:scale-105 ${
+                          isSelected ? 'border-emerald-600 bg-emerald-50/20 ring-2 ring-emerald-500/20 shadow-md' : 'border-slate-100'
+                        }`}
+                        title={m.nome}
+                      >
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={m.file}
+                            alt={m.nome}
+                            fill
+                            sizes="48px"
+                            className="object-contain"
+                          />
+                        </div>
+                        {isSelected && (
+                          <span className="absolute top-0.5 right-0.5 bg-emerald-600 text-white rounded-full p-0.5 shadow-sm">
+                            <Check size={8} className="text-white font-bold" />
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+                
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs">
+                  <p className="font-bold text-slate-800">{selectedMascotte.nome}</p>
+                  <p className="text-slate-500 mt-1 leading-relaxed">{selectedMascotte.descrizione}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Form Tabs */}
+          <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm">
+            <div className="flex border-b border-gray-100 bg-slate-50/50">
+              <button
+                type="button"
+                onClick={() => setActiveTab('info')}
+                className={`flex-1 py-3 text-xs font-extrabold uppercase tracking-wider text-center border-b-2 transition-all ${
+                  activeTab === 'info'
+                    ? 'border-emerald-600 text-emerald-700 bg-white'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                1. Informazioni Profilo
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('stile')}
+                className={`flex-1 py-3 text-xs font-extrabold uppercase tracking-wider text-center border-b-2 transition-all ${
+                  activeTab === 'stile'
+                    ? 'border-emerald-600 text-emerald-700 bg-white'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                2. Layout & Toggles
+              </button>
+            </div>
+
+            <div className="p-6">
+              {activeTab === 'info' ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Nome Impresa</label>
+                      <input
+                        type="text"
+                        value={nomeImpresa}
+                        onChange={e => setNomeImpresa(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 bg-slate-50/50 focus:bg-white transition-all font-semibold"
                       />
                     </div>
-                    {isSelected && (
-                      <span className="absolute top-0.5 right-0.5 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
-                        <CheckCircle size={8} className="fill-white text-emerald-500" />
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-            
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs">
-              <p className="font-bold text-slate-700">{selectedMascotte.nome}</p>
-              <p className="text-slate-500 mt-1">{selectedMascotte.descrizione}</p>
-            </div>
-          </div>
-        </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Settore di Attività</label>
+                      <input
+                        type="text"
+                        value={settore}
+                        onChange={e => setSettore(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 bg-slate-50/50 focus:bg-white transition-all font-semibold"
+                      />
+                    </div>
+                  </div>
 
-        {/* Column 3: Personalizzazione controlli */}
-        <div className="space-y-4">
-          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Personalizza la tua card</h2>
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-md space-y-5">
-            
-            {/* Informazioni da mostrare (Toggles) */}
-            <div className="space-y-3">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Informazioni da mostrare</p>
-              
-              <div className="space-y-2">
-                {[
-                  { label: 'Nome impresa', val: mostraNome, set: setMostraNome },
-                  { label: 'Settore di attività', val: mostraSettore, set: setMostraSettore },
-                  { label: 'Indirizzo', val: mostraIndirizzo, set: setMostraIndirizzo },
-                  { label: 'Telefono', val: mostraTelefono, set: setMostraTelefono },
-                  { label: 'Email', val: mostraEmail, set: setMostraEmail },
-                  { label: 'Sito web', val: mostraSitoWeb, set: setMostraSitoWeb },
-                  { label: 'Servizi principali', val: mostraServizi, set: setMostraServizi },
-                  { label: 'Certificazioni', val: mostraCertificazioni, set: setMostraCertificazioni },
-                  { label: 'Descrizione aziendale', val: mostraDescrizione, set: setMostraDescrizione },
-                  { label: 'Mascotte e Motto', val: mostraMascotte, set: setMostraMascotte },
-                ].map(t => (
-                  <label key={t.label} className="flex items-center justify-between text-xs text-gray-700 font-medium py-0.5 cursor-pointer">
-                    <span>{t.label}</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Telefono</label>
+                      <input
+                        type="text"
+                        value={telefono}
+                        onChange={e => setTelefono(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 bg-slate-50/50 focus:bg-white transition-all font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 bg-slate-50/50 focus:bg-white transition-all font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Indirizzo Sede</label>
+                      <input
+                        type="text"
+                        value={indirizzo}
+                        onChange={e => setIndirizzo(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 bg-slate-50/50 focus:bg-white transition-all font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Sito Web</label>
+                      <input
+                        type="text"
+                        value={sitoWeb}
+                        onChange={e => setSitoWeb(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 bg-slate-50/50 focus:bg-white transition-all font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Motto del Team / Slogan</label>
                     <input
-                      type="checkbox"
-                      checked={t.val}
-                      onChange={e => t.set(e.target.checked)}
-                      className="h-4 w-8 rounded-full border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      type="text"
+                      value={mottoTeam}
+                      onChange={e => setMottoTeam(e.target.value)}
+                      placeholder="Costruiamo oggi, per un domani migliore..."
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 bg-slate-50/50 focus:bg-white transition-all font-semibold"
                     />
-                  </label>
-                ))}
-              </div>
-            </div>
+                  </div>
 
-            {/* Inputs editable values */}
-            <div className="space-y-3 pt-3 border-t border-gray-100">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Dati testuali</p>
-              <div className="space-y-2 text-xs">
-                <div>
-                  <label className="block text-gray-500 mb-1">Motto del team</label>
-                  <input
-                    type="text"
-                    value={mottoTeam}
-                    onChange={e => setMottoTeam(e.target.value)}
-                    className="w-full border rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-emerald-500 outline-none"
-                  />
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Descrizione Aziendale</label>
+                    <textarea
+                      value={descrizione}
+                      onChange={e => setDescrizione(e.target.value)}
+                      rows={3}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 bg-slate-50/50 focus:bg-white transition-all font-semibold resize-none"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-gray-500 mb-1">Descrizione</label>
-                  <textarea
-                    value={descrizione}
-                    onChange={e => setDescrizione(e.target.value)}
-                    rows={2}
-                    className="w-full border rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-emerald-500 outline-none resize-none"
-                  />
+              ) : (
+                <div className="space-y-6">
+                  {/* Informazioni da mostrare (Toggles) */}
+                  <div className="space-y-3">
+                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Informazioni Visibili su Card</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                      {[
+                        { label: 'Nome impresa', val: mostraNome, set: setMostraNome },
+                        { label: 'Settore di attività', val: mostraSettore, set: setMostraSettore },
+                        { label: 'Indirizzo', val: mostraIndirizzo, set: setMostraIndirizzo },
+                        { label: 'Telefono', val: mostraTelefono, set: setMostraTelefono },
+                        { label: 'Email', val: mostraEmail, set: setMostraEmail },
+                        { label: 'Sito web', val: mostraSitoWeb, set: setMostraSitoWeb },
+                        { label: 'Servizi principali', val: mostraServizi, set: setMostraServizi },
+                        { label: 'Certificazioni', val: mostraCertificazioni, set: setMostraCertificazioni },
+                        { label: 'Descrizione aziendale', val: mostraDescrizione, set: setMostraDescrizione },
+                        { label: 'Mascotte / Avatar', val: mostraMascotte, set: setMostraMascotte },
+                      ].map(t => (
+                        <label key={t.label} className="flex items-center justify-between text-xs text-gray-700 font-medium py-1.5 cursor-pointer hover:bg-slate-50 px-2 rounded-lg transition-colors">
+                          <span>{t.label}</span>
+                          <input
+                            type="checkbox"
+                            checked={t.val}
+                            onChange={e => t.set(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Colori e stile */}
+                  <div className="space-y-4 pt-4 border-t border-gray-100">
+                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Colore Primario</h4>
+                    <div className="flex flex-wrap gap-3 items-center">
+                      {PALETTE.map(p => (
+                        <button
+                          key={p.hex}
+                          type="button"
+                          onClick={() => setColorePrimario(p.hex)}
+                          className={`h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 flex items-center justify-center ${
+                            colorePrimario === p.hex ? 'border-slate-800 scale-105 shadow-md' : 'border-transparent'
+                          }`}
+                          style={{ backgroundColor: p.hex }}
+                          title={p.name}
+                        >
+                          {colorePrimario === p.hex && (
+                            <span className="text-white text-xs">✔</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Stile card */}
+                  <div className="space-y-3 pt-2">
+                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Stile Grafico Card</h4>
+                    <div className="grid grid-cols-3 gap-3 text-xs">
+                      {['Classico', 'Compatto', 'Minimal'].map(styleName => (
+                        <button
+                          key={styleName}
+                          type="button"
+                          onClick={() => setStileCard(styleName)}
+                          className={`py-3 rounded-xl border font-bold transition-all text-center ${
+                            stileCard === styleName
+                              ? 'border-emerald-600 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-500/20'
+                              : 'border-gray-200 bg-white text-gray-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          {styleName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Colori e stile */}
-            <div className="space-y-3 pt-3 border-t border-gray-100">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Colori e stile</p>
-              
-              {/* Palette */}
-              <div className="flex gap-2 items-center">
-                {PALETTE.map(p => (
-                  <button
-                    key={p.hex}
-                    type="button"
-                    onClick={() => setColorePrimario(p.hex)}
-                    className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${
-                      colorePrimario === p.hex ? 'border-black' : 'border-transparent'
-                    }`}
-                    style={{ backgroundColor: p.hex }}
-                    title={p.name}
-                  />
-                ))}
+            {/* Error or Saving feedback message */}
+            {message && (
+              <div className="mx-6 mb-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-100 text-xs font-bold text-center text-slate-700">
+                {message}
               </div>
-
-              {/* Stile card */}
-              <div className="grid grid-cols-3 gap-2 text-xs pt-1">
-                {['Classico', 'Compatto', 'Minimal'].map(styleName => (
-                  <button
-                    key={styleName}
-                    type="button"
-                    onClick={() => setStileCard(styleName)}
-                    className={`py-1.5 rounded-lg border-2 text-center font-bold transition-all ${
-                      stileCard === styleName
-                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                        : 'border-gray-200 bg-white text-gray-600'
-                    }`}
-                  >
-                    {styleName}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Saving feedback message */}
-            {message && <p className="text-xs font-bold text-center mt-2">{message}</p>}
+            )}
 
             {/* Actions */}
-            <div className="flex gap-2 pt-3 border-t border-gray-100">
+            <div className="bg-slate-50 px-6 py-4 flex gap-3 border-t border-gray-100 justify-end">
               <button
                 type="button"
                 onClick={handleReset}
                 disabled={saving}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1"
+                className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active-press disabled:opacity-50"
               >
-                <Undo2 size={12} />
-                Ripristina default
+                <Undo2 size={13} />
+                Ripristina Default
               </button>
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 shadow-md disabled:opacity-50"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active-press disabled:opacity-50"
               >
-                <Save size={12} />
-                {saving ? 'Salvataggio...' : 'Salva modifiche'}
+                <Save size={13} />
+                {saving ? 'Salvataggio...' : 'Salva Modifiche'}
               </button>
             </div>
           </div>

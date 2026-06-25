@@ -66,7 +66,14 @@ export function FirstAccessModal({ userRole, userEmail, userName }: Props) {
     setDescrizione(funnyBio)
   }
 
-  // Gestione step 1: validazione e cambio password
+  // Disconnessione ed uscita al login
+  async function handleExit() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+  }
+
+  // Gestione step 1: validazione e cambio password immediato su Supabase
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault()
     setPassError(null)
@@ -81,11 +88,36 @@ export function FirstAccessModal({ userRole, userEmail, userName }: Props) {
       return
     }
 
-    // Se l'utente è operaio o magazziniere/ufficio, passiamo allo step 2
-    setStep(2)
+    startTransition(async () => {
+      try {
+        const supabase = createClient()
+        const { error: authError } = await supabase.auth.updateUser({
+          password: password
+        })
+
+        if (authError) {
+          let errorMessage = authError.message
+          // Traduzione in italiano dei messaggi di errore standard di Supabase
+          if (errorMessage.includes("different from the old")) {
+            errorMessage = "La nuova password deve essere diversa da quella temporanea precedente. Per favore, scegli una password diversa."
+          } else if (errorMessage.includes("should be at least 6 characters")) {
+            errorMessage = "La password deve contenere almeno 6 caratteri."
+          } else {
+            errorMessage = `Errore durante l'aggiornamento della password: ${errorMessage}`
+          }
+          throw new Error(errorMessage)
+        }
+
+        // Se l'aggiornamento ha successo, procediamo allo step 2
+        setStep(2)
+      } catch (err: any) {
+        console.error(err)
+        setPassError(err.message || "Si è verificato un errore durante il cambio della password.")
+      }
+    })
   }
 
-  // Gestione step 2: invio dati finali e aggiornamento db
+  // Gestione step 2: invio dati finali del profilo e aggiornamento db
   async function handleFinalSubmit(e: React.FormEvent) {
     e.preventDefault()
     setPassError(null)
@@ -100,17 +132,7 @@ export function FirstAccessModal({ userRole, userEmail, userName }: Props) {
 
     startTransition(async () => {
       try {
-        // 1. Aggiorna Supabase Auth password
-        const supabase = createClient()
-        const { error: authError } = await supabase.auth.updateUser({
-          password: password
-        })
-
-        if (authError) {
-          throw new Error(`Errore aggiornamento password auth: ${authError.message}`)
-        }
-
-        // 2. Salva profilo in QUADRO e disattiva primoAccesso
+        // Salva profilo in QUADRO e disattiva primoAccesso
         const res = await completaPrimoAccesso({
           role: userRole,
           email: userEmail,
@@ -225,12 +247,20 @@ export function FirstAccessModal({ userRole, userEmail, userName }: Props) {
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end">
+              <div className="pt-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={handleExit}
+                  className="rounded-xl border border-white/10 hover:bg-white/5 text-white/80 px-4 py-2.5 text-xs font-semibold"
+                >
+                  Annulla ed Esci
+                </button>
                 <button
                   type="submit"
-                  className={`w-full max-w-xs mx-auto rounded-xl ${theme.btn} text-white font-bold py-3 text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-black/20`}
+                  disabled={pending}
+                  className={`flex-1 sm:flex-none rounded-xl ${theme.btn} text-white font-bold px-6 py-2.5 text-xs transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-black/20 disabled:opacity-50`}
                 >
-                  Procedi al Profilo
+                  {pending ? 'Verifica...' : 'Procedi al Profilo'}
                   <ArrowRight size={14} />
                 </button>
               </div>
