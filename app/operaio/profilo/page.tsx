@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { richiediAssenza } from './actions'
 import { formatData } from '@/lib/format'
 import Link from 'next/link'
+import Image from 'next/image'
+import { PersonalizzazioneOperaioForm } from '@/components/PersonalizzazioneOperaioForm'
 
 const TIPO_LABEL: Record<string, string> = {
   ferie: 'Ferie',
@@ -56,9 +58,21 @@ export default async function ProfiloOperaioPage() {
       {/* Intestazione profilo */}
       <div className="rounded-xl border border-gray-200 bg-white p-5">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl font-bold text-emerald-700">
-            {operaio.nome.charAt(0).toUpperCase()}
-          </div>
+          {operaio.avatarMascotte ? (
+            <div className="relative h-14 w-14 rounded-xl overflow-hidden border-2 border-emerald-500 bg-slate-50 shrink-0">
+              <Image
+                src={`/mascotte/mascotte_${operaio.avatarMascotte}.png`}
+                alt=""
+                fill
+                sizes="56px"
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl font-bold text-emerald-700 shrink-0">
+              {operaio.nome.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
             <h1 className="text-lg font-bold text-gray-900">{operaio.nome}</h1>
             <p className="text-sm text-gray-500">{user.email}</p>
@@ -191,6 +205,25 @@ export default async function ProfiloOperaioPage() {
           </ul>
         </div>
       )}
+
+      {/* Personalizzazione scheda */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="border-b border-gray-100 pb-3">
+          <h2 className="text-sm font-semibold text-gray-700">Personalizza il tuo profilo cantiere</h2>
+        </div>
+        <PersonalizzazioneOperaioForm
+          initialData={{
+            avatarMascotte: operaio.avatarMascotte,
+            coloreMascotte: operaio.coloreMascotte,
+            descrizione: operaio.descrizione,
+            fraseDivertente: operaio.fraseDivertente,
+            hobbies: operaio.hobbies,
+            nome: operaio.nome,
+            ruolo: operaio.ruolo,
+          }}
+        />
+
+      </div>
     </div>
   )
 }

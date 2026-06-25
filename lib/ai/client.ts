@@ -4,7 +4,12 @@ export async function callGemini(systemPrompt: string, userMessage: string): Pro
     throw new Error('API_KEY_MISSING')
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+  let model = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+  if (model.startsWith('models/')) {
+    model = model.substring('models/'.length)
+  }
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+
 
   const payload = {
     contents: [
@@ -32,6 +37,9 @@ export async function callGemini(systemPrompt: string, userMessage: string): Pro
 
   if (!response.ok) {
     const errorText = await response.text()
+    if (response.status === 404) {
+      throw new Error('GEMINI_MODEL_NOT_FOUND')
+    }
     throw new Error(`GEMINI_API_ERROR: ${response.status} - ${errorText}`)
   }
 

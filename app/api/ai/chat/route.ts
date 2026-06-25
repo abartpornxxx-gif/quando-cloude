@@ -46,17 +46,23 @@ export async function POST(req: Request) {
       const responseText = await callGemini(systemPrompt, message)
       return NextResponse.json({ response: responseText })
     } catch (apiErr: any) {
+      console.error('SERVER_ERROR: Gemini chat error:', apiErr)
       if (apiErr.message === 'API_KEY_MISSING') {
         return NextResponse.json({ 
-          error: 'Assistente AI non ancora configurato. Inserire chiave API nell’ambiente server.',
+          error: 'Assistente AI momentaneamente non disponibile. Verifica la configurazione o riprova più tardi.',
           notConfigured: true 
         }, { status: 200 })
       }
-      throw apiErr
+      return NextResponse.json({
+        error: 'Assistente AI momentaneamente non disponibile. Verifica la configurazione o riprova più tardi.',
+        notAvailable: true
+      }, { status: 200 })
     }
 
   } catch (err: any) {
-    console.error('API Chat Error:', err)
-    return NextResponse.json({ error: err.message || 'Errore interno del server' }, { status: 500 })
+    console.error('SERVER_ERROR: API Chat Route Error:', err)
+    return NextResponse.json({
+      error: 'Assistente AI momentaneamente non disponibile. Verifica la configurazione o riprova più tardi.'
+    }, { status: 200 })
   }
 }

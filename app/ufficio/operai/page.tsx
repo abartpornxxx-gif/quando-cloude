@@ -4,13 +4,22 @@ import Link from 'next/link'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { DeleteButton } from '@/components/DeleteButton'
-import { eliminaOperaioUfficio } from './actions'
+import { eliminaOperaioUfficio, ripristinaPasswordOperaio } from './actions'
+import { ResetPasswordButton } from '@/components/ResetPasswordButton'
 
 export default async function UfficioOperaiPage() {
   await requireUfficio()
   const operai = await prisma.operaio.findMany({
     orderBy: { nome: 'asc' },
-    select: { id: true, nome: true, ruolo: true, zona: true, email: true },
+    select: { 
+      id: true, 
+      nome: true, 
+      ruolo: true, 
+      zona: true, 
+      email: true, 
+      primoAccesso: true, 
+      passwordResetRichiesto: true 
+    },
   })
 
   return (
@@ -34,21 +43,46 @@ export default async function UfficioOperaiPage() {
             {operai.map(o => {
               const initials = o.nome.split(' ').slice(0, 2).map((w: string) => w[0] ?? '').join('').toUpperCase()
               return (
-                <div key={o.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/70 transition-colors group">
-                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold shrink-0 select-none">
-                    {initials}
-                  </div>
-                  <Link href={`/ufficio/operai/${o.id}`} className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 group-hover:text-teal-700 transition-colors">{o.nome}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5 text-xs text-gray-400">
-                      {o.ruolo && <span>{o.ruolo}</span>}
-                      {o.ruolo && o.zona && <span>·</span>}
-                      {o.zona && <span>{o.zona}</span>}
-                      {!o.ruolo && !o.zona && <span>Nessun ruolo assegnato</span>}
+                <div key={o.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 hover:bg-gray-50/70 transition-colors group">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold shrink-0 select-none">
+                      {initials}
                     </div>
-                  </Link>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <Link href={`/ufficio/operai/${o.id}`} className="hidden sm:block text-xs font-medium text-teal-600 hover:text-teal-800">Modifica</Link>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-gray-900 group-hover:text-teal-700 transition-colors truncate">{o.nome}</p>
+                        
+                        {/* Stato Accesso/Password Badges */}
+                        {o.primoAccesso && o.passwordResetRichiesto ? (
+                          <span className="inline-flex items-center rounded-md bg-yellow-50 px-1.5 py-0.5 text-[10px] font-bold text-yellow-700 ring-1 ring-inset ring-yellow-600/20">
+                            Password temporanea consegnata
+                          </span>
+                        ) : o.primoAccesso && !o.passwordResetRichiesto ? (
+                          <span className="inline-flex items-center rounded-md bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold text-orange-700 ring-1 ring-inset ring-orange-600/20">
+                            Primo accesso da completare
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                            Password personale impostata
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
+                        {o.ruolo && <span>{o.ruolo}</span>}
+                        {o.ruolo && o.zona && <span>·</span>}
+                        {o.zona && <span>{o.zona}</span>}
+                        {!o.ruolo && !o.zona && <span>Nessun ruolo assegnato</span>}
+                        {o.email && <span className="hidden sm:inline">· {o.email}</span>}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 sm:gap-3 pl-13 sm:pl-0 shrink-0">
+                    <ResetPasswordButton id={o.id} nome={o.nome} action={ripristinaPasswordOperaio} />
+                    <span className="text-gray-300 text-sm hidden sm:inline">|</span>
+                    <Link href={`/ufficio/operai/${o.id}`} className="text-xs font-semibold text-teal-600 hover:text-teal-800">Modifica</Link>
+                    <span className="text-gray-300 text-sm hidden sm:inline">|</span>
                     <DeleteButton action={eliminaOperaioUfficio.bind(null, o.id)} />
                   </div>
                 </div>

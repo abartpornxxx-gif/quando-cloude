@@ -8,7 +8,7 @@
  *   3. Aggiungi in .env.local:
  *        NEXT_PUBLIC_VAPID_PUBLIC_KEY=<valore publicKey>
  *        VAPID_PRIVATE_KEY=<valore privateKey>
- *        VAPID_SUBJECT=mailto:info@tuaimpresa.it
+ *        VAPID_SUBJECT=mailto:info@crecasimpianti.it
  *   4. Decommentare il blocco import e la logica in ogni funzione
  *   5. Il service worker in /public/sw.js gestisce già la ricezione delle push
  *
@@ -16,8 +16,8 @@
  * quando l'utente consente le notifiche nel browser (via profilo operaio).
  */
 
-// import webpush from 'web-push'
-// import { prisma } from '@/lib/prisma'
+import webpush from 'web-push'
+import { prisma } from '@/lib/prisma'
 
 function vapidConfigured() {
   return !!(process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_SUBJECT)
@@ -35,31 +35,45 @@ async function inviaPushAOperaio(operaioId: string, payload: PushPayload): Promi
     console.warn('[push] VAPID non configurato — push non inviata a operaio', operaioId)
     return
   }
-  // TODO ATTIVARE — decommentare dopo npm install web-push:
-  //
-  // webpush.setVapidDetails(
-  //   process.env.VAPID_SUBJECT!,
-  //   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  //   process.env.VAPID_PRIVATE_KEY!
-  // )
-  // const { prisma } = await import('@/lib/prisma')
-  // const subs = await prisma.$queryRaw<{subscription: unknown}[]>`
-  //   SELECT subscription FROM push_subscriptions WHERE operaio_id = ${operaioId}::uuid
-  // `
-  // await Promise.allSettled(
-  //   subs.map(s => webpush.sendNotification(s.subscription as webpush.PushSubscription, JSON.stringify(payload)))
-  // )
+
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  )
+
+  const subs = await prisma.$queryRaw<{subscription: any}[]>`
+    SELECT subscription FROM push_subscriptions WHERE operaio_id = ${operaioId}::uuid
+  `
+
+  await Promise.allSettled(
+    subs.map(s => {
+      const subObj = typeof s.subscription === 'string' ? JSON.parse(s.subscription) : s.subscription
+      return webpush.sendNotification(subObj as any, JSON.stringify(payload))
+    })
+  )
 }
 
 async function inviaPushAEmail(email: string, payload: PushPayload): Promise<void> {
   if (!vapidConfigured()) return
-  // TODO ATTIVARE: cercare push_subscriptions by email
-  // const { prisma } = await import('@/lib/prisma')
-  // const subs = await prisma.$queryRaw<{subscription: unknown}[]>`
-  //   SELECT ps.subscription FROM push_subscriptions ps
-  //   JOIN operai o ON o.id = ps.operaio_id WHERE o.email = ${email}
-  // `
-  // await Promise.allSettled(subs.map(s => webpush.sendNotification(...)))
+
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  )
+
+  const subs = await prisma.$queryRaw<{subscription: any}[]>`
+    SELECT ps.subscription FROM push_subscriptions ps
+    JOIN operai o ON o.id = ps.operaio_id WHERE o.email = ${email}
+  `
+
+  await Promise.allSettled(
+    subs.map(s => {
+      const subObj = typeof s.subscription === 'string' ? JSON.parse(s.subscription) : s.subscription
+      return webpush.sendNotification(subObj as any, JSON.stringify(payload))
+    })
+  )
 }
 
 // ─── Funzioni specifiche ──────────────────────────────────────────────────────
@@ -120,11 +134,24 @@ export async function pushFatturaInScadenza(email: string, numero: string, giorn
   })
 }
 
+export async function pushNuovoAppuntamento(
+  operaioId: string,
+  titolo: string,
+  dataOraFormatted: string,
+  luogo: string
+): Promise<void> {
+  const cleanTitolo = titolo.replace(/^TEST_AI_FULL_QUADRO:\s*/, '')
+  await inviaPushAOperaio(operaioId, {
+    title: '📅 Nuovo Appuntamento Assegnato',
+    body: `Appuntamento "${cleanTitolo}" alle ore ${dataOraFormatted} presso ${luogo}.`,
+    url: '/operaio/dashboard',
+  })
+}
+
 // ─── Salva subscription dal browser ──────────────────────────────────────────
 
 export async function salvaSubscription(operaioId: string, subscription: object): Promise<void> {
   const endpoint = (subscription as Record<string, unknown>).endpoint as string
-  const { prisma } = await import('@/lib/prisma')
   await prisma.$executeRaw`
     INSERT INTO push_subscriptions (operaio_id, endpoint, subscription)
     VALUES (${operaioId}::uuid, ${endpoint}, ${JSON.stringify(subscription)}::jsonb)

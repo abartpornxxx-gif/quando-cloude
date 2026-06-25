@@ -115,7 +115,12 @@ export async function inviaRapportino(
 }
 
 export async function analizzaRapportinoConIA(testo: string) {
-  await requireOperaio()
-  const { analizzaTestoRapportino } = await import('@/lib/ai')
-  return await analizzaTestoRapportino(testo)
+  try {
+    await requireOperaio()
+    const { analizzaTestoRapportino } = await import('@/lib/ai')
+    return await analizzaTestoRapportino(testo)
+  } catch (err: any) {
+    console.error('SERVER_ERROR: Rapportino AI Error:', err)
+    throw new Error('Assistente AI momentaneamente non disponibile. Verifica la configurazione o riprova più tardi.')
+  }
 }

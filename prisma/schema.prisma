@@ -89,6 +89,16 @@ model Operaio {
   zona        String?
   skills      Json              @default("[]")
   note        String?
+  avatarMascotte String?        @map("avatar_mascotte")
+  descrizione String?
+  fraseDivertente String?       @map("frase_divertente")
+  hobbies     String?
+  coloreMascotte String?        @default("giallo") @map("colore_mascotte")
+  authUserId  String?           @map("auth_user_id") @db.Uuid
+  primoAccesso Boolean          @default(true) @map("primo_accesso")
+  passwordResetRichiesto Boolean @default(false) @map("password_reset_richiesto")
+  ultimoResetPasswordAt DateTime? @map("ultimo_reset_password_at")
+  ultimoResetPasswordBy String?  @map("ultimo_reset_password_by")
   createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz
   commesse          CommessaOperaio[]
@@ -98,6 +108,7 @@ model Operaio {
   attrezzatureUsi   AttrezzaturaUso[]
   richiesteMateriale RichiestaMateriale[]
   pushSubscriptions PushSubscription[]
+  promemoria        Promemoria[]
 
   @@map("operai")
 }
@@ -107,6 +118,11 @@ model Magazziniere {
   nome      String
   email     String?  @unique
   note      String?
+  authUserId  String?           @map("auth_user_id") @db.Uuid
+  primoAccesso Boolean          @default(true) @map("primo_accesso")
+  passwordResetRichiesto Boolean @default(false) @map("password_reset_richiesto")
+  ultimoResetPasswordAt DateTime? @map("ultimo_reset_password_at")
+  ultimoResetPasswordBy String?  @map("ultimo_reset_password_by")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -118,6 +134,11 @@ model CollaboratoreUfficio {
   nome      String
   email     String?  @unique
   note      String?
+  authUserId  String?           @map("auth_user_id") @db.Uuid
+  primoAccesso Boolean          @default(true) @map("primo_accesso")
+  passwordResetRichiesto Boolean @default(false) @map("password_reset_richiesto")
+  ultimoResetPasswordAt DateTime? @map("ultimo_reset_password_at")
+  ultimoResetPasswordBy String?  @map("ultimo_reset_password_by")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -610,8 +631,10 @@ enum StatoFatturaAttiva {
 
 enum StatoFatturaPassiva {
   da_pagare
+  parzialmente_pagata
   pagata
 }
+
 
 model FatturaAttiva {
   id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -993,4 +1016,55 @@ model PushSubscription {
 
   @@unique([operaioId, endpoint])
   @@map("push_subscriptions")
+}
+
+// ─── Profilo Personalizzato Impresa ──────────────────────────────────────────
+model ImpresaProfilo {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nomeImpresa         String   @default("CreCas Impianti S.r.l.") @map("nome_impresa")
+  settore             String   @default("Termoidraulica ed Elettrica")
+  descrizione         String   @default("Da anni leader nel settore dell'impiantistica civile ed industriale, garantendo qualità, sicurezza ed efficienza energetica.")
+  telefono            String   @default("+39 06 1234567")
+  email               String   @default("info@crecasimpianti.it")
+  sitoWeb             String   @default("www.crecasimpianti.it") @map("sito_web")
+  indirizzo           String   @default("Via Roma, 10 - 00100 Roma (RM)")
+  mascotteAvatar      String   @default("leone") @map("mascotte_avatar")
+  colorePrimario      String   @default("#0f766e") @map("colore_primario")
+  stileCard           String   @default("Classico") @map("stile_card")
+  mostraNome          Boolean  @default(true) @map("mostra_nome")
+  mostraSettore       Boolean  @default(true) @map("mostra_settore")
+  mostraIndirizzo     Boolean  @default(true) @map("mostra_indirizzo")
+  mostraTelefono      Boolean  @default(true) @map("mostra_telefono")
+  mostraEmail         Boolean  @default(true) @map("mostra_email")
+  mostraSitoWeb       Boolean  @default(true) @map("mostra_sito_web")
+  mostraServizi       Boolean  @default(true) @map("mostra_servizi")
+  mostraCertificazioni Boolean @default(true) @map("mostra_certificazioni")
+  mostraDescrizione   Boolean  @default(true) @map("mostra_descrizione")
+  mostraValori        Boolean  @default(true) @map("mostra_valori")
+  mostraMascotte      Boolean  @default(true) @map("mostra_mascotte")
+  mottoTeam           String   @default("Costruiamo oggi, per un domani migliore.") @map("motto_team")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("impresa_profilo")
+}
+
+// ─── Promemoria & Appuntamenti ───────────────────────────────────────────────
+model Promemoria {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  titolo              String
+  descrizione         String?
+  luogo               String?
+  dataOra             DateTime  @map("data_ora") @db.Timestamptz
+  tipo                String    @default("intervento")
+  stato               String    @default("attivo")
+  assegnatoAOperaioId String?   @map("assegnato_a_operaio_id") @db.Uuid
+  operaio             Operaio?  @relation(fields: [assegnatoAOperaioId], references: [id], onDelete: Cascade)
+  perImpresa          Boolean   @default(false) @map("per_impresa")
+  creatoDa            String?   @map("creato_da")
+  completatoAt        DateTime? @map("completato_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("promemoria")
 }

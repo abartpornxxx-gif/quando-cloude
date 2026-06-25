@@ -6,34 +6,10 @@ import Link from 'next/link'
 import { LogoutButton } from '@/components/LogoutButton'
 import { alertUfficio } from '@/lib/notifiche'
 import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
-import {
-  LayoutDashboard,
-  Users,
-  FileText,
-  Package,
-  CalendarDays,
-  Receipt,
-  ChevronDown,
-  AlertCircle,
-  Building2,
-} from 'lucide-react'
+import { UfficioNav } from '@/components/UfficioNav'
+import { prisma } from '@/lib/prisma'
+import { FirstAccessModal } from '@/components/FirstAccessModal'
 
-const NAV = [
-  { label: 'Dashboard', href: '/ufficio/dashboard', Icon: LayoutDashboard },
-  { label: 'Commesse', href: '/ufficio/commesse', Icon: Building2 },
-  { label: 'Preventivi', href: '/ufficio/preventivi', Icon: FileText },
-  { label: 'Ordini', href: '/ufficio/ordini', Icon: Package },
-  { label: 'Pianificazione', href: '/ufficio/pianificazione', Icon: CalendarDays },
-  { label: 'Fatture', href: '/ufficio/fatture', Icon: Receipt },
-  { label: 'Saldi', href: '/ufficio/saldi-pendenti', Icon: AlertCircle },
-  { label: 'Scadenzario', href: '/ufficio/scadenzario', Icon: CalendarDays },
-]
-
-const ANAGRAFICHE = [
-  { label: 'Clienti', href: '/ufficio/clienti' },
-  { label: 'Fornitori', href: '/ufficio/fornitori' },
-  { label: 'Operai', href: '/ufficio/operai' },
-]
 
 export default async function UfficioLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -43,6 +19,21 @@ export default async function UfficioLayout({ children }: { children: React.Reac
 
   const nome = user.user_metadata?.full_name ?? user.email ?? 'Ufficio'
   const alertCount = await alertUfficio(user.id)
+
+  let showFirstAccess = false
+  let dbNome = ''
+
+  if (user.email) {
+    const col = await prisma.collaboratoreUfficio.findFirst({
+      where: { email: user.email },
+      select: { nome: true, primoAccesso: true }
+    })
+    if (col) {
+      dbNome = col.nome
+      showFirstAccess = col.primoAccesso
+    }
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -60,61 +51,6 @@ export default async function UfficioLayout({ children }: { children: React.Reac
               </div>
             </Link>
 
-            {/* Nav desktop */}
-            <nav className="hidden md:flex items-center gap-0.5">
-              {/* Anagrafiche dropdown */}
-              <div className="group relative">
-                <button className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-600 hover:text-white">
-                  <Users size={14} />
-                  <span>Anagrafiche</span>
-                  <ChevronDown size={12} className="opacity-60 transition-transform group-hover:rotate-180" />
-                </button>
-                <div className="absolute top-full left-0 z-50 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-150 pt-1">
-                  <div className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[160px]">
-                    {ANAGRAFICHE.map(item => (
-                      <Link key={item.href} href={item.href}
-                        className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium">
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {NAV.filter(n => n.href !== '/ufficio/dashboard').map(item => {
-                if (item.label === 'Fatture') {
-                  return (
-                    <div key={item.href} className="group relative">
-                      <button className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-600 hover:text-white">
-                        <item.Icon size={14} />
-                        <span>Fatture</span>
-                        <ChevronDown size={12} className="opacity-60 transition-transform group-hover:rotate-180" />
-                      </button>
-                      <div className="absolute top-full left-0 z-50 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-150 pt-1">
-                        <div className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden min-w-[180px]">
-                          <Link href="/ufficio/fatture"
-                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium">
-                            Fatture Attive (Emesse)
-                          </Link>
-                          <Link href="/ufficio/fatture-passive"
-                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium">
-                            Fatture Passive (Ricevute)
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                }
-                return (
-                  <Link key={item.href} href={item.href}
-                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-teal-100 hover:bg-teal-600 hover:text-white">
-                    <item.Icon size={14} />
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </nav>
-
             {/* Actions */}
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="hidden lg:block text-sm text-teal-200 truncate max-w-32">{nome.split(' ')[0]}</span>
@@ -123,29 +59,15 @@ export default async function UfficioLayout({ children }: { children: React.Reac
             </div>
           </div>
         </div>
-
-        {/* Nav mobile */}
-        <div className="md:hidden border-t border-teal-600/50">
-          <div className="mx-auto max-w-7xl px-4">
-            <div className="flex overflow-x-auto scrollbar-none gap-0.5 py-1">
-              <Link href="/ufficio/commesse" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Commesse</Link>
-              <Link href="/ufficio/clienti" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Clienti</Link>
-              <Link href="/ufficio/fornitori" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Fornitori</Link>
-              <Link href="/ufficio/operai" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Operai</Link>
-              <Link href="/ufficio/preventivi" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Preventivi</Link>
-              <Link href="/ufficio/ordini" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Ordini</Link>
-              <Link href="/ufficio/pianificazione" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Pianificazione</Link>
-              <Link href="/ufficio/fatture" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Fatture</Link>
-              <Link href="/ufficio/fatture-passive" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">F. Passive</Link>
-              <Link href="/ufficio/saldi-pendenti" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Saldi pendenti</Link>
-              <Link href="/ufficio/scadenzario" className="shrink-0 whitespace-nowrap px-3 py-2 text-sm font-medium text-teal-200 hover:text-white">Scadenzario</Link>
-            </div>
-          </div>
-        </div>
+        <UfficioNav />
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       <AssistenteContestuale role="ufficio" />
+      {showFirstAccess && (
+        <FirstAccessModal userRole="ufficio" userEmail={user.email!} userName={dbNome} />
+      )}
     </div>
   )
 }
+
