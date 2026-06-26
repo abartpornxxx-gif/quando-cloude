@@ -24,6 +24,7 @@ export default async function CommessaDettPage({
       include: {
         cliente: { select: { nome: true } },
         preventivo: { select: { id: true } },
+        sopralluogo: true,
         operai: { include: { operaio: { select: { id: true, nome: true, ruolo: true } } } },
         tipoLavoro: { select: { id: true, nome: true } },
         adempimenti: { orderBy: [{ ordine: 'asc' }, { createdAt: 'asc' }] },
@@ -167,6 +168,7 @@ export default async function CommessaDettPage({
     costiManodopera: c.costiManodopera,
     costiMezzi: c.costiMezzi,
     fatturato: c.fatturato,
+    avanzamentoPercentuale: c.avanzamentoPercentuale,
   }
 
   return (
@@ -289,6 +291,7 @@ export default async function CommessaDettPage({
         piano={pianoRows}
         operaiAssegnati={operaiAssegnati}
         operaiDisponibili={operaiDisponibili}
+        sopralluogo={c.sopralluogo}
       />
     </div>
   )

@@ -47,7 +47,7 @@ export default async function MagazziniereDashboard() {
         localStorageKey="quadro_onboarding_seen_magazziniere"
       />
       {/* Hero */}
-      <div className="rounded-2xl mesh-bg-magazziniere border border-amber-850 px-6 py-6 shadow-premium-lg">
+      <div className="rounded-2xl mesh-bg-magazziniere border border-amber-900 px-6 py-6 shadow-premium-lg">
         <p className="text-amber-100/90 text-xs font-semibold uppercase tracking-wider">Area Magazzino</p>
         <h1 className="text-2xl font-black text-white tracking-tight mt-1">
           Ciao, {magazziniere.nome.split(' ')[0]}!

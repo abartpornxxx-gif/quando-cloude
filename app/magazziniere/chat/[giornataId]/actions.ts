@@ -10,6 +10,13 @@ export async function inviaMsgMagazziniere(giornataId: string, testo: string): P
   const giornata = await prisma.giornata.findUnique({ where: { id: giornataId } })
   if (!giornata) throw new Error('Giornata non trovata')
 
+  // Verifica che esista almeno una richiesta materiale per questa giornata (contesto valido)
+  const richiestaEsiste = await prisma.richiestaMateriale.findFirst({
+    where: { giornataId },
+    select: { id: true },
+  })
+  if (!richiestaEsiste) throw new Error('Non autorizzato: nessuna richiesta materiale collegata a questa giornata')
+
   await prisma.chatMessaggio.create({
     data: {
       giornataId,
@@ -24,9 +31,18 @@ export async function inviaMsgMagazziniere(giornataId: string, testo: string): P
 }
 
 export async function getMessaggiMagazziniere(giornataId: string) {
-  await requireMagazziniere()
+  const { magazziniere } = await requireMagazziniere()
+
+  // Stessa verifica del contesto valido
+  const richiestaEsiste = await prisma.richiestaMateriale.findFirst({
+    where: { giornataId },
+    select: { id: true },
+  })
+  if (!richiestaEsiste) throw new Error('Non autorizzato')
+
   return prisma.chatMessaggio.findMany({
     where: { giornataId },
     orderBy: { createdAt: 'asc' },
+    take: 200,
   })
 }

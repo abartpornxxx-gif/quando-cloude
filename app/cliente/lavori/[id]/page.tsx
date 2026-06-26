@@ -1,4 +1,4 @@
-﻿import { requireCliente } from '@/lib/auth'
+import { requireCliente } from '@/lib/auth'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
@@ -18,7 +18,10 @@ export default async function ClienteCommessaPage({ params }: Props) {
     include: {
       giornate: {
         include: {
-          foto: { orderBy: { createdAt: 'asc' } },
+          foto: { 
+            where: { visibileCliente: true },
+            orderBy: { createdAt: 'asc' } 
+          },
           rapportino: true,
           operaio: { select: { nome: true } },
         },
@@ -38,22 +41,28 @@ export default async function ClienteCommessaPage({ params }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const c = commessa!
 
-  function avanzamento() {
-    if (c.stato === 'chiusa') return 100
-    if (c.preventivato <= 0) return null
-    const costi = c.costiManodopera + c.costiMateriali + c.costiMezzi
-    return Math.min(100, Math.round(costi / c.preventivato * 100))
-  }
-
-  const perc = avanzamento()
+  const perc = c.avanzamentoPercentuale ?? 0
 
   // Raccoglie tutte le foto dalle giornate
   const tutteFoto = c.giornate.flatMap(g =>
     g.foto.map(f => ({ url: f.url, data: g.data, operaio: g.operaio?.nome }))
   )
 
+  // Calcola lo stato del cantiere in quel momento per animare la barra
+  // (es. l'operaio sta lavorando ora?)
+  const oggi = new Date()
+  const oggiStr = formatData(oggi)
+  const giornataOggi = c.giornate.find(g => formatData(g.data) === oggiStr)
+  const inPausa = giornataOggi?.fase === 'pausa'
+  const inLavoro = giornataOggi?.fase === 'mattina' || giornataOggi?.fase === 'pomeriggio'
+  
+  const workerStatus = c.stato === 'chiusa' || c.stato === 'finita' ? '🎉 Lavori conclusi!' : 
+                       inPausa ? '☕ Operaio in pausa' :
+                       inLavoro ? '🔨 Lavori in corso ora...' :
+                       '🚧 Cantiere in attesa'
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-10">
       <div className="flex items-center gap-3">
         <Link href="/cliente/lavori" className="text-violet-600 hover:text-violet-800 text-sm">‹ Lavori</Link>
         <h1 className="text-2xl font-bold text-gray-900 flex-1 truncate">{c.nome}</h1>
@@ -64,26 +73,58 @@ export default async function ClienteCommessaPage({ params }: Props) {
 
       {c.indirizzoCantiere && (
         <p className="text-sm text-gray-500 flex items-center gap-1">
-          <Image src="/immagini/icona-posizione.png" width={13} height={13} alt="" className="shrink-0 opacity-60" />
+          <span className="text-gray-400">📍</span>
           {c.indirizzoCantiere}
         </p>
       )}
 
-      {/* Barra avanzamento */}
-      {perc !== null && (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="font-semibold text-gray-700">Avanzamento lavori</span>
-            <span className="font-bold text-violet-700">{perc}%</span>
+      {/* Barra avanzamento con animazione */}
+      <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white shadow-md p-5 relative overflow-hidden">
+        <div className="flex justify-between items-end mb-8 relative z-10">
+          <div>
+            <span className="block font-bold text-gray-800 text-lg">Avanzamento Lavori</span>
+            <span className="block text-sm text-violet-600 font-medium mt-1">{workerStatus}</span>
           </div>
-          <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full ${perc >= 100 ? 'bg-green-500' : perc >= 50 ? 'bg-blue-500' : 'bg-violet-500'}`}
-              style={{ width: `${perc}%` }}
-            />
+          <span className="text-3xl font-black text-violet-800">{perc}%</span>
+        </div>
+        
+        {/* Track */}
+        <div className="h-4 bg-violet-100/50 rounded-full w-full relative">
+          {/* Fill animato */}
+          <div
+            className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out flex items-center justify-end pr-2"
+            style={{ 
+              width: `${Math.max(perc, 5)}%`, 
+              background: 'linear-gradient(90deg, #8b5cf6, #6d28d9)',
+              boxShadow: '0 0 10px rgba(139, 92, 246, 0.5)'
+            }}
+          >
+            {/* Animazione striped */}
+            {inLavoro && (
+              <div className="absolute inset-0 rounded-full opacity-20 bg-[length:20px_20px]" 
+                   style={{ backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent)', animation: 'progress-stripes 2s linear infinite' }} />
+            )}
+          </div>
+          
+          {/* Mascotte/Operaio che cammina sulla barra */}
+          <div 
+            className="absolute -top-8 transition-all duration-1000 ease-out"
+            style={{ left: `calc(${perc}% - 16px)` }}
+          >
+            <div className={`text-3xl drop-shadow-md transition-transform ${inLavoro ? 'animate-bounce' : ''}`}>
+              {c.stato === 'chiusa' || c.stato === 'finita' ? '🏁' : inPausa ? '☕' : '👷‍♂️'}
+            </div>
           </div>
         </div>
-      )}
+
+        {/* CSS custom locale per l'animazione */}
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes progress-stripes {
+            from { background-position: 40px 0; }
+            to { background-position: 0 0; }
+          }
+        `}} />
+      </div>
 
       {/* Varianti lavori */}
       {c.varianti && c.varianti.length > 0 && (

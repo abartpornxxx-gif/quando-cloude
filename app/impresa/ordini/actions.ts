@@ -49,6 +49,16 @@ export async function avanzaStatoOrdine(
   })
   if (!ordine) throw new Error('Ordine non trovato')
 
+  // Validazione sequenza stati: richiesto→ordinato→consegnato→usato
+  const statoAtteso: Record<string, string> = {
+    ordinato: 'richiesto',
+    consegnato: 'ordinato',
+    usato: 'consegnato',
+  }
+  if (ordine.stato !== statoAtteso[nuovoStato]) {
+    throw new Error(`Transizione non valida: ordine in stato "${ordine.stato}", non può passare a "${nuovoStato}"`)
+  }
+
   await prisma.$transaction(async tx => {
     await tx.ordineFornitore.update({
       where: { id: ordineId },

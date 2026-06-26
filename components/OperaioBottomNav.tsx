@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { HardHat, Calendar, CalendarDays, Bell, UserCircle, type LucideIcon } from 'lucide-react'
 
@@ -36,7 +37,7 @@ export function OperaioBottomNav({ alertCount }: Props) {
           const { Icon } = item
 
           return (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors"
@@ -67,7 +68,7 @@ export function OperaioBottomNav({ alertCount }: Props) {
               <span className={isGiornata ? 'text-emerald-700 font-bold' : isActive ? 'text-emerald-700' : 'text-gray-500'}>
                 {item.label}
               </span>
-            </a>
+            </Link>
           )
         })}
       </div>

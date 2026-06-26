@@ -39,6 +39,7 @@ const MACRO: MacroEntry[] = [
       { label: 'Preventivi', href: '/impresa/preventivi', desc: 'Offerte ai clienti' },
       { label: 'Rapportini', href: '/impresa/rapportini', desc: 'Per commessa' },
       { label: 'Pianificazione', href: '/impresa/pianificazione', desc: 'Chi lavora e quando' },
+      { label: 'Calendario', href: '/impresa/calendario', desc: 'Vista mensile' },
       { label: 'Manutenzioni', href: '/impresa/manutenzioni', desc: 'Controlli periodici' },
       { label: 'Tipi lavoro', href: '/impresa/tipi-lavoro', desc: 'Checklist adempimenti' },
     ],
@@ -106,12 +107,13 @@ const MACRO: MacroEntry[] = [
     iconBg: 'bg-slate-100',
     iconCls: 'text-slate-500',
     dot: 'bg-slate-400',
-    prefixes: ['/impresa/configurazione', '/impresa/checklist', '/impresa/personalizzazione', '/impresa/promemoria'],
+    prefixes: ['/impresa/configurazione', '/impresa/checklist', '/impresa/personalizzazione', '/impresa/promemoria', '/impresa/task'],
     items: [
       { label: 'Configurazione', href: '/impresa/configurazione', desc: 'Orari e opzioni' },
       { label: 'Personalizzazione', href: '/impresa/personalizzazione', desc: 'Mascotte e stile' },
       { label: 'Checklist', href: '/impresa/checklist', desc: 'Suggerimenti operai' },
       { label: 'Promemoria', href: '/impresa/promemoria', desc: 'Appuntamenti' },
+      { label: 'Task libreria', href: '/impresa/task', desc: 'Attività tipo' },
     ],
   },
 ]

@@ -42,12 +42,21 @@ export async function registraPagamento(
 ): Promise<void> {
   await requireImpresaOUfficio()
 
+  const fattura = await prisma.fatturaPassiva.findUnique({ where: { id: fatturaId } })
+  if (!fattura) throw new Error('Fattura non trovata')
+  if (fattura.stato === 'pagata') throw new Error('Fattura già interamente pagata')
+
+  const giaIncassato = fattura.importoPagato ?? 0
+  const nuovoTotale = giaIncassato + importoPagato
+  const completamentePagata = nuovoTotale >= fattura.importo
+  const nuovoStato = completamentePagata ? 'pagata' : 'parzialmente_pagata'
+
   await prisma.fatturaPassiva.update({
     where: { id: fatturaId },
     data: {
-      stato: 'pagata',
-      dataPagamento: new Date(dataPagamento),
-      importoPagato,
+      stato: nuovoStato,
+      dataPagamento: completamentePagata ? new Date(dataPagamento) : fattura.dataPagamento,
+      importoPagato: nuovoTotale,
     },
   })
 
@@ -62,7 +71,9 @@ export async function eliminaFatturaPassiva(fatturaId: string): Promise<void> {
 
   const fattura = await prisma.fatturaPassiva.findUnique({ where: { id: fatturaId } })
   if (!fattura) throw new Error('Fattura non trovata')
-  if (fattura.stato === 'pagata') throw new Error('Non puoi eliminare una fattura già pagata')
+  if (fattura.stato === 'pagata' || fattura.stato === 'parzialmente_pagata') {
+    throw new Error('Non puoi eliminare una fattura con pagamenti già registrati')
+  }
 
   await prisma.fatturaPassiva.delete({ where: { id: fatturaId } })
   revalidatePath('/impresa/fatture-passive')

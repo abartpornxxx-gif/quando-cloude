@@ -14,19 +14,17 @@ export default async function ClienteDocumentiPage() {
   })
   const commessaIds = commesse.map(c => c.id)
 
-  const [dicos, fatture] = await Promise.all([
-    commessaIds.length > 0
-      ? prisma.dichiarazioneConformita.findMany({
-          where: { commessaId: { in: commessaIds } },
-          include: { commessa: { select: { nome: true } } },
-          orderBy: { data: 'desc' },
-        })
-      : [],
+  const [fatture, richiesteDiCo] = await Promise.all([
     prisma.fatturaAttiva.findMany({
       where: { clienteId: cliente.id },
       include: { righe: true },
       orderBy: [{ anno: 'desc' }, { numero: 'desc' }],
     }),
+    prisma.richiestaDiCo.findMany({
+      where: { clienteId: cliente.id },
+      include: { commessa: { select: { nome: true } } },
+      orderBy: { createdAt: 'desc' },
+    })
   ])
 
   function totale(righe: { quantita: number; prezzoUnitario: number }[], iva: number) {
@@ -34,7 +32,7 @@ export default async function ClienteDocumentiPage() {
     return imp + Math.round(imp * iva / 100)
   }
 
-  const haDocumenti = dicos.length > 0 || fatture.length > 0
+  const haDocumenti = fatture.length > 0 || richiesteDiCo.length > 0
 
   return (
     <div className="space-y-6">
@@ -81,34 +79,54 @@ export default async function ClienteDocumentiPage() {
         </div>
       )}
 
-      {/* Dichiarazioni di Conformità */}
-      {dicos.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-2">Dichiarazioni di Conformità (DM 37/2008)</h2>
+      {/* Dichiarazioni di Conformità - Richiesta */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold text-gray-700">Dichiarazioni di Conformità (Di.Co.)</h2>
+          <Link
+            href="/cliente/documenti/richiedi-dico"
+            className="text-xs font-semibold bg-violet-100 text-violet-800 hover:bg-violet-200 px-3 py-1.5 rounded-full transition-colors"
+          >
+            + Richiedi Di.Co.
+          </Link>
+        </div>
+        
+        {richiesteDiCo.length === 0 ? (
+          <div className="bg-violet-50 border border-violet-200 rounded-xl p-5 text-center">
+            <h3 className="text-sm font-bold text-violet-900 mb-1">Hai bisogno della Di.Co.?</h3>
+            <p className="text-xs text-violet-700 max-w-sm mx-auto mb-3">
+              Richiedi la Dichiarazione di Conformità ufficiale all'impresa per uno dei tuoi cantieri completati.
+            </p>
+            <Link
+              href="/cliente/documenti/richiedi-dico"
+              className="inline-block bg-violet-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-violet-700 transition-colors shadow-sm"
+            >
+              Richiedi ora →
+            </Link>
+          </div>
+        ) : (
           <div className="bg-white rounded-xl border border-gray-200 divide-y">
-            {dicos.map(d => (
-              <Link
-                key={d.id}
-                href={`/cliente/documenti/dico/${d.id}`}
-                className="flex items-center justify-between p-4 hover:bg-gray-50"
-              >
+            {richiesteDiCo.map(r => (
+              <div key={r.id} className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
                   <Image src="/immagini/icona-rapportino.png" width={28} height={28} alt="" className="opacity-80" />
                   <div>
-                    <p className="font-semibold text-sm">{d.tipoImpianto}</p>
-                    <p className="text-xs text-gray-400">
-                      {d.indirizzoImpianto}
-                      {d.commessa ? ` · ${d.commessa.nome}` : ''}
+                    <p className="font-semibold text-sm">
+                      Richiesta per: {r.commessa?.nome ?? 'Cantiere generico'}
                     </p>
-                    <p className="text-xs text-gray-400">Data: {formatData(d.data)}</p>
+                    <p className="text-xs text-gray-400">Data richiesta: {formatData(r.createdAt)}</p>
                   </div>
                 </div>
-                <span className="text-violet-600 text-xs font-medium shrink-0">Scarica / Stampa →</span>
-              </Link>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${r.evasa ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                    {r.evasa ? 'Evasa (Controlla Email)' : 'In elaborazione'}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

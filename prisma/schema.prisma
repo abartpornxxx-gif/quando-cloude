@@ -54,6 +54,7 @@ model Cliente {
   richiesteOfferte   RichiestaOfferta[]
   manutenzioni       ManutenzioneProgrammata[]
   proposteIntervento PropostaIntervento[]
+  richiesteDiCo      RichiestaDiCo[]
 
   @@map("clienti")
 }
@@ -257,6 +258,7 @@ model Commessa {
   indirizzoCantiere String?           @map("indirizzo_cantiere")
   stato             StatoCommessa     @default(aperta)
   archiviata        Boolean           @default(false)
+  avanzamentoPercentuale       Int                            @default(0) @map("avanzamento_percentuale")
   preventivato      Int               @default(0)
   costiMateriali    Int               @default(0) @map("costi_materiali")
   costiManodopera   Int               @default(0) @map("costi_manodopera")
@@ -287,8 +289,35 @@ model Commessa {
   proposteIntervento      PropostaIntervento[]
   varianti                VarianteLavoro[]
   richiestePreventiviFornitori RichiestaPreventivoFornitore[]
+  richiesteDiCo                RichiestaDiCo[]
+  sopralluogo                  Sopralluogo?
 
   @@map("commesse")
+}
+
+model Sopralluogo {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId          String   @unique @map("commessa_id") @db.Uuid
+  commessa            Commessa @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  dataSopralluogo     DateTime @map("data_sopralluogo") @db.Timestamptz
+  referentePresente   String   @map("referente_presente")
+  indirizzo           String
+  ambienti            String[] // Elenco locali
+  fotoUrls            String[] @map("foto_urls")
+  noteTecniche        String?  @map("note_tecniche")
+  misure              String?
+  richiesteCliente    String?  @map("richieste_cliente")
+  criticita           String?
+  materialiPrevisti   String?  @map("materiali_previsti")
+  lavorazioniDaFare   String?  @map("lavorazioni_da_fare")
+  vincoli             String?  
+  accessi             String?  
+  statoImpianto       String?  @map("stato_impianto_esistente")
+  istruzioniOperai    String?  @map("istruzioni_operai")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("sopralluoghi")
 }
 
 // ─── Fase 2/Redesign: Giornata lavorativa con flusso temporale ───────────────
@@ -388,6 +417,7 @@ model GiornataFoto {
   url        String
   path       String
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  visibileCliente  Boolean  @default(false) @map("visibile_cliente")
 
   @@map("giornata_foto")
 }
@@ -1061,10 +1091,24 @@ model Promemoria {
   assegnatoAOperaioId String?   @map("assegnato_a_operaio_id") @db.Uuid
   operaio             Operaio?  @relation(fields: [assegnatoAOperaioId], references: [id], onDelete: Cascade)
   perImpresa          Boolean   @default(false) @map("per_impresa")
+  importante          Boolean   @default(false)
   creatoDa            String?   @map("creato_da")
   completatoAt        DateTime? @map("completato_at") @db.Timestamptz
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("promemoria")
+}
+
+model RichiestaDiCo {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clienteId   String   @map("cliente_id") @db.Uuid
+  cliente     Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  commessaId  String?  @map("commessa_id") @db.Uuid
+  commessa    Commessa? @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  note        String?
+  evasa       Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("richieste_dico")
 }

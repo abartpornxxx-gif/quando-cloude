@@ -7,6 +7,15 @@ import { revalidatePath } from 'next/cache'
 export async function inviaRichiesta(offertaId: string, commessaId: string | null, note: string) {
   const { cliente } = await requireCliente()
 
+  // Verifica ownership: la commessa deve appartenere a questo cliente
+  if (commessaId) {
+    const commessa = await prisma.commessa.findFirst({
+      where: { id: commessaId, clienteId: cliente.id },
+      select: { id: true },
+    })
+    if (!commessa) throw new Error('Commessa non valida')
+  }
+
   await prisma.richiestaOfferta.create({
     data: {
       offertaId,

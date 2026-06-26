@@ -14,7 +14,13 @@ export async function salvaPreventivo(formData: FormData) {
   await requireImpresa()
   const id = formData.get('id') as string | null
   const righeJson = formData.get('righe') as string
-  const righeInput: RigaInput[] = JSON.parse(righeJson)
+  let righeInput: RigaInput[]
+  try {
+    righeInput = JSON.parse(righeJson)
+    if (!Array.isArray(righeInput)) throw new Error()
+  } catch {
+    throw new Error('Dati righe preventivo non validi')
+  }
 
   const data = {
     clienteId: (formData.get('clienteId') as string) || null,
@@ -24,20 +30,22 @@ export async function salvaPreventivo(formData: FormData) {
   }
 
   if (id) {
-    await prisma.preventivoRiga.deleteMany({ where: { preventivoId: id } })
-    await prisma.preventivo.update({
-      where: { id },
-      data: {
-        ...data,
-        righe: {
-          create: righeInput.map((r, i) => ({
-            descrizione: r.descrizione,
-            quantita: r.quantita,
-            prezzoUnitario: Math.round(r.prezzoUnitario),
-            ordine: i,
-          })),
+    await prisma.$transaction(async tx => {
+      await tx.preventivoRiga.deleteMany({ where: { preventivoId: id } })
+      await tx.preventivo.update({
+        where: { id },
+        data: {
+          ...data,
+          righe: {
+            create: righeInput.map((r, i) => ({
+              descrizione: r.descrizione,
+              quantita: r.quantita,
+              prezzoUnitario: Math.round(r.prezzoUnitario),
+              ordine: i,
+            })),
+          },
         },
-      },
+      })
     })
   } else {
     await prisma.preventivo.create({

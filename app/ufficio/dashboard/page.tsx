@@ -151,7 +151,7 @@ export default async function UfficioDashboard() {
       />
 
       {/* Hero */}
-      <div className="rounded-2xl mesh-bg-ufficio border border-teal-850 px-6 py-6 shadow-premium-lg">
+      <div className="rounded-2xl mesh-bg-ufficio border border-teal-900 px-6 py-6 shadow-premium-lg">
         <p className="text-teal-200 text-xs font-semibold uppercase tracking-wider">Area Ufficio</p>
         <h1 className="text-2xl font-black text-white tracking-tight mt-1">
           Ciao, {collaboratore.nome.split(' ')[0]}!
@@ -190,19 +190,19 @@ export default async function UfficioDashboard() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Azioni rapide</p>
         <div className="flex flex-wrap gap-3">
           <Link href="/ufficio/preventivi/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4.5 py-2.5 text-sm font-semibold text-white shadow-premium transition-all hover:bg-teal-700 hover-lift active-press">
+            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-premium transition-all hover:bg-teal-700 hover-lift active-press">
             + Nuovo preventivo
           </Link>
           <Link href="/ufficio/clienti/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Nuovo cliente
           </Link>
           <Link href="/ufficio/ordini/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Nuovo ordine
           </Link>
           <Link href="/ufficio/fatture/nuova"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Nuova fattura
           </Link>
         </div>

@@ -97,9 +97,12 @@ export function FirstAccessModal({ userRole, userEmail, userName }: Props) {
 
         if (authError) {
           let errorMessage = authError.message
-          // Traduzione in italiano dei messaggi di errore standard di Supabase
+          // Se l'utente ha inserito la password che ha già, Supabase dà errore.
+          // Invece di bloccare l'utente in uno stallo, procediamo allo step successivo.
           if (errorMessage.includes("different from the old")) {
-            errorMessage = "La nuova password deve essere diversa da quella temporanea precedente. Per favore, scegli una password diversa."
+            console.log("L'utente ha inserito la password attuale. Procedo allo step 2.")
+            setStep(2)
+            return
           } else if (errorMessage.includes("should be at least 6 characters")) {
             errorMessage = "La password deve contenere almeno 6 caratteri."
           } else {

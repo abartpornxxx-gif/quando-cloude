@@ -15,7 +15,7 @@ export default async function LavoriPage({ params }: Props) {
   const giornata = await prisma.giornata.findUnique({
     where: { id },
     include: {
-      commessa: { select: { id: true, nome: true, indirizzoCantiere: true, istruzioniCantiere: true, attrezzatureNecessarie: true } },
+      commessa: { select: { id: true, nome: true, indirizzoCantiere: true, istruzioniCantiere: true, attrezzatureNecessarie: true, sopralluogo: true } },
       pianificazione: { select: { lavoroDaFare: true, noteMateriale: true } },
       foto: { orderBy: { createdAt: 'desc' }, take: 8 },
       attrezzatureUsi: {

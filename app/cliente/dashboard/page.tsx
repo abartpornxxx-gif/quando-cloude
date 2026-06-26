@@ -64,8 +64,8 @@ export default async function ClienteDashboardPage() {
     {
       href: '/cliente/documenti',
       icon: '/immagini/icona-dico.png',
-      titolo: 'Documenti',
-      desc: 'Fatture e Dichiarazioni di Conformità',
+      titolo: 'Documenti & Certificati',
+      desc: 'Fatture e Richieste Di.Co.',
       badge: null,
     },
     {
@@ -85,21 +85,21 @@ export default async function ClienteDashboardPage() {
         subtitle="La tua finestra personale sui lavori eseguiti da CreCas Impianti S.r.l."
         features={[
           "Consultare l'avanzamento dei lavori dei tuoi cantieri attivi.",
-          "Verificare e scaricare i documenti ufficiali (certificati DiCo, preventivi).",
+          "Verificare e scaricare le fatture e richiedere la Di.Co.",
           "Visualizzare gli interventi programmati di manutenzione periodica.",
           "Accettare o rifiutare in tempo reale le nuove proposte di intervento."
         ]}
         actions={[
           "Controlla lo stato e le novità dei tuoi cantieri in corso in 'I miei lavori'.",
           "Esamina le fatture emesse e lo storico dei tuoi pagamenti.",
-          "Scarica le Dichiarazioni di Conformità e i file caricati per te.",
+          "Richiedi all'impresa la tua Dichiarazione di Conformità in modo professionale.",
           "Controlla le prossime scadenze delle manutenzioni programmate."
         ]}
         finalMessage="“Il cliente non deve chiedere sempre aggiornamenti: QUADRO mostra ciò che serve in modo ordinato.”"
         localStorageKey="quadro_onboarding_seen_cliente"
       />
       {/* Welcome */}
-      <div className="rounded-2xl mesh-bg-cliente text-white px-6 py-6 shadow-premium-lg border border-violet-850 flex items-center justify-between gap-4">
+      <div className="rounded-2xl mesh-bg-cliente text-white px-6 py-6 shadow-premium-lg border border-violet-900 flex items-center justify-between gap-4">
         <div>
           <p className="text-violet-200 text-xs font-semibold uppercase tracking-wider">Portale personale</p>
           <h1 className="text-2xl font-black mt-1 tracking-tight">Ciao, {nome.split(' ')[0]}!</h1>
@@ -164,7 +164,7 @@ export default async function ClienteDashboardPage() {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {item.badge}
-              <span className="text-gray-300 group-hover:text-violet-450 text-lg font-bold transition-colors group-hover:translate-x-0.5 duration-300">›</span>
+              <span className="text-gray-300 group-hover:text-violet-500 text-lg font-bold transition-colors group-hover:translate-x-0.5 duration-300">›</span>
             </div>
           </Link>
         ))}

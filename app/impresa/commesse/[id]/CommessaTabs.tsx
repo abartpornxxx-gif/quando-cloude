@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { AdempimentiSection } from './AdempimentiSection'
 import { CommessaForm } from '../CommessaForm'
 import { OperaiManager } from './OperaiManager'
+import { SopralluogoTab } from './SopralluogoTab'
 import { formatEuro, formatData } from '@/lib/format'
 
-type Tab = 'timeline' | 'adempimenti' | 'documenti' | 'piano' | 'note'
+type Tab = 'timeline' | 'sopralluogo' | 'adempimenti' | 'documenti' | 'piano' | 'note'
 
 type Adempimento = {
   id: string
@@ -69,6 +70,7 @@ type DefaultValues = {
   costiManodopera: number
   costiMezzi: number
   fatturato: number
+  avanzamentoPercentuale: number
 }
 
 interface Props {
@@ -90,6 +92,7 @@ interface Props {
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'timeline',    label: 'Timeline',       icon: '📅' },
+  { id: 'sopralluogo', label: 'Sopralluogo',    icon: '🔍' },
   { id: 'adempimenti', label: 'Adempimenti',    icon: '✓' },
   { id: 'documenti',   label: 'Documenti',      icon: '📄' },
   { id: 'piano',       label: 'Piano',          icon: '📆' },
@@ -117,13 +120,14 @@ export function CommessaTabs({
   piano,
   operaiAssegnati,
   operaiDisponibili,
-}: Props) {
+  sopralluogo,
+}: Props & { sopralluogo: any }) {
   const [activeTab, setActiveTab] = useState<Tab>('timeline')
 
   return (
     <div>
       {/* Tab bar — overflow-x-auto per mobile */}
-      <div className="flex overflow-x-auto border-b border-gray-200 bg-white rounded-t-2xl shadow-sm">
+      <div className="flex overflow-x-auto border-b border-gray-200 bg-white rounded-t-2xl shadow-sm hide-scrollbar">
         {TABS.map(t => (
           <button
             key={t.id}
@@ -196,6 +200,11 @@ export function CommessaTabs({
               ))}
             </div>
           )
+        )}
+
+        {/* ── SOPRALLUOGO ── */}
+        {activeTab === 'sopralluogo' && (
+          <SopralluogoTab commessaId={commessaId} sopralluogo={sopralluogo} />
         )}
 
         {/* ── ADEMPIMENTI ── */}

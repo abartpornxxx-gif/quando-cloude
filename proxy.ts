@@ -75,24 +75,30 @@ export async function proxy(request: NextRequest) {
       return redirectWithSession(dest)
     }
 
-    // Impedisce di accedere all'area di un altro ruolo
-    if (role) {
-      const inWrongArea =
-        (pathname.startsWith('/impresa/') && role !== 'impresa') ||
-        (pathname.startsWith('/operaio/') && role !== 'operaio') ||
-        (pathname.startsWith('/cliente/') && role !== 'cliente') ||
-        (pathname.startsWith('/magazziniere/') && role !== 'magazziniere') ||
-        (pathname.startsWith('/ufficio/') && role !== 'ufficio')
+    // Utente autenticato senza ruolo: rimanda al login (account incompleto)
+    if (!role) {
+      return redirectWithSession('/login')
+    }
 
-      if (inWrongArea) {
-        return redirectWithSession(ROLE_HOME[role])
-      }
+    // Impedisce di accedere all'area di un altro ruolo
+    const inWrongArea =
+      (pathname.startsWith('/impresa/') && role !== 'impresa') ||
+      (pathname.startsWith('/operaio/') && role !== 'operaio') ||
+      (pathname.startsWith('/cliente/') && role !== 'cliente') ||
+      (pathname.startsWith('/magazziniere/') && role !== 'magazziniere') ||
+      (pathname.startsWith('/ufficio/') && role !== 'ufficio')
+
+    if (inWrongArea) {
+      return redirectWithSession(ROLE_HOME[role])
     }
 
     return supabaseResponse
   } catch {
-    // Middleware non deve mai bloccare le route: se c'è un errore, passa
-    return NextResponse.next()
+    // Su errore Auth (es. Supabase irraggiungibile), blocca l'accesso alle aree protette
+    const { pathname: p } = request.nextUrl
+    const isPublic = p === '/login' || p === '/register' || p.startsWith('/auth/')
+    if (isPublic) return NextResponse.next()
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 }
 

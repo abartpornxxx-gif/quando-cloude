@@ -109,7 +109,7 @@ export default async function UfficioScadenzarioPage() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
-              v.tipo === 'attiva' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-850'
+              v.tipo === 'attiva' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-900'
             }`}>
               {v.tipo === 'attiva' ? '▲ Credito' : '▼ Debito'}
             </span>
@@ -158,7 +158,7 @@ export default async function UfficioScadenzarioPage() {
         </div>
         <div className="rounded-2xl border border-orange-200 bg-orange-50/50 p-4">
           <p className="text-xs font-semibold text-orange-700 uppercase tracking-wide">Da pagare (Debiti)</p>
-          <p className="text-xl font-black text-orange-850 mt-1">{formatEuro(totDaPagare)}</p>
+          <p className="text-xl font-black text-orange-900 mt-1">{formatEuro(totDaPagare)}</p>
         </div>
       </div>
 

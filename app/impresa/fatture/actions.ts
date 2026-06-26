@@ -50,31 +50,31 @@ export async function registraIncasso(
 ): Promise<void> {
   await requireImpresaOUfficio()
 
-  // Il totale viene calcolato server-side dalle righe del DB (mai fidarsi del client)
-  const fattura = await prisma.fatturaAttiva.findUnique({
-    where: { id: fatturaId },
-    include: { righe: true },
-  })
-  if (!fattura) throw new Error('Fattura non trovata')
-  if (fattura.stato === 'incassata') throw new Error('Fattura già interamente incassata')
+  // Tutto dentro la transazione per evitare race condition su incassi concorrenti
+  const commessaId = await prisma.$transaction(async tx => {
+    const fattura = await tx.fatturaAttiva.findUnique({
+      where: { id: fatturaId },
+      include: { righe: true },
+    })
+    if (!fattura) throw new Error('Fattura non trovata')
+    if (fattura.stato === 'incassata') throw new Error('Fattura già interamente incassata')
 
-  const imponibile = fattura.righe.reduce(
-    (acc, r) => acc + Math.round(r.quantita * r.prezzoUnitario),
-    0
-  )
-  const iva = Math.round(imponibile * fattura.aliquotaIva / 100)
-  const totaleFattura = imponibile + iva
+    const imponibile = fattura.righe.reduce(
+      (acc, r) => acc + Math.round(r.quantita * r.prezzoUnitario),
+      0
+    )
+    const iva = Math.round(imponibile * fattura.aliquotaIva / 100)
+    const totaleFattura = imponibile + iva
 
-  const giaIncassato = fattura.importoIncassato ?? 0
-  const residuo = totaleFattura - giaIncassato
-  if (nuovoImporto <= 0) throw new Error('Importo non valido')
-  if (nuovoImporto > residuo) throw new Error(`Importo superiore al residuo (${(residuo / 100).toFixed(2)} €)`)
+    const giaIncassato = fattura.importoIncassato ?? 0
+    const residuo = totaleFattura - giaIncassato
+    if (nuovoImporto <= 0) throw new Error('Importo non valido')
+    if (nuovoImporto > residuo) throw new Error(`Importo superiore al residuo (${(residuo / 100).toFixed(2)} €)`)
 
-  const nuovoTotaleIncassato = giaIncassato + nuovoImporto
-  const completamenteIncassata = nuovoTotaleIncassato >= totaleFattura
-  const nuovoStato = completamenteIncassata ? 'incassata' : 'parzialmente_incassata'
+    const nuovoTotaleIncassato = giaIncassato + nuovoImporto
+    const completamenteIncassata = nuovoTotaleIncassato >= totaleFattura
+    const nuovoStato = completamenteIncassata ? 'incassata' : 'parzialmente_incassata'
 
-  await prisma.$transaction(async tx => {
     await tx.fatturaAttiva.update({
       where: { id: fatturaId },
       data: {
@@ -89,22 +89,28 @@ export async function registraIncasso(
         data: { fatturato: { increment: nuovoImporto } },
       })
     }
+    return fattura.commessaId
   })
 
   revalidatePath('/impresa/fatture')
   revalidatePath(`/impresa/fatture/${fatturaId}`)
-  if (fattura.commessaId) revalidatePath(`/impresa/commesse/${fattura.commessaId}`)
+  if (commessaId) revalidatePath(`/impresa/commesse/${commessaId}`)
   revalidatePath('/ufficio/fatture')
   revalidatePath(`/ufficio/fatture/${fatturaId}`)
   revalidatePath('/ufficio/saldi-pendenti')
   revalidatePath('/ufficio/dashboard')
-  if (fattura.commessaId) {
-    revalidatePath(`/ufficio/commesse/${fattura.commessaId}`)
+  if (commessaId) {
+    revalidatePath(`/ufficio/commesse/${commessaId}`)
   }
 }
 
 export async function segnaScaduta(fatturaId: string): Promise<void> {
   await requireImpresaOUfficio()
+  const fattura = await prisma.fatturaAttiva.findUnique({ where: { id: fatturaId }, select: { stato: true } })
+  if (!fattura) throw new Error('Fattura non trovata')
+  if (fattura.stato === 'incassata' || fattura.stato === 'parzialmente_incassata') {
+    throw new Error('Non puoi segnare come scaduta una fattura con incassi registrati')
+  }
   await prisma.fatturaAttiva.update({
     where: { id: fatturaId },
     data: { stato: 'scaduta' },

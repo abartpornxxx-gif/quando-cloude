@@ -11,6 +11,7 @@ export async function creaPromemoria(data: {
   dataOra: string // ISO string
   assegnatoAOperaioId?: string
   perImpresa: boolean
+  importante?: boolean
 }) {
   const user = await requireImpresaOUfficio()
   const role = user.user_metadata?.role || 'ufficio'
@@ -23,6 +24,7 @@ export async function creaPromemoria(data: {
       dataOra: new Date(data.dataOra),
       assegnatoAOperaioId: data.assegnatoAOperaioId || null,
       perImpresa: data.perImpresa,
+      importante: data.importante || false,
       tipo: 'intervento',
       stato: 'attivo',
       creatoDa: role === 'impresa' ? 'Impresa' : 'Ufficio',
@@ -53,6 +55,50 @@ export async function creaPromemoria(data: {
   revalidatePath('/ufficio/promemoria')
   revalidatePath('/impresa/dashboard')
   return { success: true, id: promemoria.id }
+}
+
+export async function aggiornaPromemoria(id: string, data: {
+  titolo: string
+  descrizione?: string
+  luogo?: string
+  dataOra: string
+  assegnatoAOperaioId?: string
+  perImpresa: boolean
+  importante?: boolean
+}) {
+  await requireImpresaOUfficio()
+
+  await prisma.promemoria.update({
+    where: { id },
+    data: {
+      titolo: data.titolo,
+      descrizione: data.descrizione || null,
+      luogo: data.luogo || null,
+      dataOra: new Date(data.dataOra),
+      assegnatoAOperaioId: data.assegnatoAOperaioId || null,
+      perImpresa: data.perImpresa,
+      importante: data.importante || false,
+    },
+  })
+
+  revalidatePath('/ufficio/promemoria')
+  revalidatePath('/impresa/dashboard')
+  revalidatePath('/operaio/dashboard')
+  return { success: true }
+}
+
+export async function toggleImportante(id: string, importante: boolean) {
+  await requireImpresaOUfficio()
+  await prisma.promemoria.update({
+    where: { id },
+    data: {
+      importante,
+    },
+  })
+
+  revalidatePath('/ufficio/promemoria')
+  revalidatePath('/impresa/dashboard')
+  return { success: true }
 }
 
 export async function completaPromemoria(id: string, completato: boolean) {

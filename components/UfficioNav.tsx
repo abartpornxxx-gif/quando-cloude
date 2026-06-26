@@ -72,6 +72,7 @@ const MACRO: MacroEntry[] = [
     items: [
       { label: 'Fatture Attive', href: '/ufficio/fatture', desc: 'Emesse' },
       { label: 'Fatture Passive', href: '/ufficio/fatture-passive', desc: 'Ricevute' },
+      { label: 'Importa Fatture', href: '/ufficio/fatture-passive/importa', desc: 'AI + manuale' },
       { label: 'Saldi Pendenti', href: '/ufficio/saldi-pendenti', desc: 'Scaduti' },
       { label: 'Scadenzario', href: '/ufficio/scadenzario', desc: 'Scadenze' },
     ],

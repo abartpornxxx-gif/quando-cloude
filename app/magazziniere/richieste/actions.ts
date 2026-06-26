@@ -72,9 +72,28 @@ export async function uploadFotoConsegna(
 
   const { data: urlData } = supabase.storage.from('foto-cantiere').getPublicUrl(path)
 
-  await prisma.richiestaMateriale.update({
-    where: { id: richiestaId },
-    data: { fotoUrl: urlData.publicUrl, fotoPath: path, stato: 'consegnata' },
+  await prisma.$transaction(async tx => {
+    await tx.richiestaMateriale.update({
+      where: { id: richiestaId },
+      data: { fotoUrl: urlData.publicUrl, fotoPath: path, stato: 'consegnata' },
+    })
+
+    // Crea scarico magazzino (stesso comportamento di aggiornaStatoRichiesta)
+    if (richiesta.materialeId) {
+      const existingMovimento = await tx.movimentoMagazzino.findUnique({ where: { richiestaId } })
+      if (!existingMovimento) {
+        await tx.movimentoMagazzino.create({
+          data: {
+            materialeId: richiesta.materialeId,
+            tipo: 'scarico',
+            quantita: 1,
+            descrizione: `Richiesta cantiere: ${richiesta.descrizione}`,
+            commessaId: richiesta.commessaId,
+            richiestaId,
+          },
+        })
+      }
+    }
   })
 
   // Notifica via chat nella giornata

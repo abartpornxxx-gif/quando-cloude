@@ -28,6 +28,14 @@ export async function salvaVarianteLavoro(commessaId: string, formData: FormData
   const fileUrl = (formData.get('fileUrl') as string) || null
   const visibileCliente = formData.get('visibileCliente') === 'on' || formData.get('visibileCliente') === 'true'
 
+  let approvatoAt: Date | null = stato === 'approvata' ? new Date() : null
+
+  // Preserva la data originale di approvazione se la variante era già approvata
+  if (id && stato === 'approvata') {
+    const existing = await prisma.varianteLavoro.findUnique({ where: { id }, select: { approvatoAt: true } })
+    approvatoAt = existing?.approvatoAt ?? new Date()
+  }
+
   const data: any = {
     commessaId,
     titolo,
@@ -38,7 +46,7 @@ export async function salvaVarianteLavoro(commessaId: string, formData: FormData
     note,
     fileUrl,
     visibileCliente,
-    approvatoAt: stato === 'approvata' ? new Date() : null,
+    approvatoAt,
   }
 
   if (id) {

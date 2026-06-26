@@ -25,6 +25,7 @@ interface Props {
     id?: string; nome?: string; clienteId?: string; indirizzoCantiere?: string
     stato?: string; note?: string; tipoLavoroId?: string
     istruzioniCantiere?: string; attrezzatureNecessarie?: string
+    avanzamentoPercentuale?: number
   } & Partial<Importi>
 }
 
@@ -155,6 +156,28 @@ export function CommessaForm({ action, clienti, tipiLavoro = [], defaultValues }
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Avanzamento manuale per Portale Cliente */}
+        <div className="border-t border-gray-100 px-6 py-4">
+          <label className="block text-sm font-medium text-gray-700">Avanzamento lavori (visibile al cliente) *</label>
+          <div className="mt-2 flex items-center gap-4">
+            <input
+              type="range"
+              name="avanzamentoPercentuale"
+              min="0" max="100" step="5"
+              defaultValue={defaultValues?.avanzamentoPercentuale ?? 0}
+              onChange={e => {
+                const el = document.getElementById('avanzamento-val')
+                if (el) el.innerText = `${e.target.value}%`
+              }}
+              className="flex-1 accent-blue-600"
+            />
+            <span id="avanzamento-val" className="text-lg font-bold text-blue-600 w-12 text-right">
+              {defaultValues?.avanzamentoPercentuale ?? 0}%
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-gray-400">Questa percentuale anima la barra di progresso nel Portale Cliente.</p>
         </div>
 
         {/* Dashboard margine */}

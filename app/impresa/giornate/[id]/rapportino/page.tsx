@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { formatData, formatEuro } from '@/lib/format'
+import { togglePrivacyFoto } from '../../foto-actions'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -270,19 +271,44 @@ export default async function RapportinoDettaglioPage({ params }: Props) {
       {/* Foto */}
       {giornata.foto.length > 0 && (
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-gray-100 px-5 py-4">
+          <div className="border-b border-gray-100 px-5 py-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-800">Foto di cantiere ({giornata.foto.length})</h2>
+            <p className="text-xs text-gray-400">Clicca sull'occhio per nascondere o mostrare la foto al cliente.</p>
           </div>
-          <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-4">
             {giornata.foto.map(f => (
-              <a key={f.id} href={f.url} target="_blank" rel="noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={f.url}
-                  alt="Foto cantiere"
-                  className="h-40 w-full rounded-xl object-cover border border-gray-200 hover:opacity-90 transition-opacity"
-                />
-              </a>
+              <div key={f.id} className="relative group">
+                <a href={f.url} target="_blank" rel="noreferrer" className="block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={f.url}
+                    alt="Foto cantiere"
+                    className={`h-40 w-full rounded-xl object-cover border transition-all ${
+                      f.visibileCliente ? 'border-gray-200 hover:opacity-90' : 'border-red-300 opacity-60 grayscale-[50%]'
+                    }`}
+                  />
+                </a>
+                <div className="absolute top-2 right-2">
+                  <form action={togglePrivacyFoto.bind(null, f.id, f.visibileCliente, giornata.id)}>
+                    <button
+                      type="submit"
+                      title={f.visibileCliente ? 'Visibile al cliente (Clicca per nascondere)' : 'Nascosta al cliente (Clicca per mostrare)'}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full shadow-sm backdrop-blur-md transition-transform hover:scale-110 ${
+                        f.visibileCliente ? 'bg-white/90 text-blue-600' : 'bg-red-600/90 text-white'
+                      }`}
+                    >
+                      {f.visibileCliente ? '👁️' : '🙈'}
+                    </button>
+                  </form>
+                </div>
+                {!f.visibileCliente && (
+                  <div className="absolute bottom-2 left-2 right-2 text-center pointer-events-none">
+                    <span className="bg-red-600/90 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded shadow-sm">
+                      Nascosta al cliente
+                    </span>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>

@@ -44,8 +44,11 @@ export async function inviaGiornata(input: GiornataInput): Promise<{ id: string 
   })
   if (!assegnazione) throw new Error('Non sei assegnato a questa commessa')
 
-  // Calcola costi da aggiungere alla commessa
-  const costoManodopera = Math.round((input.oreOrdinarie + input.oreStraordinarie) * operaio.costoOrario)
+  // Calcola costi: straordinari con maggiorazione 1.5x
+  const costoManodopera = Math.round(
+    input.oreOrdinarie * operaio.costoOrario +
+    input.oreStraordinarie * operaio.costoOrario * 1.5
+  )
   const costoMateriali = input.materiali.reduce(
     (acc, m) => acc + Math.round(m.quantita * m.prezzoUnitario),
     0

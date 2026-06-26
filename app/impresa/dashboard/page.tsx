@@ -497,19 +497,19 @@ export default async function ImpresaDashboardPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Azioni rapide</p>
         <div className="flex flex-wrap gap-3">
           <Link href="/impresa/preventivi/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4.5 py-2.5 text-sm font-semibold text-white shadow-premium transition-all hover:bg-blue-700 hover-lift active-press">
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-premium transition-all hover:bg-blue-700 hover-lift active-press">
             + Nuovo preventivo
           </Link>
           <Link href="/impresa/commesse/nuova"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Nuova commessa
           </Link>
           <Link href="/impresa/ordini/nuovo"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             + Ordine fornitore
           </Link>
           <Link href="/impresa/notifiche"
-            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4.5 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-bold text-slate-700 shadow-premium transition-all hover:bg-gray-50 hover-lift active-press">
             <Bell size={14} className="text-slate-500" />
             Notifiche
           </Link>
