@@ -1,47 +1,67 @@
 export async function callAI(systemPrompt: string, userMessage: string): Promise<string> {
-  // Supporta Groq (default), OpenRouter, OpenAI — formato OpenAI-compatible
   const apiKey = process.env.GROQ_API_KEY || process.env.AI_API_KEY || process.env.OPENAI_API_KEY
 
-  if (!apiKey) {
-    throw new Error('AI_NOT_CONFIGURED')
+  // ── Con chiave: usa provider OpenAI-compatible (Groq, OpenRouter, OpenAI...) ──
+  if (apiKey) {
+    const baseUrl = process.env.AI_BASE_URL || 'https://api.groq.com/openai/v1'
+    const model = process.env.AI_MODEL || 'llama-3.1-8b-instant'
+
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage },
+        ],
+        temperature: 0.7,
+        max_tokens: 1024,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      const status = response.status
+      if (status === 429) throw new Error('AI_QUOTA_EXCEEDED')
+      if (status === 401 || status === 403) {
+        // La chiave non va — proviamo Pollinations come fallback
+        return callPollinations(systemPrompt, userMessage)
+      }
+      throw new Error(`AI_API_ERROR: ${status} - ${errorText.slice(0, 200)}`)
+    }
+
+    const data = await response.json()
+    const text = data?.choices?.[0]?.message?.content
+    if (!text) throw new Error('AI_EMPTY_RESPONSE')
+    return text
   }
 
-  // Default: Groq (gratuito, veloce). Override con AI_BASE_URL per altri provider.
-  const baseUrl = process.env.AI_BASE_URL || 'https://api.groq.com/openai/v1'
-  const model = process.env.AI_MODEL || 'llama-3.1-8b-instant'
+  // ── Senza chiave: Pollinations AI (gratuito, nessun account richiesto) ──────
+  return callPollinations(systemPrompt, userMessage)
+}
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+async function callPollinations(systemPrompt: string, userMessage: string): Promise<string> {
+  const response = await fetch('https://text.pollinations.ai/', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model,
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: systemPrompt.slice(0, 3000) },
         { role: 'user', content: userMessage },
       ],
-      temperature: 0.7,
-      max_tokens: 1024,
+      model: 'openai',
+      private: true,
+      seed: Math.floor(Math.random() * 9999),
     }),
   })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    let parsed: any = {}
-    try { parsed = JSON.parse(errorText) } catch {}
+  if (!response.ok) throw new Error(`POLLINATIONS_ERROR: ${response.status}`)
 
-    const status = response.status
-    if (status === 429) throw new Error('AI_QUOTA_EXCEEDED')
-    if (status === 401 || status === 403) throw new Error('AI_INVALID_KEY')
-    throw new Error(`AI_API_ERROR: ${status} - ${errorText.slice(0, 200)}`)
-  }
-
-  const data = await response.json()
-  const text = data?.choices?.[0]?.message?.content
-
-  if (!text) throw new Error('AI_EMPTY_RESPONSE')
-
-  return text
+  const text = await response.text()
+  if (!text?.trim()) throw new Error('AI_EMPTY_RESPONSE')
+  return text.trim()
 }

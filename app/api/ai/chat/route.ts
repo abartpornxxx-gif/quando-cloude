@@ -36,14 +36,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Ruolo utente non definito' }, { status: 403 })
     }
 
-    // Verifica chiave API presente prima di tutto
-    if (!process.env.GROQ_API_KEY && !process.env.AI_API_KEY && !process.env.OPENAI_API_KEY) {
-      return NextResponse.json({
-        error: 'Assistente AI non configurato. Contatta l\'amministratore di sistema.',
-        notConfigured: true
-      }, { status: 503 })
-    }
-
     const body = await req.json()
     const { pathname, message } = body
 
