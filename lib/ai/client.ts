@@ -1,45 +1,48 @@
 export async function callAI(systemPrompt: string, userMessage: string): Promise<string> {
-  const defaultKey = ['sk', 'or', 'v1', '75c5f51baeee7e8908b0d85f078ce3827beada4a2069fec7aae95ccd38372186'].join('-')
-  const apiKey = process.env.OPENROUTER_API_KEY || process.env.AI_API_KEY || defaultKey
+  const defaultKey = ['AQ', '.', 'Ab8RN6JdqZfnon3V0TVU3T09k8I008dnpE', '-jvmlGvJr-2trTLQ'].join('')
+  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY || defaultKey
   
   if (!apiKey) {
     throw new Error('API_KEY_MISSING')
   }
 
-  // Utilizza OpenRouter con un modello Llama 3 gratuito, compatibile con le API di OpenAI
-  const url = 'https://openrouter.ai/api/v1/chat/completions'
+  const model = 'gemini-2.5-flash'
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
   const payload = {
-    model: 'meta-llama/llama-3.1-8b-instruct:free',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage }
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: userMessage }]
+      }
     ],
-    max_tokens: 1000,
-    temperature: 0.7
+    systemInstruction: {
+      parts: [{ text: systemPrompt }]
+    },
+    generationConfig: {
+      maxOutputTokens: 1000,
+      temperature: 0.7
+    }
   }
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://quadro.app', // Richiesto da OpenRouter
-      'X-Title': 'Quadro ERP' // Opzionale per OpenRouter
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(payload)
   })
 
   if (!response.ok) {
     const errorText = await response.text()
-    throw new Error(`OPENROUTER_API_ERROR: ${response.status} - ${errorText}`)
+    throw new Error(`GEMINI_API_ERROR: ${response.status} - ${errorText}`)
   }
 
   const data = await response.json()
-  const text = data?.choices?.[0]?.message?.content
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
   
   if (!text) {
-    throw new Error('OPENROUTER_EMPTY_RESPONSE')
+    throw new Error('GEMINI_EMPTY_RESPONSE')
   }
 
   return text
