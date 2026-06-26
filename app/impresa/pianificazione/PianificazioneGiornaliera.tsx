@@ -29,6 +29,7 @@ interface Props {
   operai: Operaio[]
   pianificazioni: Pianificazione[]   // per il giorno correntemente visualizzato
   giornoIniziale: string             // ISO date string YYYY-MM-DD
+  operaiInFerie: string[]            // operaio IDs con assenza approvata nel giorno selezionato
 }
 
 /* ─── utils ─────────────────────────────────────────────────────────────── */
@@ -56,7 +57,8 @@ function formatLabelLong(iso: string): string {
 
 /* ─── componente principale ─────────────────────────────────────────────── */
 
-export default function PianificazioneGiornaliera({ commesse, operai, pianificazioni: pianificazioniInit, giornoIniziale }: Props) {
+export default function PianificazioneGiornaliera({ commesse, operai, pianificazioni: pianificazioniInit, giornoIniziale, operaiInFerie }: Props) {
+  const ferieSet = new Set(operaiInFerie)
   const oggi = toISO(new Date())
   const domaniDate = new Date(); domaniDate.setDate(domaniDate.getDate() + 1)
   const domani = toISO(domaniDate)
@@ -321,7 +323,9 @@ export default function PianificazioneGiornaliera({ commesse, operai, pianificaz
                 const giaSuQuestoCantiere = pians.some(p => p.commessaId === sheetCommessa.id && p.operaioId === op.id)
                 // già su altro cantiere in questo giorno?
                 const altroCantiere = !giaSuQuestoCantiere && occupatiMap[op.id]
-                const disabilitato = !!altroCantiere
+                // assenza approvata in questo giorno?
+                const inFerie = ferieSet.has(op.id)
+                const disabilitato = !!altroCantiere || inFerie
 
                 return (
                   <div
@@ -329,6 +333,8 @@ export default function PianificazioneGiornaliera({ commesse, operai, pianificaz
                     className={`flex items-center justify-between rounded-2xl border px-4 py-3 transition-colors ${
                       giaSuQuestoCantiere
                         ? 'bg-blue-50 border-blue-200'
+                        : inFerie
+                        ? 'bg-orange-50 border-orange-200 opacity-70'
                         : disabilitato
                         ? 'bg-gray-50 border-gray-200 opacity-60'
                         : 'bg-white border-gray-200 hover:border-gray-300'
@@ -341,7 +347,10 @@ export default function PianificazioneGiornaliera({ commesse, operai, pianificaz
                       {giaSuQuestoCantiere && (
                         <p className="text-xs text-blue-600 font-medium mt-0.5">✓ Già assegnato qui</p>
                       )}
-                      {altroCantiere && (
+                      {inFerie && (
+                        <p className="text-xs text-orange-600 font-medium mt-0.5">🏖 Assenza approvata</p>
+                      )}
+                      {altroCantiere && !inFerie && (
                         <p className="text-xs text-gray-400 mt-0.5">Su: {altroCantiere}</p>
                       )}
                     </div>
@@ -349,6 +358,10 @@ export default function PianificazioneGiornaliera({ commesse, operai, pianificaz
                     {giaSuQuestoCantiere ? (
                       <span className="text-xs font-semibold text-blue-600 bg-blue-100 rounded-full px-3 py-1">
                         Assegnato
+                      </span>
+                    ) : inFerie ? (
+                      <span className="text-xs font-medium text-orange-600 bg-orange-100 rounded-full px-3 py-1">
+                        In ferie
                       </span>
                     ) : disabilitato ? (
                       <span className="text-xs font-medium text-gray-400 bg-gray-100 rounded-full px-3 py-1">

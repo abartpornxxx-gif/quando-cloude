@@ -28,6 +28,7 @@ export default async function CommessaDettPage({
         operai: { include: { operaio: { select: { id: true, nome: true, ruolo: true } } } },
         tipoLavoro: { select: { id: true, nome: true } },
         adempimenti: { orderBy: [{ ordine: 'asc' }, { createdAt: 'asc' }] },
+        varianti: { orderBy: { createdAt: 'desc' }, select: { id: true, titolo: true, importo: true, stato: true, visibileCliente: true } },
       },
     }),
     prisma.operaio.findMany({
@@ -291,6 +292,7 @@ export default async function CommessaDettPage({
         piano={pianoRows}
         operaiAssegnati={operaiAssegnati}
         operaiDisponibili={operaiDisponibili}
+        varianti={c.varianti}
         sopralluogo={c.sopralluogo}
       />
     </div>

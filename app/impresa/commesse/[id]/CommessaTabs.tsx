@@ -46,6 +46,14 @@ type DicoRow = {
   data: string
 }
 
+type VarianteRow = {
+  id: string
+  titolo: string
+  importo: number
+  stato: string
+  visibileCliente: boolean
+}
+
 type PianoRow = {
   id: string
   data: string
@@ -88,6 +96,7 @@ interface Props {
   piano: PianoRow[]
   operaiAssegnati: { operaioId: string; nome: string; ruolo: string | null }[]
   operaiDisponibili: { id: string; nome: string; ruolo: string | null }[]
+  varianti: VarianteRow[]
 }
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
@@ -105,6 +114,14 @@ const STATI_FATTURA: Record<string, { label: string; cls: string }> = {
   annullata:    { label: 'Annullata',    cls: 'bg-gray-100 text-gray-500' },
 }
 
+const STATI_VARIANTE: Record<string, { label: string; cls: string }> = {
+  bozza:     { label: 'Bozza',     cls: 'bg-gray-100 text-gray-600' },
+  inviata:   { label: 'Inviata',   cls: 'bg-blue-100 text-blue-700' },
+  approvata: { label: 'Approvata', cls: 'bg-emerald-100 text-emerald-700' },
+  rifiutata: { label: 'Rifiutata', cls: 'bg-red-100 text-red-700' },
+  annullata: { label: 'Annullata', cls: 'bg-gray-100 text-gray-500' },
+}
+
 export function CommessaTabs({
   commessaId,
   preventivoId,
@@ -120,6 +137,7 @@ export function CommessaTabs({
   piano,
   operaiAssegnati,
   operaiDisponibili,
+  varianti,
   sopralluogo,
 }: Props & { sopralluogo: any }) {
   const [activeTab, setActiveTab] = useState<Tab>('timeline')
@@ -336,6 +354,49 @@ export function CommessaTabs({
                       </a>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Varianti lavori */}
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              <div className="border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-gray-800">Varianti lavori</h2>
+                <a
+                  href={`/ufficio/commesse/${commessaId}/varianti/nuova`}
+                  className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                >
+                  + Nuova
+                </a>
+              </div>
+              {varianti.length === 0 ? (
+                <p className="px-5 py-6 text-sm text-gray-400">Nessuna variante per questa commessa.</p>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {varianti.map(v => {
+                    const badge = STATI_VARIANTE[v.stato] ?? { label: v.stato, cls: 'bg-gray-100 text-gray-500' }
+                    return (
+                      <div key={v.id} className="flex items-center justify-between px-5 py-3.5 gap-3">
+                        <div className="min-w-0 flex-1">
+                          <a
+                            href={`/ufficio/commesse/${commessaId}/varianti/${v.id}`}
+                            className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                          >
+                            {v.titolo}
+                          </a>
+                          {v.visibileCliente && (
+                            <span className="text-xs text-violet-600 font-medium">Visibile al cliente</span>
+                          )}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-semibold text-gray-900">{formatEuro(v.importo)}</p>
+                          <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${badge.cls}`}>
+                            {badge.label}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>

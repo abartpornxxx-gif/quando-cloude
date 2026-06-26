@@ -83,12 +83,13 @@ const MACRO: MacroEntry[] = [
     iconBg: 'bg-emerald-100',
     iconCls: 'text-emerald-600',
     dot: 'bg-emerald-500',
-    prefixes: ['/impresa/fatture', '/impresa/fatture-passive', '/impresa/scadenzario', '/impresa/dico'],
+    prefixes: ['/impresa/fatture', '/impresa/fatture-passive', '/impresa/scadenzario', '/impresa/dico', '/impresa/richieste-dico'],
     items: [
       { label: 'Fatture', href: '/impresa/fatture', desc: 'Da incassare' },
       { label: 'Fatture Passive', href: '/impresa/fatture-passive', desc: 'Da pagare' },
       { label: 'Scadenzario', href: '/impresa/scadenzario', desc: 'Tutte le scadenze' },
       { label: 'DiCo', href: '/impresa/dico', desc: 'DM 37/2008' },
+      { label: 'Rich. DiCo', href: '/impresa/richieste-dico', desc: 'Richieste dai clienti' },
     ],
   },
   {

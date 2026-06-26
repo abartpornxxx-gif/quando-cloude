@@ -14,7 +14,7 @@ export default async function ScadenzarioPage() {
     return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
   }
 
-  const [attive, passive] = await Promise.all([
+  const [attive, passive, mezziRaw] = await Promise.all([
     prisma.fatturaAttiva.findMany({
       where: {
         stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] },
@@ -36,6 +36,23 @@ export default async function ScadenzarioPage() {
       },
       orderBy: { dataScadenza: 'asc' },
     }),
+    prisma.mezzo.findMany({
+      where: {
+        OR: [
+          { scadenzaBollo: { not: null } },
+          { scadenzaRevisione: { not: null } },
+          { scadenzaAssicurazione: { not: null } },
+        ],
+      },
+      select: {
+        id: true,
+        nome: true,
+        targa: true,
+        scadenzaBollo: true,
+        scadenzaRevisione: true,
+        scadenzaAssicurazione: true,
+      },
+    }),
   ])
 
   type Voce = {
@@ -44,6 +61,16 @@ export default async function ScadenzarioPage() {
     descrizione: string
     scadenza: Date
     importo: number
+    scaduta: boolean
+    oggi: boolean
+    inScadenza: boolean
+    href: string
+  }
+
+  type VoceMezzo = {
+    id: string
+    descrizione: string
+    scadenza: Date
     scaduta: boolean
     oggi: boolean
     inScadenza: boolean
@@ -98,10 +125,49 @@ export default async function ScadenzarioPage() {
       }),
   ].sort((a, b) => dataUtcMs(a.scadenza) - dataUtcMs(b.scadenza))
 
+  // Scadenze mezzi (bollo, revisione, assicurazione)
+  const vociMezzi: VoceMezzo[] = []
+  for (const m of mezziRaw) {
+    const label = m.targa ? `${m.nome} (${m.targa})` : m.nome
+    if (m.scadenzaBollo) {
+      vociMezzi.push({
+        id: `${m.id}-bollo`,
+        descrizione: `🚗 Bollo — ${label}`,
+        scadenza: m.scadenzaBollo,
+        ...classificaData(m.scadenzaBollo),
+        href: `/impresa/mezzi`,
+      })
+    }
+    if (m.scadenzaRevisione) {
+      vociMezzi.push({
+        id: `${m.id}-revisione`,
+        descrizione: `🔧 Revisione — ${label}`,
+        scadenza: m.scadenzaRevisione,
+        ...classificaData(m.scadenzaRevisione),
+        href: `/impresa/mezzi`,
+      })
+    }
+    if (m.scadenzaAssicurazione) {
+      vociMezzi.push({
+        id: `${m.id}-assicurazione`,
+        descrizione: `🛡 Assicurazione — ${label}`,
+        scadenza: m.scadenzaAssicurazione,
+        ...classificaData(m.scadenzaAssicurazione),
+        href: `/impresa/mezzi`,
+      })
+    }
+  }
+  vociMezzi.sort((a, b) => dataUtcMs(a.scadenza) - dataUtcMs(b.scadenza))
+
   const scadute    = voci.filter(v => v.scaduta)
   const oggiVoci   = voci.filter(v => v.oggi)
   const inScadenza = voci.filter(v => v.inScadenza)
   const future     = voci.filter(v => !v.scaduta && !v.oggi && !v.inScadenza)
+
+  const mezziScaduti    = vociMezzi.filter(v => v.scaduta)
+  const mezziOggi       = vociMezzi.filter(v => v.oggi)
+  const mezziInScadenza = vociMezzi.filter(v => v.inScadenza)
+  const mezziFuturi     = vociMezzi.filter(v => !v.scaduta && !v.oggi && !v.inScadenza)
 
   function VoceRow({ v }: { v: Voce }) {
     return (
@@ -125,6 +191,23 @@ export default async function ScadenzarioPage() {
     )
   }
 
+  function VoceMezzoRow({ v }: { v: VoceMezzo }) {
+    return (
+      <Link href={v.href} className="flex items-center justify-between p-4 hover:bg-gray-50">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{v.descrizione}</p>
+          <p className={`text-xs mt-0.5 ${v.scaduta ? 'text-red-500 font-medium' : v.oggi ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
+            Scadenza: {formatData(v.scadenza)}
+            {v.scaduta ? ' — SCADUTA' : v.oggi ? ' — OGGI' : ''}
+          </p>
+        </div>
+        <span className="ml-4 shrink-0 text-xs rounded-full px-2 py-0.5 font-medium bg-amber-100 text-amber-800">
+          Veicolo
+        </span>
+      </Link>
+    )
+  }
+
   function Sezione({ titolo, items, colore }: { titolo: string; items: Voce[]; colore: string }) {
     if (items.length === 0) return null
     return (
@@ -137,6 +220,18 @@ export default async function ScadenzarioPage() {
     )
   }
 
+  function SezioneMezzi({ titolo, items, colore }: { titolo: string; items: VoceMezzo[]; colore: string }) {
+    if (items.length === 0) return null
+    return (
+      <div className="mb-4">
+        <h3 className={`text-xs font-semibold mb-2 ${colore}`}>{titolo} ({items.length})</h3>
+        <div className="bg-white rounded-xl border border-amber-200 shadow-sm divide-y divide-amber-50">
+          {items.map(v => <VoceMezzoRow key={v.id} v={v} />)}
+        </div>
+      </div>
+    )
+  }
+
   const totDaIncassare = attive.reduce((acc, f) => acc + (totaleAttiva(f.righe, f.aliquotaIva) - (f.importoIncassato ?? 0)), 0)
   const totDaPagare    = passive.reduce((acc, f) => acc + f.importo, 0)
 
@@ -144,7 +239,7 @@ export default async function ScadenzarioPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Scadenzario</h1>
-        <p className="mt-1 text-sm text-gray-500">Fatture attive da incassare e passive da pagare con scadenza</p>
+        <p className="mt-1 text-sm text-gray-500">Fatture, pagamenti e scadenze veicoli</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -158,7 +253,7 @@ export default async function ScadenzarioPage() {
         </div>
       </div>
 
-      {voci.length === 0 && (
+      {voci.length === 0 && vociMezzi.length === 0 && (
         <p className="text-gray-400 text-sm">Nessuna scadenza aperta. Ottimo!</p>
       )}
 
@@ -166,6 +261,22 @@ export default async function ScadenzarioPage() {
       <Sezione titolo="In scadenza oggi" items={oggiVoci} colore="text-orange-600" />
       <Sezione titolo="Entro 30 giorni" items={inScadenza} colore="text-amber-700" />
       <Sezione titolo="Oltre 30 giorni" items={future} colore="text-gray-600" />
+
+      {/* Scadenze veicoli */}
+      {vociMezzi.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            🚗 Scadenze veicoli
+            <span className="text-xs font-normal text-gray-400">bollo · revisione · assicurazione</span>
+          </h2>
+          <div className="space-y-3">
+            <SezioneMezzi titolo="Scadute" items={mezziScaduti} colore="text-red-700" />
+            <SezioneMezzi titolo="Oggi" items={mezziOggi} colore="text-orange-600" />
+            <SezioneMezzi titolo="Entro 30 giorni" items={mezziInScadenza} colore="text-amber-700" />
+            <SezioneMezzi titolo="Oltre 30 giorni" items={mezziFuturi} colore="text-gray-600" />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

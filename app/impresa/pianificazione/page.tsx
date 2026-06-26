@@ -17,7 +17,7 @@ export default async function PianificazionePage({
   const giornoISO = giornoParam ?? oggi.toISOString().slice(0, 10)
   const giornoDate = new Date(giornoISO)
 
-  const [commesse, operai, rawPians] = await Promise.all([
+  const [commesse, operai, rawPians, assenze] = await Promise.all([
     prisma.commessa.findMany({
       where: { stato: 'aperta', archiviata: false },
       select: { id: true, nome: true, indirizzoCantiere: true },
@@ -31,6 +31,14 @@ export default async function PianificazionePage({
       where: { data: giornoDate },
       include: { operaio: { select: { id: true, nome: true } } },
     }),
+    prisma.assenza.findMany({
+      where: {
+        stato: 'approvata',
+        dataInizio: { lte: giornoDate },
+        dataFine: { gte: giornoDate },
+      },
+      select: { operaioId: true },
+    }),
   ])
 
   const pianificazioni = rawPians.map(p => ({
@@ -39,6 +47,8 @@ export default async function PianificazionePage({
     operaioId: p.operaioId,
     operaioNome: p.operaio.nome,
   }))
+
+  const operaiInFerie = new Set(assenze.map(a => a.operaioId))
 
   return (
     <div className="space-y-5">
@@ -57,6 +67,7 @@ export default async function PianificazionePage({
         operai={operai}
         pianificazioni={pianificazioni}
         giornoIniziale={giornoISO}
+        operaiInFerie={[...operaiInFerie]}
       />
     </div>
   )

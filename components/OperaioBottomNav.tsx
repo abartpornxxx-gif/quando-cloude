@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { HardHat, Calendar, CalendarDays, Bell, UserCircle, type LucideIcon } from 'lucide-react'
+import { HardHat, Calendar, CalendarDays, Bell, UserCircle, ClipboardList, type LucideIcon } from 'lucide-react'
 
 interface Props {
   alertCount: number
@@ -20,7 +20,7 @@ const NAV: NavItem[] = [
   { href: '/operaio/dashboard', Icon: HardHat, label: 'Lavori' },
   { href: '/operaio/giornata/nuova', Icon: null, label: 'Giornata', isNew: true },
   { href: '/operaio/domani', Icon: Calendar, label: 'Domani' },
-  { href: '/operaio/calendario', Icon: CalendarDays, label: 'Calendario' },
+  { href: '/operaio/promemoria', Icon: ClipboardList, label: 'Memo' },
   { href: '/operaio/notifiche', Icon: Bell, label: 'Avvisi', isAlert: true },
   { href: '/operaio/profilo', Icon: UserCircle, label: 'Profilo' },
 ]
