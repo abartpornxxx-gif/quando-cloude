@@ -16,6 +16,23 @@ Per evitare conflitti valgono SEMPRE queste regole, senza eccezioni:
 4. Mai lasciare lavoro non committato e non pushato a fine sessione.
 5. Una sola area di lavoro alla volta, test (tsc + build) prima di ogni commit.
 
+## FILE INTOCCABILI — NON ELIMINARE MAI
+Questi file sono critici per il funzionamento del sito. Cancellarli rompe tutto.
+
+| File | Perché è intoccabile |
+|------|----------------------|
+| `middleware.ts` | Dice a Next.js di usare `proxy.ts` come middleware di autenticazione. Senza, ogni pagina crasha con errore server e il sito è inaccessibile. NON eliminarlo MAI, anche se sembra ridondante. |
+| `proxy.ts` | Contiene la logica di autenticazione e routing per ruolo. Richiamato da `middleware.ts`. |
+| `prisma/schema.prisma` | Schema del database. Modificare senza migrare rompe il DB in produzione. |
+
+### Regola sul `postinstall` in package.json
+**NON aggiungere `prisma db push` al postinstall.** È pericoloso in produzione perché:
+- Viene eseguito ad ogni deploy su Vercel
+- Può droppare colonne o tabelle se lo schema è cambiato
+- Può bloccare l'intera build se la connessione DB fallisce
+
+Per applicare migrazioni SQL: eseguirle manualmente dalla dashboard Supabase → SQL Editor.
+
 ## Cos'è QUADRO
 
 QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** in Italia (DM 37/2008). Ha **tre accessi distinti**:
