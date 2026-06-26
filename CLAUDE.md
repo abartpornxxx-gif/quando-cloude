@@ -153,7 +153,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Post-Fase 12: incassi parziali fatture attive completati. Migrazioni applicate: incassi-parziali-schema.sql (enum parzialmente_incassata), task-libreria-schema.sql. Sito live e funzionante.**
+- Fase corrente: **Post-Fase 12: sito live e funzionante. Tutte le migrazioni DB applicate manualmente su Supabase (sessione 2026-06-26): enum parzialmente_incassata, task_libreria, avanzamento_percentuale (commesse), quantita (richieste_materiale), importante (promemoria), visibile_cliente (giornata_foto), updated_at (push_subscriptions), tabelle richieste_dico e sopralluoghi create.**
 
 ### Decisioni architetturali recenti
 - **Countdown**: visibile SOLO all'impresa (in `/impresa/giornate`). L'operaio vede solo stato generico e pulsante bloccato/attivo.
