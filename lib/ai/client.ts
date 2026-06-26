@@ -1,35 +1,30 @@
 export async function callAI(systemPrompt: string, userMessage: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY
+  // Supporta Groq (default), OpenRouter, OpenAI — formato OpenAI-compatible
+  const apiKey = process.env.GROQ_API_KEY || process.env.AI_API_KEY || process.env.OPENAI_API_KEY
 
   if (!apiKey) {
     throw new Error('AI_NOT_CONFIGURED')
   }
 
-  // gemini-1.5-flash: stabile, disponibile su free tier, risposta rapida
-  const model = 'gemini-1.5-flash'
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+  // Default: Groq (gratuito, veloce). Override con AI_BASE_URL per altri provider.
+  const baseUrl = process.env.AI_BASE_URL || 'https://api.groq.com/openai/v1'
+  const model = process.env.AI_MODEL || 'llama-3.1-8b-instant'
 
-  const payload = {
-    // systemInstruction tiene separato il contesto dal messaggio utente (formato corretto Gemini v1beta)
-    systemInstruction: {
-      parts: [{ text: systemPrompt }]
-    },
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: userMessage }]
-      }
-    ],
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 1024,
-    }
-  }
-
-  const response = await fetch(url, {
+  const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      temperature: 0.7,
+      max_tokens: 1024,
+    }),
   })
 
   if (!response.ok) {
@@ -38,29 +33,15 @@ export async function callAI(systemPrompt: string, userMessage: string): Promise
     try { parsed = JSON.parse(errorText) } catch {}
 
     const status = response.status
-    if (status === 429 || parsed?.error?.status === 'RESOURCE_EXHAUSTED') {
-      throw new Error('AI_QUOTA_EXCEEDED')
-    }
-    if (status === 403 || status === 401) {
-      throw new Error('AI_INVALID_KEY')
-    }
-    if (status === 400 && parsed?.error?.status === 'INVALID_ARGUMENT') {
-      throw new Error('AI_INVALID_KEY')
-    }
-    throw new Error(`GEMINI_API_ERROR: ${status} - ${errorText.slice(0, 200)}`)
+    if (status === 429) throw new Error('AI_QUOTA_EXCEEDED')
+    if (status === 401 || status === 403) throw new Error('AI_INVALID_KEY')
+    throw new Error(`AI_API_ERROR: ${status} - ${errorText.slice(0, 200)}`)
   }
 
   const data = await response.json()
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+  const text = data?.choices?.[0]?.message?.content
 
-  if (!text) {
-    // Potrebbe essere bloccato dal filtro contenuti
-    const blockReason = data?.promptFeedback?.blockReason
-    if (blockReason) {
-      throw new Error(`AI_BLOCKED: ${blockReason}`)
-    }
-    throw new Error('GEMINI_EMPTY_RESPONSE')
-  }
+  if (!text) throw new Error('AI_EMPTY_RESPONSE')
 
   return text
 }

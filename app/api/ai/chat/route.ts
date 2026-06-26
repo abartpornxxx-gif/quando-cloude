@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     }
 
     // Verifica chiave API presente prima di tutto
-    if (!process.env.GEMINI_API_KEY && !process.env.AI_API_KEY) {
+    if (!process.env.GROQ_API_KEY && !process.env.AI_API_KEY && !process.env.OPENAI_API_KEY) {
       return NextResponse.json({
         error: 'Assistente AI non configurato. Contatta l\'amministratore di sistema.',
         notConfigured: true
