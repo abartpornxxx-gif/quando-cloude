@@ -1,4 +1,4 @@
-﻿import { requireImpresa } from '@/lib/auth'
+﻿﻿import { requireImpresa } from '@/lib/auth'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
@@ -18,7 +18,7 @@ export default async function CatalogoPaginaImpresa() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Catalogo offerte</h1>
-          <p className="mt-1 text-sm text-gray-500">{offerte.length} offerte Â· visibili ai clienti nel portale</p>
+          <p className="mt-1 text-sm text-gray-500">{offerte.length} offerte · visibili ai clienti nel portale</p>
         </div>
         <Link
           href="/impresa/catalogo/nuovo"
@@ -81,13 +81,13 @@ export default async function CatalogoPaginaImpresa() {
                 >
                   Modifica
                 </Link>
-                <span className="text-gray-300">Â·</span>
+                <span className="text-gray-300">·</span>
                 <form action={toggleAttiva.bind(null, o.id, !o.attiva)} className="inline">
                   <button type="submit" className="text-xs text-gray-500 hover:text-gray-700">
                     {o.attiva ? 'Nascondi' : 'Attiva'}
                   </button>
                 </form>
-                <span className="text-gray-300">Â·</span>
+                <span className="text-gray-300">·</span>
                 <form action={eliminaOfferta.bind(null, o.id)} className="inline">
                   <button type="submit" className="text-xs text-red-500 hover:text-red-700">
                     Elimina

@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prisma'
+﻿﻿import { prisma } from '@/lib/prisma'
 import { formatEuro } from '@/lib/format'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
@@ -67,7 +67,7 @@ export default async function OperaiPage() {
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5 text-xs text-gray-400">
                     {o.ruolo && <span>{o.ruolo}</span>}
-                    {o.ruolo && o.zona && <span>Â·</span>}
+                    {o.ruolo && o.zona && <span>·</span>}
                     {o.zona && <span>{o.zona}</span>}
                     {!o.ruolo && !o.zona && <span>Nessun ruolo assegnato</span>}
                   </div>

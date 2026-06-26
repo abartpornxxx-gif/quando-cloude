@@ -21,7 +21,7 @@ function whatsappUrl(telefono: string): string | null {
   // Pulisce il numero: rimuove tutto tranne le cifre
   const digits = telefono.replace(/\D/g, '')
   if (!digits) return null
-  // Se inizia con 39 (prefisso IT giÃ  presente) usa cosÃ¬; se inizia con 0 aggiunge 39; altrimenti aggiunge 39
+  // Se inizia con 39 (prefisso IT già presente) usa così; se inizia con 0 aggiunge 39; altrimenti aggiunge 39
   const normalized = digits.startsWith('39') ? digits : `39${digits.replace(/^0+/, '')}`
   if (normalized.length < 10) return null
   return `https://wa.me/${normalized}`

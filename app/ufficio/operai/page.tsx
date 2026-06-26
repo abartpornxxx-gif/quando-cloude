@@ -1,4 +1,4 @@
-﻿import { requireUfficio } from '@/lib/auth'
+﻿﻿import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -70,10 +70,10 @@ export default async function UfficioOperaiPage() {
                       
                       <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
                         {o.ruolo && <span>{o.ruolo}</span>}
-                        {o.ruolo && o.zona && <span>Â·</span>}
+                        {o.ruolo && o.zona && <span>·</span>}
                         {o.zona && <span>{o.zona}</span>}
                         {!o.ruolo && !o.zona && <span>Nessun ruolo assegnato</span>}
-                        {o.email && <span className="hidden sm:inline">Â· {o.email}</span>}
+                        {o.email && <span className="hidden sm:inline">· {o.email}</span>}
                       </div>
                     </div>
                   </div>

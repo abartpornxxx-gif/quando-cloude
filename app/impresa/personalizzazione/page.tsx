@@ -523,7 +523,7 @@ export default function PersonalizzazionePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Settore di AttivitÃ </label>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Settore di Attività</label>
                       <input
                         type="text"
                         value={settore}
@@ -604,7 +604,7 @@ export default function PersonalizzazionePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                       {[
                         { label: 'Nome impresa', val: mostraNome, set: setMostraNome },
-                        { label: 'Settore di attivitÃ ', val: mostraSettore, set: setMostraSettore },
+                        { label: 'Settore di attività', val: mostraSettore, set: setMostraSettore },
                         { label: 'Indirizzo', val: mostraIndirizzo, set: setMostraIndirizzo },
                         { label: 'Telefono', val: mostraTelefono, set: setMostraTelefono },
                         { label: 'Email', val: mostraEmail, set: setMostraEmail },

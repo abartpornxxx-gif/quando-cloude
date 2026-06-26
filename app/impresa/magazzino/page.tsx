@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { requireImpresa } from '@/lib/auth'
 import { formatData } from '@/lib/format'
 import Link from 'next/link'
@@ -71,7 +71,7 @@ export default async function MagazzinoPage() {
 
         {righe.length === 0 ? (
           <div className="p-8 text-center text-gray-400 text-sm">
-            Nessun movimento registrato. I movimenti vengono creati quando un ordine Ã¨ segnato come consegnato.
+            Nessun movimento registrato. I movimenti vengono creati quando un ordine è segnato come consegnato.
           </div>
         ) : (
           <table className="w-full text-sm">

@@ -140,11 +140,11 @@ export default async function NotificheUfficioPage() {
         </div>
       )}
 
-      {/* GiÃ  lette */}
+      {/* Già lette */}
       {lette.length > 0 && (
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            GiÃ  lette ({lette.length})
+            Già lette ({lette.length})
           </p>
           <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden opacity-60">
             <div className="divide-y divide-gray-100">

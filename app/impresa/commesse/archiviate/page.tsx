@@ -71,7 +71,7 @@ export default async function CommesseArchiviateePage() {
                     action={ripristinaCommessa.bind(null, c.id)}
                     label="Ripristina"
                     variant="warning"
-                    confirmMessage={`Ripristinare la commessa "${c.nome}"? TornerÃ  visibile nella lista principale.`}
+                    confirmMessage={`Ripristinare la commessa "${c.nome}"? Tornerà visibile nella lista principale.`}
                   />
                 </div>
               </div>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -42,7 +42,7 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
   const [pending, startTransition] = useTransition()
   const [errore, setErrore] = useState('')
 
-  // Dettagli aggiuntivi (mezzo e attrezzatura) â€” collapsed se c'Ã¨ pianificazione
+  // Dettagli aggiuntivi (mezzo e attrezzatura) â€” collapsed se c'è pianificazione
   const [dettagliAperti, setDettagliAperti] = useState(!pianificazione)
 
   function toggleAttrezzatura(id: string, bloccata: boolean) {

@@ -79,7 +79,7 @@ export default async function FattureAttivePage({
     <div>
       <PageHeader
         title="Fatture attive"
-        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'} emesse${scadute > 0 ? ` Â· ${scadute} scadute` : ''}`}
+        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'} emesse${scadute > 0 ? ` · ${scadute} scadute` : ''}`}
         action={
           <Link
             href="/impresa/fatture/nuova"
@@ -97,7 +97,7 @@ export default async function FattureAttivePage({
             {filtroLabel}
           </span>
           <Link href="/impresa/fatture" className="text-xs text-gray-400 hover:text-gray-600">
-            Ã— Rimuovi filtro
+            × Rimuovi filtro
           </Link>
           {filtroHref && (
             <Link href={filtroHref} className="text-xs text-blue-500 hover:text-blue-700">
@@ -171,7 +171,7 @@ export default async function FattureAttivePage({
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {f.commessa?.nome ?? 'Senza commessa'}
-                      {f.dataScadenza ? ` Â· Scad. ${formatData(f.dataScadenza)}` : ''}
+                      {f.dataScadenza ? ` · Scad. ${formatData(f.dataScadenza)}` : ''}
                     </p>
                   </div>
 

@@ -1,4 +1,4 @@
-﻿import { requireUfficio } from '@/lib/auth'
+﻿﻿import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
@@ -299,7 +299,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
                       {f.commessa?.nome ? `Commessa: ${f.commessa.nome}` : ''}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {formatData(f.data)}{f.dataScadenza ? ` Â· Scadenza: ${formatData(f.dataScadenza)}` : ''}
+                      {formatData(f.data)}{f.dataScadenza ? ` · Scadenza: ${formatData(f.dataScadenza)}` : ''}
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-4">

@@ -1,4 +1,4 @@
-﻿'use client'
+﻿﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -87,7 +87,7 @@ export default function CommesseUfficioList({ commesse }: { commesse: Commessa[]
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                     {c.cliente && <p className="text-xs text-gray-500">{c.cliente.nome}</p>}
-                    <p className="text-xs text-gray-400">{c._count.giornate} giornate Â· {c._count.fattureAttive} fatture</p>
+                    <p className="text-xs text-gray-400">{c._count.giornate} giornate · {c._count.fattureAttive} fatture</p>
                   </div>
                 </div>
                 <div className="text-right shrink-0 space-y-0.5">

@@ -56,7 +56,7 @@ export default async function UfficioFatturePage({
     <div>
       <PageHeader
         title="Fatture attive"
-        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'}${filtroLabel ? ` Â· ${filtroLabel}` : ''}${scadute > 0 ? ` Â· ${scadute} scadute` : ''}`}
+        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'}${filtroLabel ? ` · ${filtroLabel}` : ''}${scadute > 0 ? ` · ${scadute} scadute` : ''}`}
         action={<Link href="/ufficio/fatture/nuova" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">+ Nuova</Link>}
       />
 
@@ -67,7 +67,7 @@ export default async function UfficioFatturePage({
             {filtroLabel}
           </span>
           <Link href="/ufficio/fatture" className="text-xs text-gray-400 hover:text-gray-600">
-            Ã— Rimuovi filtro
+            × Rimuovi filtro
           </Link>
           {commessaId && (
             <Link href="/ufficio/saldi-pendenti" className="text-xs text-teal-500 hover:text-teal-700">
@@ -113,7 +113,7 @@ export default async function UfficioFatturePage({
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {f.commessa?.nome ?? 'Senza commessa'}
-                      {f.dataScadenza ? ` Â· Scad. ${formatData(f.dataScadenza)}` : ''}
+                      {f.dataScadenza ? ` · Scad. ${formatData(f.dataScadenza)}` : ''}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">

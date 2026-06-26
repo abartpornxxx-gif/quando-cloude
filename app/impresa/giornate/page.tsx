@@ -1,4 +1,4 @@
-﻿import { requireImpresa } from '@/lib/auth'
+﻿﻿import { requireImpresa } from '@/lib/auth'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { startOfTodayItaly } from '@/lib/date'
@@ -132,9 +132,9 @@ export default async function CentroOperativoPage() {
           <h1 className="text-2xl font-bold text-gray-900">Centro Operativo</h1>
           <p className="mt-1.5 text-sm text-gray-500">
             {giornateAdesso.length > 0
-              ? `${giornateAdesso.length} operaio${giornateAdesso.length > 1 ? 'i' : ''} in cantiere${giornateNonChiuse.length > 0 ? ` Â· ${giornateNonChiuse.length} giornata${giornateNonChiuse.length > 1 ? 'e' : ''} non chiusa${giornateNonChiuse.length > 1 ? 'e' : ''}` : ''} Â· ${giornateChiuse.length} archiviate`
+              ? `${giornateAdesso.length} operaio${giornateAdesso.length > 1 ? 'i' : ''} in cantiere${giornateNonChiuse.length > 0 ? ` · ${giornateNonChiuse.length} giornata${giornateNonChiuse.length > 1 ? 'e' : ''} non chiusa${giornateNonChiuse.length > 1 ? 'e' : ''}` : ''} · ${giornateChiuse.length} archiviate`
               : giornateNonChiuse.length > 0
-                ? `${giornateNonChiuse.length} giornata${giornateNonChiuse.length > 1 ? 'e' : ''} non chiusa${giornateNonChiuse.length > 1 ? 'e' : ''} Â· ${giornateChiuse.length} archiviate`
+                ? `${giornateNonChiuse.length} giornata${giornateNonChiuse.length > 1 ? 'e' : ''} non chiusa${giornateNonChiuse.length > 1 ? 'e' : ''} · ${giornateChiuse.length} archiviate`
                 : `${giornateChiuse.length} giornate archiviate`}
           </p>
         </div>
@@ -189,7 +189,7 @@ export default async function CentroOperativoPage() {
                   </div>
                   <p className="text-sm text-gray-600 mt-0.5 truncate">{g.commessa.nome}</p>
                   <p className="text-xs text-gray-400">
-                    {g.data.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })} Â· fase: {g.fase}
+                    {g.data.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })} · fase: {g.fase}
                   </p>
                 </div>
                 <a

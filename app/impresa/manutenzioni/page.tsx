@@ -1,4 +1,4 @@
-﻿import { requireImpresa } from '@/lib/auth'
+﻿﻿import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Wrench } from 'lucide-react'
@@ -104,9 +104,9 @@ export default async function ManutenzioniPage() {
                     </div>
                     <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400 flex-wrap">
                       <span className="font-medium text-gray-600">{m.cliente.nome}</span>
-                      <span>Â·</span>
+                      <span>·</span>
                       <span>{tipoLabel}</span>
-                      <span>Â·</span>
+                      <span>·</span>
                       <span>{labelRicorrenza(m.intervalloValore, m.intervalloUnita)}</span>
                     </div>
                   </Link>

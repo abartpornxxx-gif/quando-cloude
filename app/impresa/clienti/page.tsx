@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prisma'
+﻿﻿import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
 import { eliminaCliente } from './actions'
@@ -66,7 +66,7 @@ export default async function ClientiPage() {
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5 text-xs text-gray-400">
                     {c.email && <span className="truncate">{c.email}</span>}
-                    {c.email && c.telefono && <span>Â·</span>}
+                    {c.email && c.telefono && <span>·</span>}
                     {c.telefono && <span className="shrink-0">{c.telefono}</span>}
                     {!c.email && !c.telefono && (
                       <span>{c.partitaIva ?? c.codiceFiscale ?? 'Nessun contatto'}</span>

@@ -1,6 +1,6 @@
-﻿'use client'
+'use client'
 
-// ORDINE 1 â€” Il countdown Ã¨ INTERNO, visibile solo all'impresa (non all'operaio)
+// ORDINE 1 â€” Il countdown è INTERNO, visibile solo all'impresa (non all'operaio)
 
 import { useState, useEffect } from 'react'
 

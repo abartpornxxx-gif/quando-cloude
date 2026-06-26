@@ -172,7 +172,7 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
             </div>
 
             <p className="text-xs text-gray-400 text-center">
-              Un nostro tecnico ti contatterÃ  per un sopralluogo gratuito
+              Un nostro tecnico ti contatterà per un sopralluogo gratuito
             </p>
           </div>
         </div>

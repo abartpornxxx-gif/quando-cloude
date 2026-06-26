@@ -77,7 +77,7 @@ export default async function MaterialiPage() {
                     <p className="text-xs text-gray-400 mt-0.5 sm:hidden font-mono">{m.codice}</p>
                   )}
                 </Link>
-                {/* UnitÃ  */}
+                {/* Unità */}
                 <span className="shrink-0 text-xs text-gray-400 hidden sm:block w-8 text-center">
                   {m.unita ?? 'pz'}
                 </span>
