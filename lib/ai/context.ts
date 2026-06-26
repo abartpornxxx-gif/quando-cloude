@@ -1,98 +1,257 @@
 import { prisma } from '@/lib/prisma'
 
+function extractId(parts: string[]): string | null {
+  const id = parts[parts.length - 1]
+  if (id && id.length > 8 && id !== 'nuova' && id !== 'nuovo' && id !== 'archiviate' && id !== 'stampa' && id !== 'importa') {
+    return id
+  }
+  return null
+}
+
 export async function fetchContextData(role: string, pathname: string, email?: string): Promise<any> {
-  const parts = pathname.split('/')
-  
-  if (pathname.includes('/commesse/') || pathname.includes('/lavori/')) {
-    const id = parts[parts.length - 1]
-    if (id && id.length > 5 && id !== 'nuova' && id !== 'archiviate') {
+  const parts = pathname.split('/').filter(Boolean)
+
+  // ── Commessa detail ──────────────────────────────────────────────────────────
+  if (pathname.match(/\/(commesse|lavori)\/[^/]+$/) || pathname.match(/\/(commesse|lavori)\/[^/]+\//)) {
+    const id = parts.find(p => p.length > 8 && !['commesse','lavori','materiali','adempimenti','note'].includes(p))
+    if (id) {
       try {
         const whereClause: any = { id }
-        if (role === 'cliente' && email) {
-          whereClause.cliente = { email }
-        } else if (role === 'operaio' && email) {
-          whereClause.operai = { some: { operaio: { email } } }
-        }
+        if (role === 'cliente' && email) whereClause.cliente = { email }
+        else if (role === 'operaio' && email) whereClause.operai = { some: { operaio: { email } } }
 
         const commessa = await prisma.commessa.findFirst({
           where: whereClause,
           include: {
-            cliente: { select: { nome: true } },
-            varianti: true,
-            richiestePreventiviFornitori: {
-              include: { fornitore: { select: { nome: true } } }
-            }
+            cliente: { select: { nome: true, telefono: true } },
+            varianti: { select: { titolo: true, importo: true, stato: true, visibileCliente: true } },
+            richiestePreventiviFornitori: { include: { fornitore: { select: { nome: true } } } },
+            adempimenti: { select: { testo: true, fatto: true, collegamento: true } },
+            giornate: { select: { data: true, stato: true }, orderBy: { data: 'desc' }, take: 5 },
           }
         })
         return { commessa }
-      } catch (e) {
-        console.error('Error fetching commessa context:', e)
-      }
+      } catch (e) { console.error('AI context commessa:', e) }
     }
   }
 
+  // ── Giornata detail ──────────────────────────────────────────────────────────
   if (pathname.includes('/giornata/')) {
-    const id = parts[parts.length - 1]
-    if (id && id.length > 5 && id !== 'nuova') {
+    const id = extractId(parts)
+    if (id) {
       try {
         const whereClause: any = { id }
-        if (role === 'operaio' && email) {
-          whereClause.operaio = { email }
-        }
+        if (role === 'operaio' && email) whereClause.operaio = { email }
 
         const giornata = await prisma.giornata.findFirst({
           where: whereClause,
           include: {
-            commessa: { select: { nome: true } },
-            rapportino: true
+            commessa: { select: { nome: true, indirizzoCantiere: true, istruzioniCantiere: true } },
+            rapportino: { select: { lavoroEseguito: true, lavoriExtra: true, noteAttrezzatura: true } },
+            materiali: { select: { descrizione: true, quantita: true } },
+            ore: { select: { tipo: true, quantita: true } },
           }
         })
         return { giornata }
-      } catch (e) {
-        console.error('Error fetching giornata context:', e)
-      }
+      } catch (e) { console.error('AI context giornata:', e) }
     }
   }
 
-  if (pathname.includes('/richieste/')) {
-    const id = parts[parts.length - 1]
-    if (id && id.length > 5) {
+  // ── Fattura attiva detail ────────────────────────────────────────────────────
+  if (pathname.includes('/fatture/') && !pathname.includes('passive')) {
+    const id = extractId(parts)
+    if (id && role !== 'operaio' && role !== 'magazziniere') {
       try {
-        const richiestaPreventivo = await prisma.richiestaPreventivoFornitore.findUnique({
+        const fattura = await prisma.fatturaAttiva.findUnique({
           where: { id },
           include: {
-            fornitore: { select: { nome: true } }
+            cliente: { select: { nome: true } },
+            commessa: { select: { nome: true } },
+            righe: { select: { descrizione: true, quantita: true, prezzoUnitario: true } },
           }
         })
-        return { richiestaPreventivo }
-      } catch (e) {
-        console.error('Error fetching request context:', e)
-      }
+        return { fattura }
+      } catch (e) { console.error('AI context fattura:', e) }
     }
   }
 
+  // ── Fattura passiva detail ───────────────────────────────────────────────────
+  if (pathname.includes('/fatture-passive/')) {
+    const id = extractId(parts)
+    if (id && role !== 'operaio' && role !== 'magazziniere') {
+      try {
+        const fatturaPassiva = await prisma.fatturaPassiva.findUnique({
+          where: { id },
+          include: {
+            fornitore: { select: { nome: true } },
+            commessa: { select: { nome: true } },
+          }
+        })
+        return { fatturaPassiva }
+      } catch (e) { console.error('AI context fatturaPassiva:', e) }
+    }
+  }
+
+  // ── Preventivo detail ────────────────────────────────────────────────────────
+  if (pathname.includes('/preventivi/')) {
+    const id = extractId(parts)
+    if (id && role !== 'operaio' && role !== 'magazziniere') {
+      try {
+        const preventivo = await prisma.preventivo.findUnique({
+          where: { id },
+          include: {
+            cliente: { select: { nome: true } },
+            righe: { select: { descrizione: true, quantita: true, prezzoUnitario: true } },
+          }
+        })
+        return { preventivo }
+      } catch (e) { console.error('AI context preventivo:', e) }
+    }
+  }
+
+  // ── Ordine fornitore detail ──────────────────────────────────────────────────
+  if (pathname.includes('/ordini/')) {
+    const id = extractId(parts)
+    if (id && role !== 'operaio' && role !== 'cliente') {
+      try {
+        const ordine = await prisma.ordineFornitore.findUnique({
+          where: { id },
+          include: {
+            fornitore: { select: { nome: true } },
+            commessa: { select: { nome: true } },
+            righe: { select: { descrizione: true, quantita: true, prezzoUnitario: true } },
+          }
+        })
+        return { ordine }
+      } catch (e) { console.error('AI context ordine:', e) }
+    }
+  }
+
+  // ── Manutenzione detail ──────────────────────────────────────────────────────
+  if (pathname.includes('/manutenzioni/')) {
+    const id = extractId(parts)
+    if (id) {
+      try {
+        const manutenzione = await prisma.manutenzioneProgrammata.findUnique({
+          where: { id },
+          include: {
+            cliente: { select: { nome: true, telefono: true } },
+            proposte: { select: { stato: true, dataPropostaPrevista: true }, orderBy: { createdAt: 'desc' }, take: 3 },
+          }
+        })
+        return { manutenzione }
+      } catch (e) { console.error('AI context manutenzione:', e) }
+    }
+  }
+
+  // ── Operaio detail ───────────────────────────────────────────────────────────
+  if (pathname.includes('/operai/')) {
+    const id = extractId(parts)
+    if (id && (role === 'impresa' || role === 'ufficio')) {
+      try {
+        const operaio = await prisma.operaio.findUnique({
+          where: { id },
+          select: { nome: true, ruolo: true, costoOrario: true, zona: true, skills: true, note: true }
+        })
+        return { operaio }
+      } catch (e) { console.error('AI context operaio:', e) }
+    }
+  }
+
+  // ── Promemoria list ──────────────────────────────────────────────────────────
+  if (pathname.includes('/promemoria')) {
+    if (role === 'impresa' || role === 'ufficio') {
+      try {
+        const oggi = new Date()
+        const prossimi = await prisma.promemoria.findMany({
+          where: { stato: 'attivo', dataOra: { gte: oggi } },
+          include: { operaio: { select: { nome: true } } },
+          orderBy: { dataOra: 'asc' },
+          take: 10,
+        })
+        return { promemoria: prossimi }
+      } catch (e) { console.error('AI context promemoria:', e) }
+    }
+  }
+
+  // ── Richiesta materiale detail (magazziniere) ────────────────────────────────
+  if (pathname.includes('/richieste/')) {
+    const id = extractId(parts)
+    if (id) {
+      try {
+        const richiesta = await prisma.richiestaMateriale.findUnique({
+          where: { id },
+          include: {
+            operaio: { select: { nome: true } },
+            commessa: { select: { nome: true } },
+            materiale: { select: { descrizione: true } },
+          }
+        })
+        return { richiesta }
+      } catch (e) { console.error('AI context richiesta:', e) }
+    }
+  }
+
+  // ── Dashboard (tutti i ruoli) ────────────────────────────────────────────────
   if (pathname.includes('/dashboard')) {
     try {
       if (role === 'impresa' || role === 'ufficio') {
-        const commesseAperte = await prisma.commessa.count({ where: { stato: 'aperta', archiviata: false } })
-        const preventiviDaInviare = await prisma.preventivo.count({ where: { stato: 'bozza' } })
-        const ordiniAperti = await prisma.ordineFornitore.count({ where: { stato: { in: ['richiesto', 'ordinato'] } } })
-        const fattureDaPagare = await prisma.fatturaPassiva.count({ where: { stato: 'da_pagare' } })
-        const fattureDaIncassare = await prisma.fatturaAttiva.count({ where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] } } })
-        
-        return {
-          dashboard: {
-            commesseAperte,
-            preventiviDaInviare,
-            ordiniAperti,
-            fattureDaPagare,
-            fattureDaIncassare
-          }
+        const [commesseAperte, preventiviDaInviare, ordiniAperti, fattureDaPagare, fattureDaIncassare, prosTodayCount] = await Promise.all([
+          prisma.commessa.count({ where: { stato: 'aperta', archiviata: false } }),
+          prisma.preventivo.count({ where: { stato: 'bozza' } }),
+          prisma.ordineFornitore.count({ where: { stato: { in: ['richiesto', 'ordinato'] } } }),
+          prisma.fatturaPassiva.count({ where: { stato: 'da_pagare' } }),
+          prisma.fatturaAttiva.count({ where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] } } }),
+          prisma.promemoria.count({ where: { stato: 'attivo', dataOra: { gte: new Date(new Date().setHours(0,0,0,0)), lte: new Date(new Date().setHours(23,59,59,999)) } } }),
+        ])
+        return { dashboard: { commesseAperte, preventiviDaInviare, ordiniAperti, fattureDaPagare, fattureDaIncassare, promemoriOggi: prosTodayCount } }
+      }
+      if (role === 'operaio' && email) {
+        const operaio = await prisma.operaio.findFirst({ where: { email }, select: { id: true, nome: true } })
+        if (operaio) {
+          const [giornateRecenti, pianificazioniDomani] = await Promise.all([
+            prisma.giornata.findMany({
+              where: { operaioId: operaio.id },
+              select: { data: true, stato: true, commessa: { select: { nome: true } } },
+              orderBy: { data: 'desc' }, take: 5,
+            }),
+            prisma.pianificazione.findMany({
+              where: { operaioId: operaio.id, data: { gte: new Date() } },
+              select: { data: true, lavoroDaFare: true, commessa: { select: { nome: true } } },
+              take: 3,
+            }),
+          ])
+          return { dashboard: { nomeOperaio: operaio.nome, giornateRecenti, pianificazioniDomani } }
         }
       }
-    } catch (e) {
-      console.error('Error fetching dashboard context:', e)
-    }
+      if (role === 'magazziniere') {
+        const richiesteUrgenti = await prisma.richiestaMateriale.count({ where: { stato: 'richiesta', urgente: true } })
+        const richiesteTotali = await prisma.richiestaMateriale.count({ where: { stato: 'richiesta' } })
+        return { dashboard: { richiesteUrgenti, richiesteTotali } }
+      }
+      if (role === 'cliente' && email) {
+        const cliente = await prisma.cliente.findFirst({ where: { email }, select: { id: true, nome: true } })
+        if (cliente) {
+          const commesse = await prisma.commessa.findMany({
+            where: { clienteId: cliente.id, archiviata: false },
+            select: { nome: true, stato: true, avanzamentoPercentuale: true },
+          })
+          return { dashboard: { nomeCliente: cliente.nome, commesse } }
+        }
+      }
+    } catch (e) { console.error('AI context dashboard:', e) }
+  }
+
+  // ── Rapportini list (impresa) ────────────────────────────────────────────────
+  if (pathname.includes('/rapportini') && (role === 'impresa' || role === 'ufficio')) {
+    try {
+      const recenti = await prisma.rapportino.findMany({
+        include: { giornata: { select: { data: true, commessa: { select: { nome: true } }, operaio: { select: { nome: true } } } } },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      })
+      return { rapportiniRecenti: recenti.map(r => ({ data: r.giornata.data, commessa: r.giornata.commessa.nome, operaio: r.giornata.operaio.nome, lavoroEseguito: r.lavoroEseguito })) }
+    } catch (e) { console.error('AI context rapportini:', e) }
   }
 
   return {}

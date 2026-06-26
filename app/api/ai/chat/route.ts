@@ -5,10 +5,9 @@ import { sanitizeContext } from '@/lib/ai/permissions'
 import { SYSTEM_BASE_PROMPT, SYSTEM_PROMPTS_BY_ROLE } from '@/lib/ai/prompts'
 import { callAI } from '@/lib/ai/client'
 
-// S8: Basic Rate Limiting
-const rateLimitMap = new Map<string, { count: number, resetTime: number }>()
-const MAX_REQUESTS = 10; // max 10 richieste
-const WINDOW_MS = 60 * 1000; // per 1 minuto
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+const MAX_REQUESTS = 15
+const WINDOW_MS = 60 * 1000
 
 export async function POST(req: Request) {
   try {
@@ -19,62 +18,80 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
     }
 
+    // Rate limiting
     const now = Date.now()
-    const userRateLimit = rateLimitMap.get(user.id) || { count: 0, resetTime: now + WINDOW_MS }
-    if (now > userRateLimit.resetTime) {
-      userRateLimit.count = 1
-      userRateLimit.resetTime = now + WINDOW_MS
+    const rl = rateLimitMap.get(user.id) || { count: 0, resetTime: now + WINDOW_MS }
+    if (now > rl.resetTime) {
+      rl.count = 1; rl.resetTime = now + WINDOW_MS
     } else {
-      userRateLimit.count++
-      if (userRateLimit.count > MAX_REQUESTS) {
-        return NextResponse.json({ error: 'Troppe richieste. Riprova tra 1 minuto.' }, { status: 429 })
+      rl.count++
+      if (rl.count > MAX_REQUESTS) {
+        return NextResponse.json({ error: 'Troppe richieste. Riprova tra 1 minuto.', rateLimited: true }, { status: 429 })
       }
     }
-    rateLimitMap.set(user.id, userRateLimit)
+    rateLimitMap.set(user.id, rl)
 
     const role = user.user_metadata?.role
     if (!role) {
       return NextResponse.json({ error: 'Ruolo utente non definito' }, { status: 403 })
     }
 
+    // Verifica chiave API presente prima di tutto
+    if (!process.env.GEMINI_API_KEY && !process.env.AI_API_KEY) {
+      return NextResponse.json({
+        error: 'Assistente AI non configurato. Contatta l\'amministratore di sistema.',
+        notConfigured: true
+      }, { status: 503 })
+    }
+
     const body = await req.json()
     const { pathname, message } = body
 
-    if (!message) {
-      return NextResponse.json({ error: 'Messaggio mancante' }, { status: 400 })
+    if (!message?.trim()) {
+      return NextResponse.json({ error: 'Messaggio vuoto' }, { status: 400 })
     }
 
-    // 1. Carica e sanitizza il contesto
-    const rawContext = await fetchContextData(role, pathname || '', user.email || undefined)
-    const context = {
-      role,
-      pathname: pathname || '',
-      ...rawContext
+    // Carica e sanitizza il contesto
+    let rawContext: any = {}
+    try {
+      rawContext = await fetchContextData(role, pathname || '', user.email || undefined)
+    } catch (ctxErr) {
+      console.warn('AI context load failed (non bloccante):', ctxErr)
     }
+
+    const context = { role, pathname: pathname || '', ...rawContext }
     const sanitizedContext = sanitizeContext(context)
 
-    // 2. Compila i prompt
-    const basePrompt = SYSTEM_BASE_PROMPT
     const rolePrompt = SYSTEM_PROMPTS_BY_ROLE[role] || ''
-    
-    const systemPrompt = `${basePrompt}\n\n${rolePrompt}\n\nEcco il contesto JSON dell'utente e della pagina corrente da utilizzare (non parlare mai di dati vietati al tuo ruolo): \n${JSON.stringify(sanitizedContext, null, 2)}`
+    const systemPrompt = `${SYSTEM_BASE_PROMPT}\n\n${rolePrompt}\n\nContesto pagina corrente (JSON):\n${JSON.stringify(sanitizedContext, null, 2)}`
 
-    // 3. Esegui la chiamata a AI
     try {
-      const responseText = await callAI(systemPrompt, message)
+      const responseText = await callAI(systemPrompt, message.trim())
       return NextResponse.json({ response: responseText })
     } catch (apiErr: any) {
-      console.error('SERVER_ERROR: AI chat error:', apiErr)
+      console.error('AI chat error:', apiErr.message)
+
+      if (apiErr.message === 'AI_NOT_CONFIGURED' || apiErr.message === 'AI_INVALID_KEY') {
+        return NextResponse.json({
+          error: 'Assistente AI non configurato correttamente. Verifica la chiave API nelle impostazioni.',
+          notConfigured: true
+        }, { status: 503 })
+      }
+      if (apiErr.message === 'AI_QUOTA_EXCEEDED') {
+        return NextResponse.json({
+          error: '⏱️ Quota API esaurita per oggi. L\'assistente sarà disponibile di nuovo domani.',
+          notAvailable: true
+        }, { status: 503 })
+      }
+
       return NextResponse.json({
-        error: 'Assistente AI temporaneamente non disponibile. Riprova tra poco.',
+        error: 'Assistente AI temporaneamente non disponibile. Riprova tra qualche secondo.',
         notAvailable: true
       }, { status: 503 })
     }
 
   } catch (err: any) {
-    console.error('SERVER_ERROR: API Chat Route Error:', err)
-    return NextResponse.json({
-      error: 'Errore interno. Riprova tra poco.'
-    }, { status: 500 })
+    console.error('AI route error:', err)
+    return NextResponse.json({ error: 'Errore interno. Riprova tra poco.' }, { status: 500 })
   }
 }
