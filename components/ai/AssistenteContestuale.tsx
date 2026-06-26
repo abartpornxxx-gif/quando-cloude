@@ -60,7 +60,7 @@ export function AssistenteContestuale({ role }: Props) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [disabled, setDisabled] = useState(false) // true quando notConfigured
+  const [disabled] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const c = COLORS[role]
@@ -73,7 +73,6 @@ export function AssistenteContestuale({ role }: Props) {
   // Reset quando cambia pagina
   useEffect(() => {
     setMessages([])
-    setDisabled(false)
     setInput('')
   }, [pathname])
 
@@ -106,11 +105,10 @@ export function AssistenteContestuale({ role }: Props) {
 
       const data = await res.json()
 
-      if (data.notConfigured) {
-        setDisabled(true)
+      if (data.notConfigured || data.notAvailable) {
         setMessages(prev => [...prev, {
           sender: 'error',
-          text: '⚠️ Assistente AI non configurato. Contatta l\'amministratore per impostare la chiave API.',
+          text: '⏳ Assistente momentaneamente non disponibile. Riprova tra qualche secondo.',
         }])
       } else if (data.rateLimited) {
         setMessages(prev => [...prev, {
@@ -201,9 +199,7 @@ export function AssistenteContestuale({ role }: Props) {
                   </div>
                   <p className="text-sm font-bold text-gray-800">Ciao! Sono il tuo assistente QUADRO.</p>
                   <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
-                    {disabled
-                      ? 'Il servizio AI non è configurato. Contatta l\'amministratore.'
-                      : 'Posso aiutarti con la pagina che stai usando. Fai una domanda o usa i suggerimenti qui sotto.'}
+                    Posso aiutarti con la pagina che stai usando. Fai una domanda o usa i suggerimenti qui sotto.
                   </p>
                 </div>
               )}
