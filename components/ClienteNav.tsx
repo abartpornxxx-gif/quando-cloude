@@ -11,6 +11,7 @@ const NAV = [
   { label: 'Documenti', href: '/cliente/documenti' },
   { label: 'Servizi', href: '/cliente/servizi' },
   { label: 'Manutenzioni', href: '/cliente/manutenzioni' },
+  { label: 'Notifiche', href: '/cliente/notifiche' },
 ]
 
 export function ClienteNav() {

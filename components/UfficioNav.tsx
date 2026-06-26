@@ -9,7 +9,6 @@ import {
   Users,
   Package,
   Receipt,
-  Settings,
   LayoutDashboard,
   type LucideIcon,
 } from 'lucide-react'
@@ -31,11 +30,12 @@ const MACRO: MacroEntry[] = [
     iconBg: 'bg-teal-50 border border-teal-100',
     iconCls: 'text-teal-600',
     dot: 'bg-teal-400',
-    prefixes: ['/ufficio/commesse', '/ufficio/preventivi', '/ufficio/pianificazione'],
+    prefixes: ['/ufficio/commesse', '/ufficio/preventivi', '/ufficio/pianificazione', '/ufficio/promemoria'],
     items: [
       { label: 'Commesse', href: '/ufficio/commesse', desc: 'Cantieri aperti' },
       { label: 'Preventivi', href: '/ufficio/preventivi', desc: 'Offerte clienti' },
       { label: 'Pianificazione', href: '/ufficio/pianificazione', desc: 'Spostamenti' },
+      { label: 'Promemoria', href: '/ufficio/promemoria', desc: 'Appuntamenti' },
     ],
   },
   {
@@ -75,17 +75,6 @@ const MACRO: MacroEntry[] = [
       { label: 'Importa Fatture', href: '/ufficio/fatture-passive/importa', desc: 'AI + manuale' },
       { label: 'Saldi Pendenti', href: '/ufficio/saldi-pendenti', desc: 'Scaduti' },
       { label: 'Scadenzario', href: '/ufficio/scadenzario', desc: 'Scadenze' },
-    ],
-  },
-  {
-    label: 'Impostazioni',
-    Icon: Settings,
-    iconBg: 'bg-slate-50 border border-slate-100',
-    iconCls: 'text-slate-600',
-    dot: 'bg-slate-400',
-    prefixes: ['/ufficio/promemoria'],
-    items: [
-      { label: 'Promemoria', href: '/ufficio/promemoria', desc: 'Appuntamenti' },
     ],
   },
 ]
@@ -146,7 +135,13 @@ export function UfficioNav() {
                       <span className="text-xs font-bold uppercase tracking-wider text-gray-600">{macro.label}</span>
                     </div>
                     {macro.items.map(item => {
-                      const itemActive = pathname.startsWith(item.href)
+                      // "longest match wins": se un fratello con path più lungo matcha, questo non è attivo
+                      const itemActive = pathname.startsWith(item.href) &&
+                        !macro.items.some(other =>
+                          other.href !== item.href &&
+                          pathname.startsWith(other.href) &&
+                          other.href.length > item.href.length
+                        )
                       return (
                         <Link
                           key={item.href}
@@ -264,7 +259,12 @@ export function UfficioNav() {
                     {/* Items */}
                     <div className="space-y-0.5">
                       {macro.items.map(item => {
-                        const itemActive = pathname.startsWith(item.href)
+                        const itemActive = pathname.startsWith(item.href) &&
+                          !macro.items.some(other =>
+                            other.href !== item.href &&
+                            pathname.startsWith(other.href) &&
+                            other.href.length > item.href.length
+                          )
                         return (
                           <Link
                             key={item.href}

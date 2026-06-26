@@ -7,7 +7,7 @@ import { NotificheBell } from '@/components/NotificheBell'
 import { LogoutButton } from '@/components/LogoutButton'
 import { listaNotificheMagazziniere } from '@/lib/notifiche'
 import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
-import { LayoutDashboard, Inbox, Warehouse, type LucideIcon } from 'lucide-react'
+import { MagazzinoNav } from '@/components/MagazzinoNav'
 import { prisma } from '@/lib/prisma'
 import { FirstAccessModal } from '@/components/FirstAccessModal'
 
@@ -35,12 +35,6 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
   }
 
 
-  const NAV_ITEMS: { label: string; href: string; Icon: LucideIcon }[] = [
-    { label: 'Dashboard', href: '/magazziniere/dashboard', Icon: LayoutDashboard },
-    { label: 'Richieste', href: '/magazziniere/richieste', Icon: Inbox },
-    { label: 'Giacenza', href: '/magazziniere/magazzino', Icon: Warehouse },
-  ]
-
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <header className="sticky top-0 z-40 bg-amber-800 text-white shadow-lg">
@@ -57,18 +51,7 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
                   <p className="text-amber-200 text-xs leading-tight">Magazzino</p>
                 </div>
               </Link>
-              <nav className="flex items-center gap-0.5 sm:gap-1">
-                {NAV_ITEMS.map(item => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 sm:px-3 text-sm font-medium text-amber-100 hover:bg-amber-700 hover:text-white transition-colors"
-                  >
-                    <item.Icon size={14} className="opacity-80 shrink-0" />
-                    <span className="hidden sm:inline">{item.label}</span>
-                  </Link>
-                ))}
-              </nav>
+              <MagazzinoNav />
             </div>
 
             {/* Actions */}

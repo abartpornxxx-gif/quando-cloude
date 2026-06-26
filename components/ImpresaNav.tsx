@@ -40,6 +40,7 @@ const MACRO: MacroEntry[] = [
       { label: 'Rapportini', href: '/impresa/rapportini', desc: 'Per commessa' },
       { label: 'Pianificazione', href: '/impresa/pianificazione', desc: 'Chi lavora e quando' },
       { label: 'Promemoria', href: '/impresa/promemoria', desc: 'Appuntamenti' },
+      { label: 'Giornate', href: '/impresa/giornate', desc: 'Storico giornate' },
       { label: 'Calendario', href: '/impresa/calendario', desc: 'Vista mensile' },
       { label: 'Manutenzioni', href: '/impresa/manutenzioni', desc: 'Controlli periodici' },
       { label: 'Tipi lavoro', href: '/impresa/tipi-lavoro', desc: 'Checklist adempimenti' },
@@ -85,7 +86,7 @@ const MACRO: MacroEntry[] = [
     prefixes: ['/impresa/fatture', '/impresa/fatture-passive', '/impresa/scadenzario', '/impresa/dico'],
     items: [
       { label: 'Fatture', href: '/impresa/fatture', desc: 'Da incassare' },
-      { label: 'F. Passive', href: '/impresa/fatture-passive', desc: 'Da pagare' },
+      { label: 'Fatture Passive', href: '/impresa/fatture-passive', desc: 'Da pagare' },
       { label: 'Scadenzario', href: '/impresa/scadenzario', desc: 'Tutte le scadenze' },
       { label: 'DiCo', href: '/impresa/dico', desc: 'DM 37/2008' },
     ],
@@ -174,7 +175,12 @@ export function ImpresaNav() {
                       <span className="text-xs font-bold uppercase tracking-wider text-gray-600">{macro.label}</span>
                     </div>
                     {macro.items.map(item => {
-                      const itemActive = pathname.startsWith(item.href)
+                      const itemActive = pathname.startsWith(item.href) &&
+                        !macro.items.some(other =>
+                          other.href !== item.href &&
+                          pathname.startsWith(other.href) &&
+                          other.href.length > item.href.length
+                        )
                       return (
                         <Link
                           key={item.href}
@@ -292,7 +298,12 @@ export function ImpresaNav() {
                     {/* Items */}
                     <div className="space-y-0.5">
                       {macro.items.map(item => {
-                        const itemActive = pathname.startsWith(item.href)
+                        const itemActive = pathname.startsWith(item.href) &&
+                          !macro.items.some(other =>
+                            other.href !== item.href &&
+                            pathname.startsWith(other.href) &&
+                            other.href.length > item.href.length
+                          )
                         return (
                           <Link
                             key={item.href}
