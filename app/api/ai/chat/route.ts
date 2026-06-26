@@ -65,6 +65,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ response: responseText })
     } catch (apiErr: any) {
       console.error('SERVER_ERROR: AI chat error:', apiErr)
+      if (apiErr.message === 'API_KEY_MISSING') {
+        return NextResponse.json({ 
+          error: 'Assistente AI non ancora configurato. Inserisci la chiave API nell\'ambiente server.',
+          notConfigured: true 
+        }, { status: 200 })
+      }
       return NextResponse.json({
         error: 'Assistente AI momentaneamente non disponibile. Riprova più tardi.',
         notAvailable: true
