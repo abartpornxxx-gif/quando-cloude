@@ -1,9 +1,8 @@
 export async function callAI(systemPrompt: string, userMessage: string): Promise<string> {
-  const defaultKey = ['AQ', '.', 'Ab8RN6JdqZfnon3V0TVU3T09k8I008dnpE', '-jvmlGvJr-2trTLQ'].join('')
-  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY || defaultKey
-  
+  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY
+
   if (!apiKey) {
-    throw new Error('API_KEY_MISSING')
+    throw new Error('API_KEY_MISSING: configurare GEMINI_API_KEY nelle variabili d\'ambiente Vercel')
   }
 
   const model = 'gemini-2.5-flash'
@@ -22,7 +21,13 @@ export async function callAI(systemPrompt: string, userMessage: string): Promise
     generationConfig: {
       maxOutputTokens: 1000,
       temperature: 0.7
-    }
+    },
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+    ]
   }
 
   const response = await fetch(url, {

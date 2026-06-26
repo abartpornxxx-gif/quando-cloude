@@ -21,9 +21,10 @@ Questi file sono critici per il funzionamento del sito. Cancellarli rompe tutto.
 
 | File | Perché è intoccabile |
 |------|----------------------|
-| `middleware.ts` | Dice a Next.js di usare `proxy.ts` come middleware di autenticazione. Senza, ogni pagina crasha con errore server e il sito è inaccessibile. NON eliminarlo MAI, anche se sembra ridondante. |
-| `proxy.ts` | Contiene la logica di autenticazione e routing per ruolo. Richiamato da `middleware.ts`. |
+| `proxy.ts` | **È il middleware di autenticazione di Next.js 16.** Next.js 16 usa `proxy.ts` come middleware nativo (NON `middleware.ts` come nelle versioni precedenti). Contiene il routing per ruolo e la verifica sessione. Non eliminarlo MAI — senza, ogni pagina è accessibile senza autenticazione. NON creare un `middleware.ts` separato: in Next.js 16 i due file entrano in conflitto e il build fallisce. |
 | `prisma/schema.prisma` | Schema del database. Modificare senza migrare rompe il DB in produzione. |
+
+> **Nota Next.js 16**: In Next.js 16, `proxy.ts` sostituisce `middleware.ts`. Se vedi entrambi i file nel repo, il build fallisce con errore "Both middleware file and proxy file are detected". Tenere SOLO `proxy.ts`.
 
 ### Regola sul `postinstall` in package.json
 **NON aggiungere `prisma db push` al postinstall.** È pericoloso in produzione perché:

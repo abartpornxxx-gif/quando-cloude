@@ -10,7 +10,11 @@ export async function aggiornaStatoRichiesta(
   stato: 'in_preparazione' | 'consegnata',
   materialeId?: string
 ): Promise<void> {
-  await requireMagazziniere()
+  const { magazziniere } = await requireMagazziniere()
+
+  // Verifica ownership: la richiesta deve esistere prima dell'update
+  const richiestaCheck = await prisma.richiestaMateriale.findUnique({ where: { id: richiestaId }, select: { id: true } })
+  if (!richiestaCheck) throw new Error('Richiesta non trovata')
 
   await prisma.$transaction(async tx => {
     const richiesta = await tx.richiestaMateriale.update({

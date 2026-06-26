@@ -22,7 +22,7 @@ export async function salvaCommessa(formData: FormData) {
     costiManodopera: euroToCents(formData.get('costiManodopera') as string),
     costiMezzi: euroToCents(formData.get('costiMezzi') as string),
     fatturato: euroToCents(formData.get('fatturato') as string),
-    avanzamentoPercentuale: parseInt(formData.get('avanzamentoPercentuale') as string || '0', 10),
+    avanzamentoPercentuale: Math.min(100, Math.max(0, parseInt(formData.get('avanzamentoPercentuale') as string || '0', 10))),
     note: (formData.get('note') as string) || null,
     istruzioniCantiere: (formData.get('istruzioniCantiere') as string) || null,
     attrezzatureNecessarie: (formData.get('attrezzatureNecessarie') as string) || null,

@@ -66,15 +66,15 @@ export async function POST(req: Request) {
     } catch (apiErr: any) {
       console.error('SERVER_ERROR: AI chat error:', apiErr)
       return NextResponse.json({
-        error: `[DEBUG] Errore API AI: ${apiErr.message || apiErr}`,
+        error: 'Assistente AI temporaneamente non disponibile. Riprova tra poco.',
         notAvailable: true
-      }, { status: 200 })
+      }, { status: 503 })
     }
 
   } catch (err: any) {
     console.error('SERVER_ERROR: API Chat Route Error:', err)
     return NextResponse.json({
-      error: `[DEBUG] Errore API Route: ${err.message || err}`
-    }, { status: 200 })
+      error: 'Errore interno. Riprova tra poco.'
+    }, { status: 500 })
   }
 }
