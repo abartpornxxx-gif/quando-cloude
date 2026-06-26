@@ -116,7 +116,7 @@ export default async function ImpresaDashboardPage() {
   ] = await Promise.all([
     prisma.commessa.count(),
     prisma.commessa.count({ where: { stato: 'aperta' } }),
-    prisma.giornata.count({ where: { fase: 'fine', stato: 'bozza', rapportino: null } }),
+    prisma.giornata.count({ where: { fase: 'fine', stato: 'bozza', rapportino: { is: null } } }),
     prisma.fatturaAttiva.count({
       where: { stato: { in: ['da_incassare', 'parzialmente_incassata', 'scaduta'] }, dataScadenza: { lte: tra30, not: null } },
     }),

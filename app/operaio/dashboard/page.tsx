@@ -43,7 +43,7 @@ export default async function OperaioDashboardPage() {
       },
     }),
     prisma.giornata.findFirst({
-      where: { operaioId: operaio.id, fase: 'fine', stato: 'bozza', rapportino: null },
+      where: { operaioId: operaio.id, fase: 'fine', stato: 'bozza', rapportino: { is: null } },
       select: { id: true, data: true, commessa: { select: { nome: true } } },
       orderBy: { data: 'desc' },
     }),

@@ -35,7 +35,7 @@ export default async function OperaioLayout({ children }: { children: React.Reac
       showFirstAccess = operaio.primoAccesso
       const [g, notifiche] = await Promise.all([
         prisma.giornata.findFirst({
-          where: { operaioId: operaio.id, fase: 'fine', stato: 'bozza', rapportino: null },
+          where: { operaioId: operaio.id, fase: 'fine', stato: 'bozza', rapportino: { is: null } },
           select: { id: true, commessa: { select: { nome: true } } },
           orderBy: { data: 'desc' },
         }),

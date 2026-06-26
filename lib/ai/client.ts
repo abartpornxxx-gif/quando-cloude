@@ -1,42 +1,43 @@
 export async function callAI(systemPrompt: string, userMessage: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY || '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'
+  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY
 
-  const url = `https://openrouter.ai/api/v1/chat/completions`
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY non configurata')
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`
 
   const payload = {
-    model: 'openai/gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: systemPrompt
-      },
+    contents: [
       {
         role: 'user',
-        content: userMessage
+        parts: [{ text: `${systemPrompt}\n\n${userMessage}` }]
       }
-    ]
+    ],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 1024,
+    }
   }
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   })
 
   if (!response.ok) {
     const errorText = await response.text()
-    throw new Error(`OPENROUTER_API_ERROR: ${response.status} - ${errorText}`)
+    throw new Error(`GEMINI_API_ERROR: ${response.status} - ${errorText}`)
   }
 
   const data = await response.json()
-  const text = data?.choices?.[0]?.message?.content
-  
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+
   if (!text) {
-    throw new Error('OPENROUTER_EMPTY_RESPONSE')
+    throw new Error('GEMINI_EMPTY_RESPONSE')
   }
 
   return text
 }
+
