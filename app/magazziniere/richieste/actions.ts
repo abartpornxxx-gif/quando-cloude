@@ -33,6 +33,8 @@ export async function aggiornaStatoRichiesta(
           where: { richiestaId },
         })
         if (!existingMovimento) {
+          const materialeRef = await tx.materiale.findUnique({ where: { id: matId } })
+          
           await tx.movimentoMagazzino.create({
             data: {
               materialeId: matId,
@@ -43,6 +45,16 @@ export async function aggiornaStatoRichiesta(
               richiestaId,
             },
           })
+
+          // Incrementa costo materiale sulla commessa
+          if (materialeRef) {
+            await tx.commessa.update({
+              where: { id: richiesta.commessaId },
+              data: {
+                costiMateriali: { increment: Math.round(materialeRef.prezzo * richiesta.quantita) }
+              }
+            })
+          }
         }
       }
     }
@@ -86,6 +98,8 @@ export async function uploadFotoConsegna(
     if (richiesta.materialeId) {
       const existingMovimento = await tx.movimentoMagazzino.findUnique({ where: { richiestaId } })
       if (!existingMovimento) {
+        const materialeRef = await tx.materiale.findUnique({ where: { id: richiesta.materialeId } })
+
         await tx.movimentoMagazzino.create({
           data: {
             materialeId: richiesta.materialeId,
@@ -96,6 +110,15 @@ export async function uploadFotoConsegna(
             richiestaId,
           },
         })
+
+        if (materialeRef) {
+          await tx.commessa.update({
+            where: { id: richiesta.commessaId },
+            data: {
+              costiMateriali: { increment: Math.round(materialeRef.prezzo * richiesta.quantita) }
+            }
+          })
+        }
       }
     }
   })

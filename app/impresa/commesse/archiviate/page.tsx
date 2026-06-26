@@ -12,6 +12,7 @@ export default async function CommesseArchiviateePage() {
     where: { archiviata: true },
     orderBy: { updatedAt: 'desc' },
     include: { cliente: { select: { nome: true } } },
+    take: 100,
   })
 
   return (

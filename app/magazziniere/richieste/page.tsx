@@ -14,7 +14,8 @@ export default async function RichiestePage() {
       operaio: { select: { nome: true } },
       commessa: { select: { nome: true } },
     },
-    orderBy: [{ stato: 'asc' }, { urgente: 'desc' }, { createdAt: 'asc' }],
+    orderBy: [{ stato: 'asc' }, { urgente: 'desc' }, { createdAt: 'desc' }],
+    take: 100,
   })
 
   const aperte = richieste.filter(r => r.stato === 'richiesta').length

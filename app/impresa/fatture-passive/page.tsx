@@ -13,6 +13,7 @@ export default async function FatturePassivePage() {
       ordine: { select: { id: true } },
     },
     orderBy: { data: 'desc' },
+    take: 100,
   })
 
   const totaleDaPagare = fatture

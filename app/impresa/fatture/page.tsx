@@ -58,6 +58,7 @@ export default async function FattureAttivePage({
       righe: true,
     },
     orderBy: [{ anno: 'desc' }, { numero: 'desc' }],
+    take: 100,
   })
 
   function totaleImponibile(righe: { quantita: number; prezzoUnitario: number }[]) {
