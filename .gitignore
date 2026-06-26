@@ -39,6 +39,9 @@ yarn-error.log*
 # file di lavoro temporanei con segreti
 /scratch/
 
+# archivio file obsoleti (SQL migrazioni già applicate, test one-shot)
+/_archive/
+
 # vercel
 .vercel
 
