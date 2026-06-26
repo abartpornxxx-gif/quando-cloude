@@ -24,11 +24,11 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
   const userName = user.user_metadata?.full_name ?? user.email ?? ''
 
   return (
-    <div className="min-h-full">
+    <div className="min-h-screen">
       {/* Header scuro con identità forte */}
-      <header className="sticky top-0 z-40 bg-slate-900 shadow-lg">
+      <header className="sticky top-0 z-40 bg-slate-900" style={{ boxShadow: '0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.35)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between gap-4">
+          <div className="flex h-16 items-center justify-between gap-4">
             {/* Logo + brand */}
             <Link href="/impresa/dashboard" className="flex items-center gap-3 shrink-0 hover:opacity-80 transition-opacity">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 shadow-sm shrink-0">
@@ -54,7 +54,7 @@ export default async function ImpresaLayout({ children }: { children: React.Reac
         </div>
         <ImpresaNav />
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       <AssistenteContestuale role="impresa" />
     </div>
   )

@@ -10,21 +10,21 @@ interface EmptyStateProps {
 export function EmptyState({ icon = '📋', title, description, action }: EmptyStateProps) {
   const isImage = icon.startsWith('/')
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white py-14 px-6 text-center">
+    <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-white py-16 px-6 text-center shadow-card">
       {isImage ? (
-        <div className="mb-4">
-          <Image src={icon} width={80} height={80} alt="" className="opacity-80 mx-auto" />
+        <div className="mb-5">
+          <Image src={icon} width={72} height={72} alt="" className="opacity-70 mx-auto" />
         </div>
       ) : (
-        <span className="text-5xl mb-4 select-none" role="img" aria-hidden="true">
+        <span className="text-5xl mb-5 select-none" role="img" aria-hidden="true">
           {icon}
         </span>
       )}
-      <p className="text-sm font-semibold text-gray-700">{title}</p>
+      <p className="text-sm font-bold text-gray-700">{title}</p>
       {description && (
-        <p className="mt-1.5 text-xs text-gray-400 max-w-xs">{description}</p>
+        <p className="mt-1.5 text-xs text-gray-400 max-w-xs leading-relaxed">{description}</p>
       )}
-      {action && <div className="mt-5">{action}</div>}
+      {action && <div className="mt-6">{action}</div>}
     </div>
   )
 }

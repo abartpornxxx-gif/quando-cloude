@@ -32,7 +32,7 @@ export default async function ClienteLayout({ children }: { children: React.Reac
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-40 bg-violet-700 shadow-lg">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between gap-3">
+          <div className="flex h-16 items-center justify-between gap-3">
             {/* Logo */}
             <Link href="/cliente/dashboard" className="flex items-center gap-2.5 shrink-0">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500 shadow-sm shrink-0">
@@ -57,7 +57,7 @@ export default async function ClienteLayout({ children }: { children: React.Reac
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
       <AssistenteContestuale role="cliente" />
     </div>
   )

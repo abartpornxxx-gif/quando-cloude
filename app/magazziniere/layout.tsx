@@ -39,7 +39,7 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <header className="sticky top-0 z-40 bg-amber-800 text-white shadow-lg">
         <div className="mx-auto max-w-3xl px-4">
-          <div className="flex h-14 items-center justify-between gap-2">
+          <div className="flex h-16 items-center justify-between gap-2">
             {/* Logo + nav */}
             <div className="flex min-w-0 items-center gap-2 sm:gap-4">
               <Link href="/magazziniere/dashboard" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
@@ -62,7 +62,7 @@ export default async function MagazzinoLayout({ children }: { children: ReactNod
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
       <AssistenteContestuale role="magazziniere" />
       {showFirstAccess && (
         <FirstAccessModal userRole="magazziniere" userEmail={user.email!} userName={dbNome} />

@@ -39,7 +39,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-40 bg-teal-700 shadow-lg">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between gap-4">
+          <div className="flex h-16 items-center justify-between gap-4">
             {/* Logo */}
             <Link href="/ufficio/dashboard" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-500 shadow-sm shrink-0">
@@ -62,7 +62,7 @@ export default async function UfficioLayout({ children }: { children: React.Reac
         <UfficioNav />
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       <AssistenteContestuale role="ufficio" />
       {showFirstAccess && (
         <FirstAccessModal userRole="ufficio" userEmail={user.email!} userName={dbNome} />
