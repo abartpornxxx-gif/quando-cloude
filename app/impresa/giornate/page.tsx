@@ -1,6 +1,7 @@
 import { requireImpresa } from '@/lib/auth'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
+import { startOfTodayItaly } from '@/lib/date'
 import GiornateMonitor from './GiornateMonitor'
 import StoricoCentroOperativo from './StoricoCentroOperativo'
 import { PianificazioneSubNav } from '../pianificazione/PianificazioneSubNav'
@@ -8,8 +9,7 @@ import { PianificazioneSubNav } from '../pianificazione/PianificazioneSubNav'
 export default async function CentroOperativoPage() {
   await requireImpresa()
 
-  const oggi = new Date()
-  oggi.setHours(0, 0, 0, 0)
+  const oggi = startOfTodayItaly()
 
   const giornate = await prisma.giornata.findMany({
     include: {

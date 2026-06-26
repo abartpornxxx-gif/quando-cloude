@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link';
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -177,9 +178,9 @@ export default function CatalogoForm({ offerta }: { offerta?: OffertaData }) {
         >
           {pending ? 'Salvataggio…' : offerta ? 'Aggiorna offerta' : 'Crea offerta'}
         </button>
-        <a href="/impresa/catalogo" className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <Link href="/impresa/catalogo" className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
           Annulla
-        </a>
+        </Link>
       </div>
     </form>
   )

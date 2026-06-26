@@ -7,10 +7,14 @@ import { redirect } from 'next/navigation'
 
 export async function eliminaFatturaPassivaUfficio(fatturaId: string): Promise<void> {
   await requireImpresaOUfficio()
-  const fattura = await prisma.fatturaPassiva.findUnique({ where: { id: fatturaId } })
-  if (!fattura) throw new Error('Fattura non trovata')
-  if (fattura.stato === 'pagata') throw new Error('Non puoi eliminare una fattura già pagata')
-  await prisma.fatturaPassiva.delete({ where: { id: fatturaId } })
+  await prisma.$transaction(async tx => {
+    const fattura = await tx.fatturaPassiva.findUnique({ where: { id: fatturaId } })
+    if (!fattura) throw new Error('Fattura non trovata')
+    if (fattura.stato === 'pagata' || fattura.stato === 'parzialmente_pagata') {
+      throw new Error('Non puoi eliminare una fattura già pagata o parzialmente pagata')
+    }
+    await tx.fatturaPassiva.delete({ where: { id: fatturaId } })
+  })
   revalidatePath('/ufficio/fatture-passive')
   revalidatePath('/impresa/fatture-passive')
   redirect('/ufficio/fatture-passive')

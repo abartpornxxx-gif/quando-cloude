@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link';
 
 import { useState, useEffect, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -82,7 +83,7 @@ export default function FlussoGiornata({
   // Rapportino inline
   const [lavoroEseguito, setLavoroEseguito] = useState('')
   const [oreOrdinarie, setOreOrdinarie] = useState('8')
-  const [oreStraordinarie, setOreStraordinarie] = useState('0')
+  const [oreStraordinarie, setOreStraordinarie] = useState('')
   const [cosaFareDomani, setCosaFareDomani] = useState('')
   const [urgenzaDomani, setUrgenzaDomani] = useState(3)
   const [attrRiconsegnate, setAttrRiconsegnate] = useState<string[]>(attrezzature.map(a => a.id))
@@ -203,9 +204,9 @@ export default function FlussoGiornata({
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Cantiere</p>
             <h1 className="text-xl font-black leading-tight">{commessa.nome}</h1>
             {commessa.indirizzoCantiere && (
-              <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(commessa.indirizzoCantiere)}`} target="_blank" className="flex items-center gap-1.5 mt-2 text-sm text-blue-400 hover:text-blue-300">
+              <Link href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(commessa.indirizzoCantiere)}`} target="_blank" className="flex items-center gap-1.5 mt-2 text-sm text-blue-400 hover:text-blue-300">
                 <MapPin size={14} /> Mappa
-              </a>
+              </Link>
             )}
           </div>
           {inLavoro && (
@@ -276,10 +277,10 @@ export default function FlussoGiornata({
             <span className="text-sm font-bold text-slate-700">{uploading ? 'Caricamento...' : 'Foto Lavoro'}</span>
           </label>
           
-          <a href={`/operaio/giornata/${giornataId}/chat`} className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white p-4 h-28 hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95">
+          <Link href={`/operaio/giornata/${giornataId}/chat`} className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white p-4 h-28 hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95">
             <MessageSquare size={32} className="text-blue-500" />
             <span className="text-sm font-bold text-slate-700">Chat Ufficio</span>
-          </a>
+          </Link>
 
           <button onClick={() => setSuggerimentiAperti(!suggerimentiAperti)} className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white p-4 h-28 hover:border-violet-400 hover:bg-violet-50 transition-all active:scale-95">
             <CheckSquare size={32} className="text-violet-500" />

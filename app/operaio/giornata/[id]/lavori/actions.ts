@@ -170,8 +170,11 @@ export async function uploadFotoAvanzamento(
 export async function toggleSpunta(giornataId: string, suggerimentoId: string, completato: boolean): Promise<void> {
   const { operaio } = await requireOperaio()
 
-  const giornata = await prisma.giornata.findUnique({ where: { id: giornataId }, select: { operaioId: true } })
-  if (!giornata || giornata.operaioId !== operaio.id) throw new Error('Non autorizzato')
+  const giornata = await prisma.giornata.findFirst({ 
+    where: { id: giornataId, operaioId: operaio.id }, 
+    select: { id: true } 
+  })
+  if (!giornata) throw new Error('Non autorizzato')
 
   await prisma.suggerimentoSpunta.upsert({
     where: { suggerimentoId_giornataId: { suggerimentoId, giornataId } },

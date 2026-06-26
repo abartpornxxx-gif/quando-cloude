@@ -22,6 +22,12 @@ export default async function ChatMagazzinierePage({ params }: Props) {
   })
   if (!giornata) notFound()
 
+  const richiestaEsiste = await prisma.richiestaMateriale.findFirst({
+    where: { giornataId },
+    select: { id: true },
+  })
+  if (!richiestaEsiste) notFound()
+
   const messaggi = await prisma.chatMessaggio.findMany({
     where: { giornataId },
     orderBy: { createdAt: 'asc' },

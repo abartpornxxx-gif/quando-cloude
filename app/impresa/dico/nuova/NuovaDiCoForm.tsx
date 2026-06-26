@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link';
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -229,9 +230,9 @@ export default function NuovaDiCoForm({
       {errore && <p className="text-red-600 text-sm">{errore}</p>}
 
       <div className="flex gap-3">
-        <a href="/impresa/dico" className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <Link href="/impresa/dico" className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50">
           Annulla
-        </a>
+        </Link>
         <button
           type="submit"
           disabled={pending}

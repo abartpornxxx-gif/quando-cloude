@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS "proposte_intervento" (
   "risposta_cliente"      TEXT,
   "confermata_da_impresa" BOOLEAN NOT NULL DEFAULT FALSE,
   "commessa_id"           UUID REFERENCES "commesse"("id") ON DELETE SET NULL,
+  "data_esecuzione"       TIMESTAMPTZ,
   "created_at"            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   "updated_at"            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

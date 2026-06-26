@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link';
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -119,7 +120,7 @@ export default function NuovaFatturaPassivaFormUfficio({
 
       {errore && <p className="text-red-600 text-sm">{errore}</p>}
       <div className="flex gap-3">
-        <a href="/ufficio/fatture-passive" className="flex-1 rounded-xl border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50">Annulla</a>
+        <Link href="/ufficio/fatture-passive" className="flex-1 rounded-xl border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50">Annulla</Link>
         <button type="submit" disabled={pending} className="flex-1 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50">
           {pending ? 'Salvataggio…' : 'Registra fattura'}
         </button>

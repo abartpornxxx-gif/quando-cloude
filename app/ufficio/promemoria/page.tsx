@@ -202,7 +202,7 @@ export default function PromemoriaPage() {
                 <span className="font-bold text-slate-800">{items.length}</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2">
-                <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: '45%' }}></div>
+                <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${items.length > 0 ? Math.round((items.filter(i => i.stato === 'completato').length / items.length) * 100) : 0}%` }}></div>
               </div>
             </div>
           </div>

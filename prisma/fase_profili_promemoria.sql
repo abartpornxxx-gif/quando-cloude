@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS promemoria (
   stato VARCHAR(50) DEFAULT 'attivo',
   assegnato_a_operaio_id UUID REFERENCES operai(id) ON DELETE CASCADE,
   per_impresa BOOLEAN DEFAULT false,
+  importante BOOLEAN DEFAULT false,
   creato_da VARCHAR(255),
   completato_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,

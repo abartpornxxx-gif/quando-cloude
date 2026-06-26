@@ -1,15 +1,9 @@
 import { randomBytes } from 'crypto'
 import { getAdminClient } from '@/lib/supabase/admin'
 
-// Genera una password temporanea con CSPRNG (non Math.random)
+// Genera una password temporanea con CSPRNG
 export function generateTempPassword(): string {
-  const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  let pass = 'QDR-'
-  const bytes = randomBytes(8)
-  for (let i = 0; i < 8; i++) {
-    pass += chars.charAt(bytes[i] % chars.length)
-  }
-  return pass
+  return 'QDR-' + randomBytes(8).toString('hex')
 }
 
 interface CreateUserParams {

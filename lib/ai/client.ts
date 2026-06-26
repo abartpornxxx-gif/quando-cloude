@@ -1,15 +1,13 @@
-export async function callGemini(systemPrompt: string, userMessage: string): Promise<string> {
+export async function callAI(systemPrompt: string, userMessage: string): Promise<string> {
+  // Usa la chiave passata in env
   const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY
+  
   if (!apiKey) {
     throw new Error('API_KEY_MISSING')
   }
 
-  let model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
-  if (model.startsWith('models/')) {
-    model = model.substring('models/'.length)
-  }
+  const model = 'gemini-2.5-flash'
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
-
 
   const payload = {
     contents: [
@@ -37,14 +35,12 @@ export async function callGemini(systemPrompt: string, userMessage: string): Pro
 
   if (!response.ok) {
     const errorText = await response.text()
-    if (response.status === 404) {
-      throw new Error('GEMINI_MODEL_NOT_FOUND')
-    }
     throw new Error(`GEMINI_API_ERROR: ${response.status} - ${errorText}`)
   }
 
   const data = await response.json()
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+  
   if (!text) {
     throw new Error('GEMINI_EMPTY_RESPONSE')
   }

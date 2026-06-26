@@ -51,6 +51,14 @@ export async function importaFatturePassive(items: FatturaImportInput[]): Promis
 export async function analizzaFatturaPDFConIA(fileBase64: string, mimeType: string) {
   try {
     await requireUfficio()
+
+    const MAX_SIZE_MB = 5
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
+    const estimatedSize = fileBase64.length * 0.75
+    if (estimatedSize > MAX_SIZE_BYTES) {
+      throw new Error(`Il file supera il limite massimo di ${MAX_SIZE_MB}MB.`)
+    }
+
     const { analizzaDocumentoFattura } = await import('@/lib/ai')
     return await analizzaDocumentoFattura(fileBase64, mimeType)
   } catch (err: any) {

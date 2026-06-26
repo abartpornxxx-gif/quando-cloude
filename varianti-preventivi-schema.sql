@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS "varianti_lavoro" (
   "importo" INTEGER NOT NULL DEFAULT 0, -- in centesimi
   "costo_stimato" INTEGER NOT NULL DEFAULT 0, -- in centesimi
   "stato" "StatoVariante" NOT NULL DEFAULT 'bozza',
+  "visibile_cliente" BOOLEAN NOT NULL DEFAULT false,
   "approvato_at" TIMESTAMPTZ,
   "note" TEXT,
   "file_url" TEXT,
@@ -37,6 +38,7 @@ CREATE TABLE IF NOT EXISTS "richieste_preventivi_fornitori" (
   "descrizione" TEXT NOT NULL,
   "stato" "StatoPreventivoFornitore" NOT NULL DEFAULT 'in_attesa',
   "note" TEXT,
+  "importo" FLOAT,
   "file_url" TEXT,
   "file_path" TEXT,
   "data_richiesta" TIMESTAMPTZ NOT NULL DEFAULT now(),

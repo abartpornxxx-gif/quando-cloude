@@ -75,9 +75,9 @@ export async function proxy(request: NextRequest) {
       return redirectWithSession(dest)
     }
 
-    // Utente autenticato senza ruolo: rimanda al login (account incompleto)
+    // S2: Utente autenticato senza ruolo: gestisci il redirect al login
     if (!role) {
-      return redirectWithSession('/login')
+      return NextResponse.redirect(new URL('/login', request.url))
     }
 
     // Impedisce di accedere all'area di un altro ruolo
@@ -93,8 +93,8 @@ export async function proxy(request: NextRequest) {
     }
 
     return supabaseResponse
-  } catch {
-    // Su errore Auth (es. Supabase irraggiungibile), blocca l'accesso alle aree protette
+  } catch (error) {
+    // S1: Modifica il catch vuoto e fallo reindirizzare a /login
     const { pathname: p } = request.nextUrl
     const isPublic = p === '/login' || p === '/register' || p.startsWith('/auth/')
     if (isPublic) return NextResponse.next()

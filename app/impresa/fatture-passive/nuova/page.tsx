@@ -1,3 +1,4 @@
+import Link from 'next/link';
 ﻿import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import NuovaFatturaPassivaForm from './NuovaFatturaPassivaForm'
@@ -22,7 +23,7 @@ export default async function NuovaFatturaPassivaPage() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <a href="/impresa/fatture-passive" className="text-blue-600 hover:text-blue-800 text-sm">‹ Fatture passive</a>
+        <Link href="/impresa/fatture-passive" className="text-blue-600 hover:text-blue-800 text-sm">‹ Fatture passive</Link>
         <h1 className="text-2xl font-bold text-gray-900">Registra fattura fornitore</h1>
       </div>
       <NuovaFatturaPassivaForm fornitori={fornitori} commesse={commesse} ordini={ordini} />

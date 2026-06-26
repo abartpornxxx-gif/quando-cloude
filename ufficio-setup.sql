@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS collaboratori_ufficio (
   id         UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   nome       TEXT         NOT NULL,
   email      TEXT         UNIQUE,
+  auth_user_id UUID,
+  primo_accesso BOOLEAN DEFAULT true,
+  password_reset_richiesto BOOLEAN DEFAULT false,
   note       TEXT,
   created_at TIMESTAMPTZ  DEFAULT NOW(),
   updated_at TIMESTAMPTZ  DEFAULT NOW()

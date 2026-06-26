@@ -4,7 +4,7 @@
 -- ============================================================
 
 -- 1. Enum per i ruoli utente
-CREATE TYPE user_role AS ENUM ('impresa', 'operaio', 'cliente');
+CREATE TYPE user_role AS ENUM ('impresa', 'operaio', 'cliente', 'magazziniere', 'ufficio');
 
 -- 2. Tabella profili (estende auth.users di Supabase)
 CREATE TABLE IF NOT EXISTS public.profiles (

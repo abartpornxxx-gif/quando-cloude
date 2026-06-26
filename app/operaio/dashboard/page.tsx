@@ -231,7 +231,7 @@ export default async function OperaioDashboardPage() {
           !giornataRapportinoPendente && (
             <Link
               href="/operaio/giornata/nuova"
-              className="w-full sm:w-auto text-center bg-emerald-655 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-sm flex items-center justify-center gap-1.5"
+              className="w-full sm:w-auto text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-sm flex items-center justify-center gap-1.5"
             >
               <Play size={12} />
               Inizia Giornata
@@ -244,7 +244,7 @@ export default async function OperaioDashboardPage() {
       {cantiereOggi ? (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-xs overflow-hidden">
           {/* Intestazione ticket */}
-          <div className="bg-slate-50 border-b border-gray-150 px-5 py-4 flex items-center justify-between gap-4">
+          <div className="bg-slate-50 border-b border-gray-200 px-5 py-4 flex items-center justify-between gap-4">
             <div>
               <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
                 Intervento Odierno
@@ -329,7 +329,7 @@ export default async function OperaioDashboardPage() {
           <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5">
             <Calendar size={12} /> I tuoi Appuntamenti di Oggi
           </p>
-          <div className="space-y-3 relative before:absolute before:inset-y-0 before:left-4.5 before:w-0.5 before:bg-slate-100">
+          <div className="space-y-3 relative before:absolute before:inset-y-0 before:left-4 before:w-0.5 before:bg-slate-100">
             {promemoriaOggi.map((p) => {
               const ora = new Date(p.dataOra).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
               const cleanTitolo = p.titolo.replace(/^TEST_AI_FULL_QUADRO:\s*/, '')
@@ -389,7 +389,7 @@ export default async function OperaioDashboardPage() {
             )}
 
             {pianificazioneOggi.commessa.attrezzatureNecessarie && (
-              <div className="border border-slate-150 rounded-2xl p-3.5 space-y-1.5">
+              <div className="border border-slate-200 rounded-2xl p-3.5 space-y-1.5">
                 <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest">🔧 Attrezzatura Necessaria</span>
                 <p className="text-xs font-semibold text-slate-700 whitespace-pre-line leading-relaxed">
                   {pianificazioneOggi.commessa.attrezzatureNecessarie}
@@ -434,7 +434,7 @@ export default async function OperaioDashboardPage() {
         {cantiereOggi?.indirizzoCantiere ? (
           <PuntiUtili indirizzo={cantiereOggi.indirizzoCantiere} />
         ) : (
-          <div className="bg-gray-55 bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col justify-center">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col justify-center">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Punti utili</p>
             <p className="text-xs text-gray-500">Imposta un cantiere per vedere bar e punti di interesse vicini.</p>
           </div>
@@ -454,7 +454,7 @@ export default async function OperaioDashboardPage() {
                   const c = a.commessa
                   const uGiornata = c.giornate[0]
                   return (
-                    <div key={a.commessaId} className="bg-white rounded-2xl border border-gray-250 p-4 shadow-xs flex items-center justify-between gap-3">
+                    <div key={a.commessaId} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <h5 className="text-xs font-black text-gray-900 truncate">{c.nome}</h5>
                         {c.indirizzoCantiere && <p className="text-[11px] text-gray-400 truncate mt-0.5">📍 {c.indirizzoCantiere}</p>}
@@ -469,12 +469,12 @@ export default async function OperaioDashboardPage() {
 
           {commesseChiuse.length > 0 && (
             <>
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-350 pt-2">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 pt-2">
                 Cantieri Chiusi di Recente
               </h4>
               <div className="grid grid-cols-2 gap-2">
                 {commesseChiuse.map(a => (
-                  <div key={a.commessaId} className="bg-slate-50 border border-slate-150 rounded-xl p-3 opacity-60">
+                  <div key={a.commessaId} className="bg-slate-50 border border-slate-200 rounded-xl p-3 opacity-60">
                     <p className="text-xs font-bold text-slate-600 truncate">{a.commessa.nome}</p>
                     <p className="text-[10px] text-slate-400 truncate">Stato: Chiuso</p>
                   </div>

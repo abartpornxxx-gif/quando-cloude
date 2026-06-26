@@ -623,6 +623,7 @@ await ensureTable('richieste_materiale', `
     operaio_id UUID NOT NULL REFERENCES operai(id),
     materiale_id UUID REFERENCES materiali(id),
     descrizione TEXT NOT NULL, urgente BOOLEAN NOT NULL DEFAULT FALSE,
+    quantita FLOAT NOT NULL DEFAULT 1,
     stato stato_richiesta NOT NULL DEFAULT 'richiesta',
     foto_url TEXT, foto_path TEXT, note TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

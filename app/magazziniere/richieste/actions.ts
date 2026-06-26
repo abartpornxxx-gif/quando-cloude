@@ -33,7 +33,7 @@ export async function aggiornaStatoRichiesta(
             data: {
               materialeId: matId,
               tipo: 'scarico',
-              quantita: 1,
+              quantita: richiesta.quantita,
               descrizione: `Richiesta cantiere: ${richiesta.descrizione}`,
               commessaId: richiesta.commessaId,
               richiestaId,
@@ -86,7 +86,7 @@ export async function uploadFotoConsegna(
           data: {
             materialeId: richiesta.materialeId,
             tipo: 'scarico',
-            quantita: 1,
+            quantita: richiesta.quantita,
             descrizione: `Richiesta cantiere: ${richiesta.descrizione}`,
             commessaId: richiesta.commessaId,
             richiestaId,

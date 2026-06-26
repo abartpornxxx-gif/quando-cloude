@@ -75,6 +75,13 @@ export default async function ClienteDashboardPage() {
       desc: 'Scopri le nostre offerte',
       badge: null,
     },
+    {
+      href: '/cliente/manutenzioni',
+      icon: '🔧',
+      titolo: 'Manutenzioni',
+      desc: 'Controlli pianificati',
+      badge: null,
+    },
   ]
 
   return (
