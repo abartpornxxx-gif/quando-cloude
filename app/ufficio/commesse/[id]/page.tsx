@@ -1,4 +1,4 @@
-import { requireUfficio } from '@/lib/auth'
+﻿import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -272,7 +272,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
               const [anno, mm] = mese.split('-')
               const dataRap = new Date(parseInt(anno), parseInt(mm) - 1, 1)
               return (
-                <div key={mese} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                <div key={mese} className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
                   <div className="border-b border-gray-100 px-4 py-2.5 bg-gray-50 flex items-center justify-between">
                     <p className="text-xs font-semibold text-gray-600 capitalize">{meseLabel(dataRap)}</p>
                     <p className="text-xs text-gray-400">{giornateMese.length} giornate</p>
@@ -332,7 +332,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
           )}
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           {/* Riepilogo ordini */}
           {c.ordini.length > 0 && (
             <div className="border-b border-gray-100 px-4 py-3 bg-gray-50">
@@ -398,7 +398,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
           )}
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           {c.fattureAttive.length === 0 ? (
             <p className="px-4 py-6 text-sm text-center text-gray-400">Nessuna fattura attiva per questa commessa.</p>
           ) : (
@@ -454,7 +454,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
             )}
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
             {c.fatturePassive.length === 0 ? (
               <p className="px-4 py-6 text-sm text-center text-gray-400">Nessuna fattura fornitore collegata a questa commessa.</p>
             ) : (
@@ -516,7 +516,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
           </Link>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           {c.varianti.length === 0 ? (
             <p className="px-4 py-6 text-sm text-center text-gray-400">Nessuna variante inserita per questa commessa.</p>
           ) : (
@@ -571,7 +571,7 @@ export default async function UfficioCommessaDettaglio({ params }: Props) {
           </Link>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           {c.richiestePreventiviFornitori.length === 0 ? (
             <p className="px-4 py-6 text-sm text-center text-gray-400">Nessuna richiesta preventivo registrata.</p>
           ) : (

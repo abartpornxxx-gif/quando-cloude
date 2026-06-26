@@ -44,7 +44,7 @@ export default async function RichiestaDettaglioPage({ params }: Props) {
       </div>
 
       {/* Offerta */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
         {r.offerta.fotoUrl && (
           <img src={r.offerta.fotoUrl} alt={r.offerta.titolo} className="w-full h-48 object-cover" />
         )}

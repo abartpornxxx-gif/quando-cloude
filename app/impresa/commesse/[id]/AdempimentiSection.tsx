@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useTransition, useState } from 'react'
 import {
@@ -74,7 +74,7 @@ export function AdempimentiSection({ commessaId, tipoLavoro, adempimenti }: Prop
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
       {/* Header */}
       <div className="border-b border-gray-100 px-5 py-4">
         <div className="flex items-start justify-between gap-3">

@@ -1,4 +1,4 @@
-import { requireUfficio } from '@/lib/auth'
+﻿import { requireUfficio } from '@/lib/auth'
 import { listaNotificheUfficio } from '@/lib/notifiche'
 import { segnaTutteLetteUfficio } from './actions'
 import Link from 'next/link'
@@ -24,7 +24,7 @@ export default async function NotificheUfficioPage() {
         <div>
           <div className="mb-1">
             <Link href="/ufficio/dashboard" className="text-sm text-teal-600 hover:text-teal-800">
-              ← Dashboard
+              â† Dashboard
             </Link>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Avvisi operativi</h1>
@@ -60,9 +60,9 @@ export default async function NotificheUfficioPage() {
       {urgenti.length > 0 && (
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            Urgenti — fatture scadute ({urgenti.length})
+            Urgenti â€” fatture scadute ({urgenti.length})
           </p>
-          <div className="rounded-2xl border border-red-200 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-2xl border border-red-200 bg-white shadow-card overflow-hidden">
             <div className="divide-y divide-red-100">
               {urgenti.map(item => (
                 <Link
@@ -84,7 +84,7 @@ export default async function NotificheUfficioPage() {
                       <p className="text-xs text-gray-400 mt-1">{formatData(item.data)}</p>
                     )}
                   </div>
-                  <span className="text-gray-400 shrink-0 mt-1">›</span>
+                  <span className="text-gray-400 shrink-0 mt-1">â€º</span>
                 </Link>
               ))}
             </div>
@@ -98,7 +98,7 @@ export default async function NotificheUfficioPage() {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             Saldi pendenti ({normali.length})
           </p>
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
             <div className="divide-y divide-gray-100">
               {normali.map(item => (
                 <Link
@@ -120,7 +120,7 @@ export default async function NotificheUfficioPage() {
                       <p className="text-xs text-gray-400 mt-1">{formatData(item.data)}</p>
                     )}
                   </div>
-                  <span className="text-gray-400 shrink-0 mt-1">›</span>
+                  <span className="text-gray-400 shrink-0 mt-1">â€º</span>
                 </Link>
               ))}
             </div>
@@ -135,18 +135,18 @@ export default async function NotificheUfficioPage() {
             href="/ufficio/saldi-pendenti"
             className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700"
           >
-            Gestisci tutti i saldi pendenti →
+            Gestisci tutti i saldi pendenti â†’
           </Link>
         </div>
       )}
 
-      {/* Già lette */}
+      {/* GiÃ  lette */}
       {lette.length > 0 && (
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            Già lette ({lette.length})
+            GiÃ  lette ({lette.length})
           </p>
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden opacity-60">
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden opacity-60">
             <div className="divide-y divide-gray-100">
               {lette.map(item => (
                 <Link
@@ -163,7 +163,7 @@ export default async function NotificheUfficioPage() {
                       <p className="text-xs text-gray-400 mt-0.5">{item.sottotitolo}</p>
                     )}
                   </div>
-                  <span className="text-gray-300 shrink-0 mt-1">›</span>
+                  <span className="text-gray-300 shrink-0 mt-1">â€º</span>
                 </Link>
               ))}
             </div>
@@ -173,3 +173,4 @@ export default async function NotificheUfficioPage() {
     </div>
   )
 }
+

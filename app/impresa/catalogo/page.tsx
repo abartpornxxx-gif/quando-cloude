@@ -1,4 +1,4 @@
-import { requireImpresa } from '@/lib/auth'
+﻿import { requireImpresa } from '@/lib/auth'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
@@ -18,7 +18,7 @@ export default async function CatalogoPaginaImpresa() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Catalogo offerte</h1>
-          <p className="mt-1 text-sm text-gray-500">{offerte.length} offerte · visibili ai clienti nel portale</p>
+          <p className="mt-1 text-sm text-gray-500">{offerte.length} offerte Â· visibili ai clienti nel portale</p>
         </div>
         <Link
           href="/impresa/catalogo/nuovo"
@@ -30,7 +30,7 @@ export default async function CatalogoPaginaImpresa() {
 
       {offerte.length === 0 && (
         <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center">
-          <p className="text-2xl mb-2">🛍</p>
+          <p className="text-2xl mb-2">ðŸ›</p>
           <p className="text-gray-600 font-medium">Nessuna offerta ancora</p>
           <p className="text-sm text-gray-400 mt-1">Crea offerte per mostrarle ai clienti nel loro portale</p>
           <Link href="/impresa/catalogo/nuovo" className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
@@ -41,7 +41,7 @@ export default async function CatalogoPaginaImpresa() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {offerte.map(o => (
-          <div key={o.id} className={`rounded-xl border bg-white shadow-sm overflow-hidden ${o.attiva ? 'border-gray-200' : 'border-dashed border-gray-300 opacity-60'}`}>
+          <div key={o.id} className={`rounded-xl border bg-white shadow-card overflow-hidden ${o.attiva ? 'border-gray-200' : 'border-dashed border-gray-300 opacity-60'}`}>
             {o.fotoUrl ? (
               <img src={o.fotoUrl} alt={o.titolo} className="h-40 w-full object-cover" />
             ) : (
@@ -70,7 +70,7 @@ export default async function CatalogoPaginaImpresa() {
 
               {o._count.richieste > 0 && (
                 <Link href="/impresa/richieste-offerte" className="inline-flex items-center gap-1 text-xs text-orange-600 font-medium hover:underline">
-                  📬 {o._count.richieste} {o._count.richieste === 1 ? 'richiesta' : 'richieste'}
+                  ðŸ“¬ {o._count.richieste} {o._count.richieste === 1 ? 'richiesta' : 'richieste'}
                 </Link>
               )}
 
@@ -81,13 +81,13 @@ export default async function CatalogoPaginaImpresa() {
                 >
                   Modifica
                 </Link>
-                <span className="text-gray-300">·</span>
+                <span className="text-gray-300">Â·</span>
                 <form action={toggleAttiva.bind(null, o.id, !o.attiva)} className="inline">
                   <button type="submit" className="text-xs text-gray-500 hover:text-gray-700">
                     {o.attiva ? 'Nascondi' : 'Attiva'}
                   </button>
                 </form>
-                <span className="text-gray-300">·</span>
+                <span className="text-gray-300">Â·</span>
                 <form action={eliminaOfferta.bind(null, o.id)} className="inline">
                   <button type="submit" className="text-xs text-red-500 hover:text-red-700">
                     Elimina
@@ -101,3 +101,4 @@ export default async function CatalogoPaginaImpresa() {
     </div>
   )
 }
+

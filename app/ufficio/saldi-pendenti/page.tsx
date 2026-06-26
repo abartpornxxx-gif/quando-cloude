@@ -1,4 +1,4 @@
-import { requireUfficio } from '@/lib/auth'
+﻿import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
@@ -21,7 +21,7 @@ function whatsappUrl(telefono: string): string | null {
   // Pulisce il numero: rimuove tutto tranne le cifre
   const digits = telefono.replace(/\D/g, '')
   if (!digits) return null
-  // Se inizia con 39 (prefisso IT già presente) usa così; se inizia con 0 aggiunge 39; altrimenti aggiunge 39
+  // Se inizia con 39 (prefisso IT giÃ  presente) usa cosÃ¬; se inizia con 0 aggiunge 39; altrimenti aggiunge 39
   const normalized = digits.startsWith('39') ? digits : `39${digits.replace(/^0+/, '')}`
   if (normalized.length < 10) return null
   return `https://wa.me/${normalized}`
@@ -64,7 +64,7 @@ export default async function SaldiPendentiPage() {
       <div>
         <div className="flex items-center gap-3 mb-1">
           <Link href="/ufficio/dashboard" className="text-sm text-teal-600 hover:text-teal-800">
-            ← Dashboard
+            â† Dashboard
           </Link>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Saldi pendenti</h1>
@@ -96,7 +96,7 @@ export default async function SaldiPendentiPage() {
             return (
               <div
                 key={c.id}
-                className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+                className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden"
               >
                 {/* Intestazione commessa */}
                 <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
@@ -183,7 +183,7 @@ export default async function SaldiPendentiPage() {
                         href={`/ufficio/fatture?commessaId=${c.id}`}
                         className="text-xs font-medium text-teal-600 hover:text-teal-800"
                       >
-                        Vedi tutte →
+                        Vedi tutte â†’
                       </Link>
                     </div>
                     <div className="space-y-2">
@@ -277,3 +277,4 @@ export default async function SaldiPendentiPage() {
     </div>
   )
 }
+

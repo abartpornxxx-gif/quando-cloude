@@ -96,7 +96,7 @@ export default async function FatturaAttivaPage({ params }: Props) {
       </div>
 
       {/* Righe */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
             <tr>

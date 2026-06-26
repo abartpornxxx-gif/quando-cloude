@@ -120,7 +120,7 @@ export default async function CommessaMaterialiPage({
 
       {/* Righe preventivo */}
       {commessa.preventivo && (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="border-b border-gray-100 px-4 py-3 bg-gray-50">
             <h2 className="text-sm font-semibold text-gray-700">Materiali dal preventivo</h2>
           </div>
@@ -160,7 +160,7 @@ export default async function CommessaMaterialiPage({
       )}
 
       {/* Ordini materiale */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <div className="border-b border-gray-100 px-4 py-3 bg-gray-50 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-700">Ordini a fornitori</h2>
           <Link
@@ -206,7 +206,7 @@ export default async function CommessaMaterialiPage({
 
       {/* Materiale usato in cantiere (da rapportini operai) */}
       {tuttiMateriali.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="border-b border-gray-100 px-4 py-3 bg-gray-50 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-700">Materiale registrato in cantiere</h2>
             <p className="text-xs text-gray-400">totale: {formatEuro(totaleUsato)}</p>
@@ -244,7 +244,7 @@ export default async function CommessaMaterialiPage({
 
       {/* Movimenti magazzino per questa commessa */}
       {commessa.movimenti.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="border-b border-gray-100 px-4 py-3 bg-gray-50">
             <h2 className="text-sm font-semibold text-gray-700">Movimenti magazzino collegati</h2>
           </div>

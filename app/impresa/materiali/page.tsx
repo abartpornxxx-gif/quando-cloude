@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { formatEuro } from '@/lib/format'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
@@ -55,7 +55,7 @@ export default async function MaterialiPage() {
           }
         />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {materiali.map(m => (
               <div
@@ -77,7 +77,7 @@ export default async function MaterialiPage() {
                     <p className="text-xs text-gray-400 mt-0.5 sm:hidden font-mono">{m.codice}</p>
                   )}
                 </Link>
-                {/* Unità */}
+                {/* UnitÃ  */}
                 <span className="shrink-0 text-xs text-gray-400 hidden sm:block w-8 text-center">
                   {m.unita ?? 'pz'}
                 </span>
@@ -104,3 +104,4 @@ export default async function MaterialiPage() {
     </div>
   )
 }
+

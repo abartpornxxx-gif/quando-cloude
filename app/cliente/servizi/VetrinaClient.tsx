@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import Image from 'next/image'
@@ -72,7 +72,7 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
         {offerte.map(o => {
           const giaInviata = inviata.has(o.id)
           return (
-            <div key={o.id} className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col">
+            <div key={o.id} className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden flex flex-col">
               {o.fotoUrl ? (
                 <img src={o.fotoUrl} alt={o.titolo} className="h-48 w-full object-cover" />
               ) : (
@@ -96,14 +96,14 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
                 <div className="pt-2">
                   {giaInviata ? (
                     <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-2 text-sm text-green-700 font-medium text-center">
-                      ✓ Richiesta inviata!
+                      âœ“ Richiesta inviata!
                     </div>
                   ) : (
                     <button
                       onClick={() => apriModal(o)}
                       className="w-full rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 transition-colors"
                     >
-                      Mi interessa →
+                      Mi interessa â†’
                     </button>
                   )}
                 </div>
@@ -132,7 +132,7 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
                   onChange={e => setCommessaId(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-violet-500 focus:outline-none"
                 >
-                  <option value="">— Nessun cantiere —</option>
+                  <option value="">â€” Nessun cantiere â€”</option>
                   {commesse.map(c => (
                     <option key={c.id} value={c.id}>{c.nome}</option>
                   ))}
@@ -148,7 +148,7 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 rows={3}
-                placeholder="es. Vorrei sapere i tempi di installazione…"
+                placeholder="es. Vorrei sapere i tempi di installazioneâ€¦"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-violet-500 focus:outline-none resize-none"
               />
             </div>
@@ -161,7 +161,7 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
                 disabled={pending}
                 className="flex-1 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
               >
-                {pending ? 'Invio…' : 'Invia richiesta'}
+                {pending ? 'Invioâ€¦' : 'Invia richiesta'}
               </button>
               <button
                 onClick={chiudiModal}
@@ -172,7 +172,7 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
             </div>
 
             <p className="text-xs text-gray-400 text-center">
-              Un nostro tecnico ti contatterà per un sopralluogo gratuito
+              Un nostro tecnico ti contatterÃ  per un sopralluogo gratuito
             </p>
           </div>
         </div>
@@ -180,3 +180,4 @@ export default function VetrinaClient({ offerte, commesse }: Props) {
     </>
   )
 }
+

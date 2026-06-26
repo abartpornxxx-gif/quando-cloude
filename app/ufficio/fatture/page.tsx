@@ -1,4 +1,4 @@
-import { requireUfficio } from '@/lib/auth'
+﻿import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
@@ -56,7 +56,7 @@ export default async function UfficioFatturePage({
     <div>
       <PageHeader
         title="Fatture attive"
-        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'}${filtroLabel ? ` · ${filtroLabel}` : ''}${scadute > 0 ? ` · ${scadute} scadute` : ''}`}
+        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'}${filtroLabel ? ` Â· ${filtroLabel}` : ''}${scadute > 0 ? ` Â· ${scadute} scadute` : ''}`}
         action={<Link href="/ufficio/fatture/nuova" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">+ Nuova</Link>}
       />
 
@@ -67,11 +67,11 @@ export default async function UfficioFatturePage({
             {filtroLabel}
           </span>
           <Link href="/ufficio/fatture" className="text-xs text-gray-400 hover:text-gray-600">
-            × Rimuovi filtro
+            Ã— Rimuovi filtro
           </Link>
           {commessaId && (
             <Link href="/ufficio/saldi-pendenti" className="text-xs text-teal-500 hover:text-teal-700">
-              ← Saldi pendenti
+              â† Saldi pendenti
             </Link>
           )}
         </div>
@@ -94,7 +94,7 @@ export default async function UfficioFatturePage({
           action={<Link href="/ufficio/fatture/nuova" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">+ Nuova fattura</Link>}
         />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {fatture.map(f => {
               const imponibile = totaleImponibile(f.righe)
@@ -108,12 +108,12 @@ export default async function UfficioFatturePage({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-gray-900 group-hover:text-teal-700 transition-colors truncate">{f.cliente?.nome ?? '—'}</span>
+                      <span className="text-sm font-semibold text-gray-900 group-hover:text-teal-700 transition-colors truncate">{f.cliente?.nome ?? 'â€”'}</span>
                       <Badge variant={BADGE_VARIANT[f.stato] ?? 'neutral'}>{LABEL[f.stato] ?? f.stato}</Badge>
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {f.commessa?.nome ?? 'Senza commessa'}
-                      {f.dataScadenza ? ` · Scad. ${formatData(f.dataScadenza)}` : ''}
+                      {f.dataScadenza ? ` Â· Scad. ${formatData(f.dataScadenza)}` : ''}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
@@ -129,3 +129,4 @@ export default async function UfficioFatturePage({
     </div>
   )
 }
+

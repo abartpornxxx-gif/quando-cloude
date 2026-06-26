@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
 import { eliminaCliente } from './actions'
@@ -52,7 +52,7 @@ export default async function ClientiPage() {
           }
         />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {clienti.map(c => (
               <div
@@ -66,7 +66,7 @@ export default async function ClientiPage() {
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5 text-xs text-gray-400">
                     {c.email && <span className="truncate">{c.email}</span>}
-                    {c.email && c.telefono && <span>·</span>}
+                    {c.email && c.telefono && <span>Â·</span>}
                     {c.telefono && <span className="shrink-0">{c.telefono}</span>}
                     {!c.email && !c.telefono && (
                       <span>{c.partitaIva ?? c.codiceFiscale ?? 'Nessun contatto'}</span>
@@ -90,3 +90,4 @@ export default async function ClientiPage() {
     </div>
   )
 }
+

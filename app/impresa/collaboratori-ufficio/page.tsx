@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { requireImpresa } from '@/lib/auth'
 import Link from 'next/link'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -49,7 +49,7 @@ export default async function CollaboratoriUfficioPage() {
           }
         />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {collaboratori.map(c => {
               const initials = c.nome.split(' ').slice(0, 2).map((w: string) => w[0] ?? '').join('').toUpperCase()
@@ -101,3 +101,4 @@ export default async function CollaboratoriUfficioPage() {
     </div>
   )
 }
+

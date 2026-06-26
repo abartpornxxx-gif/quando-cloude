@@ -1,4 +1,4 @@
-import { requireOperaio } from '@/lib/auth'
+﻿import { requireOperaio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { MeteoBox } from '@/components/operaio/MeteoBox'
@@ -45,7 +45,7 @@ export default async function DomaniPage() {
     <div className="space-y-5">
       <div>
         <Link href="/operaio/dashboard" className="text-sm text-gray-400 hover:text-gray-600">
-          ← Cantieri
+          â† Cantieri
         </Link>
         <h1 className="mt-2 text-xl font-bold text-gray-900 capitalize">{dataLabel}</h1>
         <p className="text-sm text-gray-500">Il tuo programma per domani</p>
@@ -53,7 +53,7 @@ export default async function DomaniPage() {
 
       {pianificazioni.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 p-12 text-center">
-          <div className="text-4xl mb-3">🏖️</div>
+          <div className="text-4xl mb-3">ðŸ–ï¸</div>
           <p className="text-base font-medium text-gray-700">Nessun incarico pianificato per domani</p>
           <p className="mt-1 text-sm text-gray-400">Se hai dubbi contatta l&apos;ufficio</p>
         </div>
@@ -65,7 +65,7 @@ export default async function DomaniPage() {
               .map(co => co.operaio.nome)
 
             return (
-              <div key={p.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              <div key={p.id} className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
                 {/* Header cantiere */}
                 <div className="bg-emerald-800 px-4 py-4">
                   <h2 className="font-bold text-white text-lg leading-tight">{p.commessa.nome}</h2>
@@ -81,7 +81,7 @@ export default async function DomaniPage() {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 rounded-lg bg-white/20 px-2.5 py-1 text-xs font-semibold text-white hover:bg-white/30 active:scale-95 transition-all shrink-0"
                       >
-                        🗺 Apri Maps
+                        ðŸ—º Apri Maps
                       </a>
                     </div>
                   ) : (
@@ -95,7 +95,7 @@ export default async function DomaniPage() {
                     <p className="text-xs text-gray-400 mb-0.5">Mezzo</p>
                     {p.mezzo ? (
                       <p className="text-sm font-medium text-gray-900">
-                        🚗 {p.mezzo.nome}{p.mezzo.targa ? ` (${p.mezzo.targa})` : ''}
+                        ðŸš— {p.mezzo.nome}{p.mezzo.targa ? ` (${p.mezzo.targa})` : ''}
                       </p>
                     ) : (
                       <p className="text-sm text-gray-400 italic">Non assegnato</p>
@@ -107,7 +107,7 @@ export default async function DomaniPage() {
                     <div className="px-4 py-3">
                       <p className="text-xs text-gray-400 mb-0.5">Con te</p>
                       <p className="text-sm font-medium text-gray-900">
-                        👷 {altriOperai.join(', ')}
+                        ðŸ‘· {altriOperai.join(', ')}
                       </p>
                     </div>
                   )}
@@ -116,7 +116,7 @@ export default async function DomaniPage() {
                   {p.stimaImpresaOre && (
                     <div className="px-4 py-3">
                       <p className="text-xs text-gray-400 mb-0.5">Ore previste</p>
-                      <p className="text-sm font-medium text-gray-900">⏱ {p.stimaImpresaOre}h</p>
+                      <p className="text-sm font-medium text-gray-900">â± {p.stimaImpresaOre}h</p>
                     </div>
                   )}
 
@@ -131,7 +131,7 @@ export default async function DomaniPage() {
                   {/* Note materiale */}
                   {p.noteMateriale && (
                     <div className="px-4 py-3">
-                      <p className="text-xs text-gray-400 mb-0.5">📦 Materiale da preparare</p>
+                      <p className="text-xs text-gray-400 mb-0.5">ðŸ“¦ Materiale da preparare</p>
                       <p className="text-sm text-gray-700 whitespace-pre-line">{p.noteMateriale}</p>
                     </div>
                   )}
@@ -139,7 +139,7 @@ export default async function DomaniPage() {
                   {/* Attrezzatura necessaria */}
                   {p.commessa.attrezzatureNecessarie && (
                     <div className="px-4 py-3">
-                      <p className="text-xs text-gray-400 mb-0.5">🔧 Porta con te</p>
+                      <p className="text-xs text-gray-400 mb-0.5">ðŸ”§ Porta con te</p>
                       <p className="text-sm text-gray-700 whitespace-pre-line">{p.commessa.attrezzatureNecessarie}</p>
                     </div>
                   )}
@@ -149,12 +149,12 @@ export default async function DomaniPage() {
                     <details className="group">
                       <summary className="flex items-center justify-between px-4 py-3 cursor-pointer list-none select-none hover:bg-gray-50">
                         <div className="min-w-0">
-                          <p className="text-xs text-gray-400 mb-0.5">📋 Istruzioni cantiere</p>
+                          <p className="text-xs text-gray-400 mb-0.5">ðŸ“‹ Istruzioni cantiere</p>
                           <p className="text-sm font-medium text-gray-700 line-clamp-1">
                             {p.commessa.istruzioniCantiere}
                           </p>
                         </div>
-                        <span className="text-gray-400 text-sm shrink-0 ml-2 group-open:rotate-180 transition-transform">▼</span>
+                        <span className="text-gray-400 text-sm shrink-0 ml-2 group-open:rotate-180 transition-transform">â–¼</span>
                       </summary>
                       <div className="px-4 pb-4 pt-1">
                         <p className="text-sm text-gray-700 whitespace-pre-line bg-amber-50 border border-amber-200 rounded-xl p-3">
@@ -191,7 +191,7 @@ export default async function DomaniPage() {
                     href="/operaio/giornata/nuova"
                     className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all"
                   >
-                    ▶ Inizia giornata domani
+                    â–¶ Inizia giornata domani
                   </Link>
                 </div>
               </div>
@@ -202,3 +202,4 @@ export default async function DomaniPage() {
     </div>
   )
 }
+

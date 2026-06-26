@@ -54,7 +54,7 @@ export default async function OrdineUfficioDettaglioPage({ params }: { params: P
         {ordine.note && <p className="text-sm text-gray-500 italic">{ordine.note}</p>}
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <div className="border-b border-gray-100 px-4 py-3 bg-gray-50">
           <h2 className="text-sm font-semibold text-gray-700">Righe ordine</h2>
         </div>

@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-// ORDINE 1 — Il countdown è INTERNO, visibile solo all'impresa (non all'operaio)
+// ORDINE 1 â€” Il countdown Ã¨ INTERNO, visibile solo all'impresa (non all'operaio)
 
 import { useState, useEffect } from 'react'
 
@@ -58,14 +58,14 @@ export default function GiornateMonitor({
   if (giornate.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-gray-200 bg-white py-10 text-center">
-        <p className="text-2xl mb-2">😴</p>
+        <p className="text-2xl mb-2">ðŸ˜´</p>
         <p className="text-sm font-medium text-gray-500">Nessun operaio in cantiere adesso</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden divide-y divide-gray-100">
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden divide-y divide-gray-100">
       {giornate.map(g => {
         const now = Date.now()
 
@@ -102,12 +102,12 @@ export default function GiornateMonitor({
                   </span>
                   {g.hasProblema && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-red-100 text-red-700 px-2 py-0.5 text-xs font-semibold">
-                      ⚠️ Problema segnalato
+                      âš ï¸ Problema segnalato
                     </span>
                   )}
                   {g.hasUrgenza && !g.hasProblema && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-xs font-semibold">
-                      🔴 Urgenza alta
+                      ðŸ”´ Urgenza alta
                     </span>
                   )}
                 </div>
@@ -125,11 +125,11 @@ export default function GiornateMonitor({
                     href={`/impresa/giornate/${g.id}/chat`}
                     className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
                   >
-                    💬 Chat
+                    ðŸ’¬ Chat
                   </a>
                   {g.fase === 'fine' && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-700 px-2 py-0.5 text-xs font-semibold">
-                      📋 In compilazione
+                      ðŸ“‹ In compilazione
                     </span>
                   )}
                 </div>
@@ -144,3 +144,4 @@ export default function GiornateMonitor({
     </div>
   )
 }
+

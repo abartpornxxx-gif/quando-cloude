@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { AdempimentiSection } from './AdempimentiSection'
@@ -253,7 +253,7 @@ export function CommessaTabs({
             </a>
 
             {/* Preventivo */}
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
               <div className="border-b border-gray-100 px-5 py-4">
                 <h2 className="text-sm font-semibold text-gray-800">Preventivo</h2>
               </div>
@@ -272,7 +272,7 @@ export function CommessaTabs({
             </div>
 
             {/* Fatture attive */}
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
               <div className="border-b border-gray-100 px-5 py-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-800">Fatture attive</h2>
                 <div className="flex items-center gap-3">
@@ -321,7 +321,7 @@ export function CommessaTabs({
             </div>
 
             {/* Dichiarazioni di Conformità */}
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
               <div className="border-b border-gray-100 px-5 py-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-800">Dichiarazioni di Conformità (DiCo)</h2>
                 <a
@@ -359,7 +359,7 @@ export function CommessaTabs({
             </div>
 
             {/* Varianti lavori */}
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
               <div className="border-b border-gray-100 px-5 py-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-800">Varianti lavori</h2>
                 <a

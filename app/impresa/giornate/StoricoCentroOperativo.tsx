@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo } from 'react'
 
@@ -142,9 +142,9 @@ export default function StoricoCentroOperativo({ giornate, operai, commesse }: P
           {dateKeys.map(data => (
             <div key={data}>
               <p className="text-xs font-semibold text-gray-500 mb-2">
-                📅 {data}
+                ðŸ“… {data}
               </p>
-              <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden divide-y divide-gray-100">
+              <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden divide-y divide-gray-100">
                 {perData[data].map(g => (
                   <div key={g.id} className="p-4 sm:p-5">
                     <div className="flex items-start justify-between gap-4">
@@ -153,7 +153,7 @@ export default function StoricoCentroOperativo({ giornate, operai, commesse }: P
                           <p className="font-semibold text-sm text-gray-900">{g.operaioNome}</p>
                           {g.hasRapportino ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                              ✓ Rapportino
+                              âœ“ Rapportino
                             </span>
                           ) : (
                             <span className="inline-flex items-center rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-700">
@@ -169,7 +169,7 @@ export default function StoricoCentroOperativo({ giornate, operai, commesse }: P
                         )}
                         {g.cosaFareDomani && (
                           <p className="text-xs text-blue-600 mt-1.5">
-                            📝 Domani: {g.cosaFareDomani}
+                            ðŸ“ Domani: {g.cosaFareDomani}
                           </p>
                         )}
                       </div>
@@ -192,14 +192,14 @@ export default function StoricoCentroOperativo({ giornate, operai, commesse }: P
                             href={`/impresa/giornate/${g.id}/rapportino`}
                             className="inline-block text-xs font-medium text-emerald-600 hover:text-emerald-800"
                           >
-                            📋 Rapportino
+                            ðŸ“‹ Rapportino
                           </a>
                         )}
                         <a
                           href={`/impresa/giornate/${g.id}/chat`}
                           className="inline-block text-xs font-medium text-blue-600 hover:text-blue-800"
                         >
-                          💬 Chat
+                          ðŸ’¬ Chat
                         </a>
                       </div>
                     </div>
@@ -216,3 +216,4 @@ export default function StoricoCentroOperativo({ giornate, operai, commesse }: P
     </div>
   )
 }
+

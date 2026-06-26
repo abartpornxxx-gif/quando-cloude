@@ -1,4 +1,4 @@
-import { requireImpresaOUfficio } from '@/lib/auth'
+﻿import { requireImpresaOUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -143,7 +143,7 @@ export default async function RapportinoDettaglioPage({ params }: Props) {
 
       {/* Orari fasi */}
       {(giornata.inizioMattina || giornata.fineMattina || giornata.inizioPomeriggio || giornata.finePomeriggio) && (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-gray-800">Orari di lavoro</h2>
           </div>
@@ -173,7 +173,7 @@ export default async function RapportinoDettaglioPage({ params }: Props) {
       )}
 
       {/* Ore */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <div className="border-b border-gray-100 px-5 py-4">
           <h2 className="text-sm font-semibold text-gray-800">Ore lavorate</h2>
         </div>
@@ -193,7 +193,7 @@ export default async function RapportinoDettaglioPage({ params }: Props) {
       </div>
 
       {/* Lavori */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <div className="border-b border-gray-100 px-5 py-4">
           <h2 className="text-sm font-semibold text-gray-800">Descrizione lavori</h2>
         </div>
@@ -225,7 +225,7 @@ export default async function RapportinoDettaglioPage({ params }: Props) {
 
       {/* Attrezzature */}
       {giornata.attrezzatureUsi.length > 0 && (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="border-b border-gray-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-gray-800">Attrezzature utilizzate</h2>
           </div>
@@ -270,7 +270,7 @@ export default async function RapportinoDettaglioPage({ params }: Props) {
 
       {/* Foto */}
       {giornata.foto.length > 0 && (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="border-b border-gray-100 px-5 py-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-800">Foto di cantiere ({giornata.foto.length})</h2>
             <p className="text-xs text-gray-400">Clicca sull'occhio per nascondere o mostrare la foto al cliente.</p>

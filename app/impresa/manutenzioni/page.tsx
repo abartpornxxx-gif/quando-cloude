@@ -1,4 +1,4 @@
-import { requireImpresa } from '@/lib/auth'
+﻿import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { Wrench } from 'lucide-react'
@@ -72,7 +72,7 @@ export default async function ManutenzioniPage() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {manutenzioni.map(m => {
               const stato = statoScadenza(m.dataProssimoIntervento)
@@ -104,9 +104,9 @@ export default async function ManutenzioniPage() {
                     </div>
                     <div className="mt-0.5 flex items-center gap-2 text-xs text-gray-400 flex-wrap">
                       <span className="font-medium text-gray-600">{m.cliente.nome}</span>
-                      <span>·</span>
+                      <span>Â·</span>
                       <span>{tipoLabel}</span>
-                      <span>·</span>
+                      <span>Â·</span>
                       <span>{labelRicorrenza(m.intervalloValore, m.intervalloUnita)}</span>
                     </div>
                   </Link>
@@ -129,3 +129,4 @@ export default async function ManutenzioniPage() {
     </div>
   )
 }
+

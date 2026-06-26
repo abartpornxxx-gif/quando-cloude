@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -82,7 +82,7 @@ export default function PreventiviUfficioList({ preventivi }: { preventivi: Prev
           <p className="text-sm text-gray-400">Nessun preventivo trovato.</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {filtered.map(p => (
               <div key={p.id} className="flex items-center gap-3 px-5 py-4 hover:bg-gray-50/70 transition-colors group">
@@ -99,7 +99,7 @@ export default function PreventiviUfficioList({ preventivi }: { preventivi: Prev
                     </span>
                     <Badge variant={STATO_VARIANT[p.stato]}>{STATO_LABEL[p.stato]}</Badge>
                     {p.commessa && (
-                      <span className="text-xs text-gray-400 truncate">→ {p.commessa.nome}</span>
+                      <span className="text-xs text-gray-400 truncate">â†’ {p.commessa.nome}</span>
                     )}
                   </div>
                   {p.note
@@ -123,3 +123,4 @@ export default function PreventiviUfficioList({ preventivi }: { preventivi: Prev
     </div>
   )
 }
+

@@ -79,7 +79,7 @@ export default async function FatturaUfficioPage({ params }: { params: Promise<{
         {fattura.note && <p className="text-sm text-gray-600 border-t pt-3">Note: {fattura.note}</p>}
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
             <tr>

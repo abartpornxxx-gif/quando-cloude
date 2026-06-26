@@ -48,7 +48,7 @@ export default async function OperaioLayout({ children }: { children: React.Reac
 
 
   return (
-    <div className="min-h-full bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <nav className="sticky top-0 z-40 bg-emerald-900 text-white" style={{ boxShadow: '0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.25)' }}>
         <div className="mx-auto max-w-2xl px-4">

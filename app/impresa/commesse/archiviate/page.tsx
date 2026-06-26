@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { formatEuro } from '@/lib/format'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
@@ -43,7 +43,7 @@ export default async function CommesseArchiviateePage() {
               ? Math.round(((c.preventivato - costi) / c.preventivato) * 100)
               : null
             return (
-              <div key={c.id} className="flex items-stretch rounded-2xl border border-gray-200 bg-white/80 shadow-sm overflow-hidden opacity-80">
+              <div key={c.id} className="flex items-stretch rounded-2xl border border-gray-200 bg-white/80 shadow-card overflow-hidden opacity-80">
                 <Link href={`/impresa/commesse/${c.id}`} className="flex-1 min-w-0 p-4 sm:p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -71,7 +71,7 @@ export default async function CommesseArchiviateePage() {
                     action={ripristinaCommessa.bind(null, c.id)}
                     label="Ripristina"
                     variant="warning"
-                    confirmMessage={`Ripristinare la commessa "${c.nome}"? Tornerà visibile nella lista principale.`}
+                    confirmMessage={`Ripristinare la commessa "${c.nome}"? TornerÃ  visibile nella lista principale.`}
                   />
                 </div>
               </div>
@@ -82,3 +82,4 @@ export default async function CommesseArchiviateePage() {
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useTransition, useState } from 'react'
 import { assegnaOperaio, rimuoviAssegnazione } from '../actions'
@@ -23,7 +23,7 @@ export function OperaiManager({ commessaId, assegnati, disponibili }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
       <div className="border-b border-gray-100 px-5 py-4">
         <h2 className="text-sm font-semibold text-gray-800">Operai assegnati al cantiere</h2>
       </div>

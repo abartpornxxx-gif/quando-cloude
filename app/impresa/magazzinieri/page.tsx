@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { requireImpresa } from '@/lib/auth'
 import Link from 'next/link'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -37,7 +37,7 @@ export default async function MagazzinieriPage() {
 
       {magazzinieri.length === 0 ? (
         <EmptyState
-          icon="🏭"
+          icon="ðŸ­"
           title="Nessun magazziniere"
           description="Aggiungi i magazzinieri per gestire il magazzino e creare i loro accessi."
           action={
@@ -50,7 +50,7 @@ export default async function MagazzinieriPage() {
           }
         />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {magazzinieri.map(m => {
               const initials = m.nome.split(' ').slice(0, 2).map((w: string) => w[0] ?? '').join('').toUpperCase()
@@ -105,3 +105,4 @@ export default async function MagazzinieriPage() {
     </div>
   )
 }
+

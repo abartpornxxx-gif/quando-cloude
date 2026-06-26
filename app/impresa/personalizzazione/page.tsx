@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
@@ -133,11 +133,11 @@ export default function PersonalizzazionePage() {
         mostraValori,
         mostraMascotte,
       })
-      setMessage('✅ Impostazioni salvate correttamente!')
+      setMessage('âœ… Impostazioni salvate correttamente!')
       setTimeout(() => setMessage(''), 3000)
     } catch (err) {
       console.error(err)
-      setMessage('❌ Errore durante il salvataggio.')
+      setMessage('âŒ Errore durante il salvataggio.')
     } finally {
       setSaving(false)
     }
@@ -151,7 +151,7 @@ export default function PersonalizzazionePage() {
       window.location.reload()
     } catch (err) {
       console.error(err)
-      setMessage('❌ Errore durante il ripristino.')
+      setMessage('âŒ Errore durante il ripristino.')
       setSaving(false)
     }
   }
@@ -183,11 +183,11 @@ export default function PersonalizzazionePage() {
         .getPublicUrl(filePath)
 
       setMascotteAvatar(publicUrl)
-      setMessage('✅ Immagine caricata correttamente!')
+      setMessage('âœ… Immagine caricata correttamente!')
       setTimeout(() => setMessage(''), 3000)
     } catch (err: any) {
       console.error(err)
-      setMessage(`❌ Errore durante il caricamento: ${err.message || err}`)
+      setMessage(`âŒ Errore durante il caricamento: ${err.message || err}`)
     } finally {
       setUploading(false)
     }
@@ -195,7 +195,7 @@ export default function PersonalizzazionePage() {
 
   function handleRemoveCustomAvatar() {
     setMascotteAvatar('leone')
-    setMessage('✅ Avatar personalizzato rimosso.')
+    setMessage('âœ… Avatar personalizzato rimosso.')
     setTimeout(() => setMessage(''), 3000)
   }
 
@@ -250,7 +250,7 @@ export default function PersonalizzazionePage() {
             Anteprima Profilo Real-Time
           </h2>
           
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300">
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-card overflow-hidden transition-all duration-300">
             {/* Card Content */}
             <div className="p-6 space-y-5">
               {/* Mascot & Brand Header */}
@@ -330,8 +330,8 @@ export default function PersonalizzazionePage() {
                     <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                       <p className="font-bold text-gray-800 mb-1">Servizi principali</p>
                       <ul className="space-y-1 text-gray-500 font-medium">
-                        <li className="flex items-center gap-1">✔ Impianti Civili</li>
-                        <li className="flex items-center gap-1">✔ Manutenzioni</li>
+                        <li className="flex items-center gap-1">âœ” Impianti Civili</li>
+                        <li className="flex items-center gap-1">âœ” Manutenzioni</li>
                       </ul>
                     </div>
                   )}
@@ -339,8 +339,8 @@ export default function PersonalizzazionePage() {
                     <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                       <p className="font-bold text-gray-800 mb-1">Certificazioni</p>
                       <ul className="space-y-1 text-gray-500 font-medium">
-                        <li className="flex items-center gap-1">✔ ISO 9001</li>
-                        <li className="flex items-center gap-1">✔ FGAS</li>
+                        <li className="flex items-center gap-1">âœ” ISO 9001</li>
+                        <li className="flex items-center gap-1">âœ” FGAS</li>
                       </ul>
                     </div>
                   )}
@@ -350,7 +350,7 @@ export default function PersonalizzazionePage() {
               {/* Mascot Details / Motto */}
               {mostraMascotte && mottoTeam && (
                 <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-start gap-3">
-                  <div className="text-xl shrink-0 mt-0.5">💬</div>
+                  <div className="text-xl shrink-0 mt-0.5">ðŸ’¬</div>
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold text-slate-800">{isCustomAvatar ? "Il nostro team" : selectedMascotte.nome}</p>
                     <p className="text-xs italic text-slate-500 mt-1 font-medium leading-relaxed">&quot;{mottoTeam}&quot;</p>
@@ -523,7 +523,7 @@ export default function PersonalizzazionePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Settore di Attività</label>
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Settore di AttivitÃ </label>
                       <input
                         type="text"
                         value={settore}
@@ -604,7 +604,7 @@ export default function PersonalizzazionePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
                       {[
                         { label: 'Nome impresa', val: mostraNome, set: setMostraNome },
-                        { label: 'Settore di attività', val: mostraSettore, set: setMostraSettore },
+                        { label: 'Settore di attivitÃ ', val: mostraSettore, set: setMostraSettore },
                         { label: 'Indirizzo', val: mostraIndirizzo, set: setMostraIndirizzo },
                         { label: 'Telefono', val: mostraTelefono, set: setMostraTelefono },
                         { label: 'Email', val: mostraEmail, set: setMostraEmail },
@@ -643,7 +643,7 @@ export default function PersonalizzazionePage() {
                           title={p.name}
                         >
                           {colorePrimario === p.hex && (
-                            <span className="text-white text-xs">✔</span>
+                            <span className="text-white text-xs">âœ”</span>
                           )}
                         </button>
                       ))}
@@ -709,3 +709,4 @@ export default function PersonalizzazionePage() {
     </div>
   )
 }
+

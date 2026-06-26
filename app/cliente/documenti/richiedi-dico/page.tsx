@@ -1,4 +1,4 @@
-import { requireCliente } from '@/lib/auth'
+﻿import { requireCliente } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { richiediDiCo } from './actions'
@@ -15,24 +15,24 @@ export default async function RichiediDiCoPage() {
   return (
     <div className="max-w-lg mx-auto space-y-6 pb-10">
       <div className="flex items-center gap-3">
-        <Link href="/cliente/documenti" className="text-violet-600 hover:text-violet-800 text-sm font-semibold">‹ Documenti</Link>
+        <Link href="/cliente/documenti" className="text-violet-600 hover:text-violet-800 text-sm font-semibold">â€¹ Documenti</Link>
       </div>
 
       <div>
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Richiedi Di.Co.</h1>
         <p className="text-sm text-gray-500 mt-1">
-          La Dichiarazione di Conformità (DM 37/08) è il documento ufficiale che certifica l'installazione a regola d'arte. 
+          La Dichiarazione di ConformitÃ  (DM 37/08) Ã¨ il documento ufficiale che certifica l'installazione a regola d'arte. 
           Richiedila ora alla nostra segreteria.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <div className="p-1 bg-violet-600"></div>
         <form action={richiediDiCo} className="p-6 space-y-5">
           
           <div>
             <label className="block text-sm font-bold text-gray-800 mb-1">Seleziona il Cantiere *</label>
-            <p className="text-xs text-gray-500 mb-3">La Di.Co. può essere emessa solo per lavori completati.</p>
+            <p className="text-xs text-gray-500 mb-3">La Di.Co. puÃ² essere emessa solo per lavori completati.</p>
             
             {commesse.length === 0 ? (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
@@ -65,9 +65,9 @@ export default async function RichiediDiCoPage() {
           </div>
 
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3 mt-4">
-            <span className="text-xl">ℹ️</span>
+            <span className="text-xl">â„¹ï¸</span>
             <p className="text-xs text-blue-800 leading-relaxed">
-              La tua richiesta verrà presa in carico dal nostro ufficio tecnico. 
+              La tua richiesta verrÃ  presa in carico dal nostro ufficio tecnico. 
               Verificheremo la documentazione e ti invieremo la Di.Co. ufficiale via email appena pronta.
             </p>
           </div>
@@ -84,3 +84,4 @@ export default async function RichiediDiCoPage() {
     </div>
   )
 }
+

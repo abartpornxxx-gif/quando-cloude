@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { requireImpresa } from '@/lib/auth'
 import { formatData } from '@/lib/format'
 import Link from 'next/link'
@@ -45,7 +45,7 @@ export default async function MagazzinoPage() {
     scarico: 'bg-red-100 text-red-700',
     reso:    'bg-yellow-100 text-yellow-700',
   }
-  const TIPO_SIGN: Record<string, string> = { carico: '+', scarico: '−', reso: '+' }
+  const TIPO_SIGN: Record<string, string> = { carico: '+', scarico: 'âˆ’', reso: '+' }
 
   return (
     <div className="space-y-8">
@@ -63,7 +63,7 @@ export default async function MagazzinoPage() {
       </div>
 
       {/* Giacenza */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <div className="border-b border-gray-100 px-4 py-3 bg-gray-50 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-700">Giacenza attuale</h2>
           <p className="text-xs text-gray-400">{righe.length} articoli con movimenti</p>
@@ -71,7 +71,7 @@ export default async function MagazzinoPage() {
 
         {righe.length === 0 ? (
           <div className="p-8 text-center text-gray-400 text-sm">
-            Nessun movimento registrato. I movimenti vengono creati quando un ordine è segnato come consegnato.
+            Nessun movimento registrato. I movimenti vengono creati quando un ordine Ã¨ segnato come consegnato.
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -96,7 +96,7 @@ export default async function MagazzinoPage() {
                       {m.codice && <p className="text-xs text-gray-400">Cod. {m.codice}</p>}
                     </td>
                     <td className="px-4 py-3 text-right text-green-700">+{carichi} {m.unita ?? 'pz'}</td>
-                    <td className="px-4 py-3 text-right text-red-600">−{scarichi} {m.unita ?? 'pz'}</td>
+                    <td className="px-4 py-3 text-right text-red-600">âˆ’{scarichi} {m.unita ?? 'pz'}</td>
                     <td className="px-4 py-3 text-right text-yellow-700">+{resi} {m.unita ?? 'pz'}</td>
                     <td className="px-4 py-3 text-right">
                       <span className={`font-bold ${m.giacenza < 0 ? 'text-red-600' : m.giacenza === 0 ? 'text-gray-500' : 'text-green-700'}`}>
@@ -113,7 +113,7 @@ export default async function MagazzinoPage() {
 
       {/* Storico movimenti */}
       {ultimi.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="border-b border-gray-100 px-4 py-3 bg-gray-50">
             <h2 className="text-sm font-semibold text-gray-700">Ultimi movimenti</h2>
           </div>
@@ -122,7 +122,7 @@ export default async function MagazzinoPage() {
               <div key={mv.id} className="px-4 py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {mv.descrizione ?? mv.materiale?.descrizione ?? '—'}
+                    {mv.descrizione ?? mv.materiale?.descrizione ?? 'â€”'}
                   </p>
                   {mv.commessa && (
                     <p className="text-xs text-gray-400">Commessa: {mv.commessa.nome}</p>
@@ -145,3 +145,4 @@ export default async function MagazzinoPage() {
     </div>
   )
 }
+

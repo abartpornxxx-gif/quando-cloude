@@ -1,4 +1,4 @@
-import { requireUfficio } from '@/lib/auth'
+﻿import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
@@ -28,7 +28,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
     orderBy: { data: 'desc' },
   })
 
-  // ── Riepilogo debiti (su tutto, non filtrato) ──
+  // â”€â”€ Riepilogo debiti (su tutto, non filtrato) â”€â”€
   const oggi = new Date()
   oggi.setHours(0, 0, 0, 0)
   const inizioMese = new Date(oggi.getFullYear(), oggi.getMonth(), 1)
@@ -68,7 +68,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
     .sort((a, b) => b.importo - a.importo)
     .slice(0, 5)
 
-  // ── Filtro lista ──
+  // â”€â”€ Filtro lista â”€â”€
   let fattureFiltrate = tutteleFatture
 
   if (stato === 'da_pagare') fattureFiltrate = fattureFiltrate.filter(f => f.stato === 'da_pagare')
@@ -118,7 +118,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
           <div className="flex gap-2">
             <Link href="/ufficio/fatture-passive/importa"
               className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-              📥 Importa CSV
+              ðŸ“¥ Importa CSV
             </Link>
             <Link href="/ufficio/fatture-passive/nuova"
               className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">
@@ -226,7 +226,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
             name="q"
             type="text"
             defaultValue={q}
-            placeholder="Cerca (numero, fornitore, note…)"
+            placeholder="Cerca (numero, fornitore, noteâ€¦)"
             className="rounded-xl border border-gray-200 px-3 py-2 text-sm"
           />
         </div>
@@ -270,7 +270,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
           />
         )
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {fattureFiltrate.map(f => {
               const isScaduta = f.dataScadenza && new Date(f.dataScadenza) < oggi && f.stato === 'da_pagare'
@@ -280,7 +280,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-sm text-gray-900 group-hover:text-teal-700 transition-colors">
-                        {f.fornitore?.nome ?? 'Fornitore n.d.'}{f.numero ? ` — n. ${f.numero}` : ''}
+                        {f.fornitore?.nome ?? 'Fornitore n.d.'}{f.numero ? ` â€” n. ${f.numero}` : ''}
                       </p>
                       <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
                         f.stato === 'pagata' ? 'bg-green-100 text-green-800'
@@ -291,7 +291,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
                       </span>
                       {f.controllata && (
                         <span className="text-xs rounded-full px-2 py-0.5 font-medium bg-blue-100 text-blue-800">
-                          ✓ Controllata
+                          âœ“ Controllata
                         </span>
                       )}
                     </div>
@@ -299,7 +299,7 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
                       {f.commessa?.nome ? `Commessa: ${f.commessa.nome}` : ''}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {formatData(f.data)}{f.dataScadenza ? ` · Scadenza: ${formatData(f.dataScadenza)}` : ''}
+                      {formatData(f.data)}{f.dataScadenza ? ` Â· Scadenza: ${formatData(f.dataScadenza)}` : ''}
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-4">
@@ -314,3 +314,4 @@ export default async function UfficioFatturePassivePage({ searchParams }: Props)
     </div>
   )
 }
+

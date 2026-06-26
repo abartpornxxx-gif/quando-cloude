@@ -95,7 +95,7 @@ export default async function OrdineDettaglioPage({
       </div>
 
       {/* Righe ordine */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <div className="border-b border-gray-100 px-4 py-3 bg-gray-50">
           <h2 className="text-sm font-semibold text-gray-700">Righe ordine</h2>
         </div>
@@ -150,7 +150,7 @@ export default async function OrdineDettaglioPage({
 
       {/* Movimenti generati */}
       {ordine.movimenti.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="border-b border-gray-100 px-4 py-3 bg-gray-50">
             <h2 className="text-sm font-semibold text-gray-700">Movimenti magazzino generati</h2>
           </div>

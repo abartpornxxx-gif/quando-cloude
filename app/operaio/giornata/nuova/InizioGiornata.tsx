@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -42,7 +42,7 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
   const [pending, startTransition] = useTransition()
   const [errore, setErrore] = useState('')
 
-  // Dettagli aggiuntivi (mezzo e attrezzatura) — collapsed se c'è pianificazione
+  // Dettagli aggiuntivi (mezzo e attrezzatura) â€” collapsed se c'Ã¨ pianificazione
   const [dettagliAperti, setDettagliAperti] = useState(!pianificazione)
 
   function toggleAttrezzatura(id: string, bloccata: boolean) {
@@ -95,13 +95,13 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
                   rel="noreferrer"
                   className="text-xs font-semibold text-emerald-100 hover:text-white underline shrink-0"
                 >
-                  🗺 Indicazioni
+                  ðŸ—º Indicazioni
                 </a>
               </div>
             )}
             {pianificazione.mezzo && (
               <p className="text-sm text-emerald-200 mt-0.5">
-                🚗 {pianificazione.mezzo.nome}
+                ðŸš— {pianificazione.mezzo.nome}
                 {pianificazione.mezzo.targa ? ` (${pianificazione.mezzo.targa})` : ''}
               </p>
             )}
@@ -120,13 +120,13 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
           )}
           {pianificazione.commessa.istruzioniCantiere && (
             <div className="bg-white/10 rounded-xl p-3">
-              <p className="text-xs font-semibold text-emerald-300 mb-1">📋 Istruzioni cantiere</p>
+              <p className="text-xs font-semibold text-emerald-300 mb-1">ðŸ“‹ Istruzioni cantiere</p>
               <p className="text-sm text-white whitespace-pre-line">{pianificazione.commessa.istruzioniCantiere}</p>
             </div>
           )}
           {pianificazione.commessa.attrezzatureNecessarie && (
             <div className="bg-white/10 rounded-xl p-3">
-              <p className="text-xs font-semibold text-emerald-300 mb-1">🔧 Porta sempre con te</p>
+              <p className="text-xs font-semibold text-emerald-300 mb-1">ðŸ”§ Porta sempre con te</p>
               <p className="text-sm text-white whitespace-pre-line">{pianificazione.commessa.attrezzatureNecessarie}</p>
             </div>
           )}
@@ -143,10 +143,10 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
             className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             required
           >
-            <option value="">— Seleziona cantiere —</option>
+            <option value="">â€” Seleziona cantiere â€”</option>
             {commesse.map(c => (
               <option key={c.id} value={c.id}>
-                {c.nome}{c.indirizzoCantiere ? ` — ${c.indirizzoCantiere}` : ''}
+                {c.nome}{c.indirizzoCantiere ? ` â€” ${c.indirizzoCantiere}` : ''}
               </option>
             ))}
           </select>
@@ -160,26 +160,26 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
               <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 space-y-2">
                 {sel.indirizzoCantiere && (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-xs text-emerald-700">📍 {sel.indirizzoCantiere}</p>
+                    <p className="text-xs text-emerald-700">ðŸ“ {sel.indirizzoCantiere}</p>
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sel.indirizzoCantiere)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 underline shrink-0"
                     >
-                      🗺 Indicazioni
+                      ðŸ—º Indicazioni
                     </a>
                   </div>
                 )}
                 {sel.istruzioniCantiere && (
                   <div>
-                    <p className="text-xs font-semibold text-emerald-700 mb-0.5">📋 Istruzioni cantiere</p>
+                    <p className="text-xs font-semibold text-emerald-700 mb-0.5">ðŸ“‹ Istruzioni cantiere</p>
                     <p className="text-sm text-emerald-900 whitespace-pre-line">{sel.istruzioniCantiere}</p>
                   </div>
                 )}
                 {sel.attrezzatureNecessarie && (
                   <div>
-                    <p className="text-xs font-semibold text-emerald-700 mb-0.5">🔧 Porta sempre con te</p>
+                    <p className="text-xs font-semibold text-emerald-700 mb-0.5">ðŸ”§ Porta sempre con te</p>
                     <p className="text-sm text-emerald-900 whitespace-pre-line">{sel.attrezzatureNecessarie}</p>
                   </div>
                 )}
@@ -191,14 +191,14 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
 
       {/* Dettagli aggiuntivi (collapsibili) */}
       {(mezzi.length > 0 || attrezzature.length > 0) && (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <button
             type="button"
             onClick={() => setDettagliAperti(v => !v)}
             className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-gray-50 transition-colors"
           >
             <p className="text-sm font-semibold text-gray-700">
-              ⚙ Mezzo e attrezzatura
+              âš™ Mezzo e attrezzatura
               {attrezzatureSelezionate.length > 0 && (
                 <span className="ml-2 text-xs text-emerald-600 font-normal">
                   {attrezzatureSelezionate.length} selezionat{attrezzatureSelezionate.length === 1 ? 'a' : 'e'}
@@ -210,7 +210,7 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
                 </span>
               )}
             </p>
-            <span className="text-gray-400 text-sm">{dettagliAperti ? '▲' : '▼'}</span>
+            <span className="text-gray-400 text-sm">{dettagliAperti ? 'â–²' : 'â–¼'}</span>
           </button>
 
           {dettagliAperti && (
@@ -235,7 +235,7 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
                       onChange={e => setMezzoId(e.target.value)}
                       className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     >
-                      <option value="">— Nessun mezzo —</option>
+                      <option value="">â€” Nessun mezzo â€”</option>
                       {mezzi.map(m => (
                         <option key={m.id} value={m.id}>
                           {m.nome}{m.targa ? ` (${m.targa})` : ''}
@@ -277,10 +277,10 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
                             </span>
                             {bloccata ? (
                               <span className="text-xs text-red-500 font-medium">
-                                🔒 {a.assegnatario ? `Usato da ${a.assegnatario}` : 'In uso'}
+                                ðŸ”’ {a.assegnatario ? `Usato da ${a.assegnatario}` : 'In uso'}
                               </span>
                             ) : selezionata ? (
-                              <span className="text-xs text-emerald-600 font-semibold">✓ Preso</span>
+                              <span className="text-xs text-emerald-600 font-semibold">âœ“ Preso</span>
                             ) : (
                               <span className="text-xs text-gray-400">Disponibile</span>
                             )}
@@ -307,8 +307,9 @@ export default function InizioGiornata({ commesse, mezzi, attrezzature, pianific
         disabled={pending}
         className="w-full bg-emerald-600 text-white font-bold py-5 rounded-2xl text-lg shadow-lg shadow-emerald-200 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
       >
-        {pending ? 'Avvio in corso…' : '▶ Inizia giornata'}
+        {pending ? 'Avvio in corsoâ€¦' : 'â–¶ Inizia giornata'}
       </button>
     </form>
   )
 }
+

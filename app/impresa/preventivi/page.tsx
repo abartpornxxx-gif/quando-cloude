@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { formatEuro, formatData } from '@/lib/format'
 import { calcolaTotalePreventivo } from '@/lib/calcoli'
 import Link from 'next/link'
@@ -39,7 +39,7 @@ export default async function PreventiviPage() {
     <div>
       <PageHeader
         title="Preventivi"
-        subtitle={`${accettati} accettati · ${inviati} inviati · ${bozze} bozze`}
+        subtitle={`${accettati} accettati Â· ${inviati} inviati Â· ${bozze} bozze`}
         action={
           <Link
             href="/impresa/preventivi/nuovo"
@@ -65,7 +65,7 @@ export default async function PreventiviPage() {
           }
         />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {preventivi.map(p => (
               <div
@@ -116,3 +116,4 @@ export default async function PreventiviPage() {
     </div>
   )
 }
+

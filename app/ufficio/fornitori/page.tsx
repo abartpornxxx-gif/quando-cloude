@@ -1,4 +1,4 @@
-import { requireUfficio } from '@/lib/auth'
+﻿import { requireUfficio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -19,7 +19,7 @@ export default async function UfficioFornitoriPage() {
         <EmptyState title="Nessun fornitore" description="Aggiungi il primo fornitore."
           action={<Link href="/ufficio/fornitori/nuovo" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-700">+ Nuovo fornitore</Link>} />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {fornitori.map(f => (
               <div key={f.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/70 transition-colors group">
@@ -42,3 +42,4 @@ export default async function UfficioFornitoriPage() {
     </div>
   )
 }
+

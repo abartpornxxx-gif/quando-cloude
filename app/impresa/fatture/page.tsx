@@ -1,4 +1,4 @@
-import { requireImpresa } from '@/lib/auth'
+﻿import { requireImpresa } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { formatEuro, formatData } from '@/lib/format'
@@ -79,7 +79,7 @@ export default async function FattureAttivePage({
     <div>
       <PageHeader
         title="Fatture attive"
-        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'} emesse${scadute > 0 ? ` · ${scadute} scadute` : ''}`}
+        subtitle={`${fatture.length} ${fatture.length === 1 ? 'fattura' : 'fatture'} emesse${scadute > 0 ? ` Â· ${scadute} scadute` : ''}`}
         action={
           <Link
             href="/impresa/fatture/nuova"
@@ -97,11 +97,11 @@ export default async function FattureAttivePage({
             {filtroLabel}
           </span>
           <Link href="/impresa/fatture" className="text-xs text-gray-400 hover:text-gray-600">
-            × Rimuovi filtro
+            Ã— Rimuovi filtro
           </Link>
           {filtroHref && (
             <Link href={filtroHref} className="text-xs text-blue-500 hover:text-blue-700">
-              ← Torna alla scheda
+              â† Torna alla scheda
             </Link>
           )}
         </div>
@@ -140,7 +140,7 @@ export default async function FattureAttivePage({
           }
         />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
           <div className="divide-y divide-gray-100">
             {fatture.map(f => {
               const imponibile = totaleImponibile(f.righe)
@@ -163,7 +163,7 @@ export default async function FattureAttivePage({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate">
-                        {f.cliente?.nome ?? '—'}
+                        {f.cliente?.nome ?? 'â€”'}
                       </span>
                       <Badge variant={BADGE_VARIANT[f.stato] ?? 'neutral'}>
                         {LABEL[f.stato] ?? f.stato}
@@ -171,7 +171,7 @@ export default async function FattureAttivePage({
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {f.commessa?.nome ?? 'Senza commessa'}
-                      {f.dataScadenza ? ` · Scad. ${formatData(f.dataScadenza)}` : ''}
+                      {f.dataScadenza ? ` Â· Scad. ${formatData(f.dataScadenza)}` : ''}
                     </p>
                   </div>
 
@@ -191,3 +191,4 @@ export default async function FattureAttivePage({
     </div>
   )
 }
+

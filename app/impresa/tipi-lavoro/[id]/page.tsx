@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+﻿import { prisma } from '@/lib/prisma'
 import { requireImpresa } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -57,7 +57,7 @@ export default async function EditTipoLavoroPage({ params }: { params: Promise<{
       </form>
 
       {/* Voci adempimenti modello */}
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-card overflow-hidden">
         <div className="border-b border-gray-100 px-5 py-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-800">
             Voci adempimento ({tipo.modelli.length})
