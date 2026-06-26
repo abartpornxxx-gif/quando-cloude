@@ -129,7 +129,15 @@ export async function eliminaPromemoria(id: string) {
   return { success: true }
 }
 
-export async function getPromemoriaFiltro(filtro: 'oggi' | 'futuri' | 'completati') {
+export async function getOperaiDropdown() {
+  await requireImpresaOUfficio()
+  return prisma.operaio.findMany({
+    select: { id: true, nome: true },
+    orderBy: { nome: 'asc' },
+  })
+}
+
+export async function getPromemoriaFiltro(filtro: 'oggi' | 'futuri' | 'tutti' | 'completati') {
   await requireImpresaOUfficio()
   const now = new Date()
   const inizioOggi = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
@@ -152,10 +160,10 @@ export async function getPromemoriaFiltro(filtro: 'oggi' | 'futuri' | 'completat
       },
       stato: 'attivo',
     }
+  } else if (filtro === 'tutti') {
+    whereClause = { stato: 'attivo' }
   } else if (filtro === 'completati') {
-    whereClause = {
-      stato: 'completato',
-    }
+    whereClause = { stato: 'completato' }
   }
 
   return await prisma.promemoria.findMany({
