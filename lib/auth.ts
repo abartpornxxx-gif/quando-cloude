@@ -80,11 +80,16 @@ export async function requireLibero() {
 }
 
 export async function requireSuperAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const superEmail = process.env.SUPERADMIN_EMAIL
-  if (!user || !superEmail || user.email !== superEmail) redirect('/login')
-  return user
+  const { cookies } = await import('next/headers')
+  const cookieStore = await cookies()
+  const adminCookie = cookieStore.get('_qdr_admin')
+  const adminEmail = process.env.SUPERADMIN_EMAIL
+  const adminPassword = process.env.SUPERADMIN_PASSWORD
+  if (!adminCookie || !adminEmail || !adminPassword) redirect('/pannello')
+  const { createHash } = await import('crypto')
+  const expected = createHash('sha256').update(`${adminEmail}:${adminPassword}`).digest('hex')
+  if (adminCookie.value !== expected) redirect('/pannello')
+  return { email: adminEmail }
 }
 
 // Permette sia impresa che ufficio — per Server Actions condivise

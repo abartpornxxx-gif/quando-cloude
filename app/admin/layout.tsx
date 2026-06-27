@@ -1,15 +1,19 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { LogoutButton } from '@/components/LogoutButton'
+import { cookies } from 'next/headers'
+import { createHash } from 'crypto'
+import { AdminLogoutButton } from './AdminLogoutButton'
 import Link from 'next/link'
 import { Shield, Users, BarChart3, PlusCircle, LayoutDashboard } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const superEmail = process.env.SUPERADMIN_EMAIL
+  const cookieStore = await cookies()
+  const adminCookie = cookieStore.get('_qdr_admin')
+  const adminEmail = process.env.SUPERADMIN_EMAIL
+  const adminPassword = process.env.SUPERADMIN_PASSWORD
 
-  if (!user || !superEmail || user.email !== superEmail) redirect('/login')
+  if (!adminCookie || !adminEmail || !adminPassword) redirect('/pannello')
+  const expected = createHash('sha256').update(`${adminEmail}:${adminPassword}`).digest('hex')
+  if (adminCookie.value !== expected) redirect('/pannello')
 
   const navItems = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -34,12 +38,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-purple-300 text-xs hidden sm:block">{user.email}</span>
-              <LogoutButton className="rounded-lg px-3 py-1.5 text-sm font-medium text-purple-200 hover:bg-purple-800" />
+              <span className="text-purple-300 text-xs hidden sm:block">{adminEmail}</span>
+              <AdminLogoutButton className="rounded-lg px-3 py-1.5 text-sm font-medium text-purple-200 hover:bg-purple-800 transition-colors" />
             </div>
           </div>
 
-          {/* Nav secondaria */}
           <div className="flex gap-1 overflow-x-auto pb-2 -mx-1 px-1">
             {navItems.map(({ href, label, icon: Icon }) => (
               <Link

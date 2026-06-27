@@ -11,10 +11,37 @@ const ROLE_HOME: Record<UserRole, string> = {
   libero: '/libero/dashboard',
 }
 
+async function sha256hex(text: string): Promise<string> {
+  const buf = new TextEncoder().encode(text)
+  const hash = await crypto.subtle.digest('SHA-256', buf)
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Pannello admin segreto: sempre accessibile (login page + API auth)
+  if (pathname.startsWith('/pannello') || pathname.startsWith('/api/pannello-auth')) {
+    return NextResponse.next({ request })
+  }
+
+  // Area /admin/: verifica cookie proprio — completamente separata da Supabase
+  if (pathname.startsWith('/admin/')) {
+    const adminCookie = request.cookies.get('_qdr_admin')
+    const adminEmail = process.env.SUPERADMIN_EMAIL
+    const adminPassword = process.env.SUPERADMIN_PASSWORD
+    if (!adminCookie || !adminEmail || !adminPassword) {
+      return NextResponse.redirect(new URL('/pannello', request.url))
+    }
+    const expected = await sha256hex(`${adminEmail}:${adminPassword}`)
+    if (adminCookie.value !== expected) {
+      return NextResponse.redirect(new URL('/pannello', request.url))
+    }
+    return NextResponse.next({ request })
+  }
+
   // Se le variabili Supabase non sono configurate, blocca tutto (fail-closed)
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    const { pathname } = request.nextUrl
     if (pathname === '/login' || pathname.startsWith('/auth/')) return NextResponse.next()
     return NextResponse.redirect(new URL('/login', request.url))
   }
@@ -81,15 +108,6 @@ export async function proxy(request: NextRequest) {
     // S2: Utente autenticato senza ruolo: gestisci il redirect al login
     if (!role) {
       return NextResponse.redirect(new URL('/login', request.url))
-    }
-
-    // Protegge /admin/ — solo SUPERADMIN_EMAIL
-    if (pathname.startsWith('/admin/')) {
-      const superEmail = process.env.SUPERADMIN_EMAIL
-      if (!superEmail || user.email !== superEmail) {
-        return redirectWithSession(role ? ROLE_HOME[role] : '/login')
-      }
-      return supabaseResponse
     }
 
     // Impedisce di accedere all'area di un altro ruolo
