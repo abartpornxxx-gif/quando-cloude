@@ -8,14 +8,14 @@ function makeToken(email: string, password: string) {
 export async function POST(req: Request) {
   const { email, password } = await req.json()
 
-  const adminEmail = process.env.SUPERADMIN_EMAIL
-  const adminPassword = process.env.SUPERADMIN_PASSWORD
+  const adminEmail = process.env.SUPERADMIN_EMAIL?.trim()
+  const adminPassword = process.env.SUPERADMIN_PASSWORD?.trim()
 
-  if (!adminEmail || !adminPassword || email !== adminEmail || password !== adminPassword) {
+  if (!adminEmail || !adminPassword || email.trim() !== adminEmail || password.trim() !== adminPassword) {
     return NextResponse.json({ error: 'Credenziali non valide' }, { status: 401 })
   }
 
-  const token = makeToken(adminEmail, adminPassword)
+  const token = makeToken(adminEmail.trim(), adminPassword.trim())
 
   const res = NextResponse.json({ ok: true })
   res.cookies.set('_qdr_admin', token, {
