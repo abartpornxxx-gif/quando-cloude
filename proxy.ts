@@ -33,7 +33,7 @@ export async function proxy(request: NextRequest) {
     if (!adminCookie || !adminEmail || !adminPassword) {
       return NextResponse.redirect(new URL('/pannello', request.url))
     }
-    const expected = await sha256hex(`${adminEmail}:${adminPassword}`)
+    const expected = await sha256hex(`${adminEmail.trim()}:${adminPassword.trim()}`)
     if (adminCookie.value !== expected) {
       return NextResponse.redirect(new URL('/pannello', request.url))
     }

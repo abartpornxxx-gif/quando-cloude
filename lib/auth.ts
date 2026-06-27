@@ -87,7 +87,7 @@ export async function requireSuperAdmin() {
   const adminPassword = process.env.SUPERADMIN_PASSWORD
   if (!adminCookie || !adminEmail || !adminPassword) redirect('/pannello')
   const { createHash } = await import('crypto')
-  const expected = createHash('sha256').update(`${adminEmail}:${adminPassword}`).digest('hex')
+  const expected = createHash('sha256').update(`${adminEmail.trim()}:${adminPassword.trim()}`).digest('hex')
   if (adminCookie.value !== expected) redirect('/pannello')
   return { email: adminEmail }
 }
