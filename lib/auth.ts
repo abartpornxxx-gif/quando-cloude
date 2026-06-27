@@ -65,6 +65,20 @@ export async function requireUfficio() {
   return { user, collaboratore }
 }
 
+export async function requireLibero() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || user.user_metadata?.role !== 'libero') redirect('/login')
+  if (!user.email) redirect('/login')
+
+  const libero = await prisma.liberoProfessionista.findFirst({
+    where: { email: user.email },
+  })
+  if (!libero) redirect('/libero/configura')
+
+  return { user, libero }
+}
+
 export async function requireSuperAdmin() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

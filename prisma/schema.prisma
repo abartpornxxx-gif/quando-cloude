@@ -17,6 +17,7 @@ enum UserRole {
   cliente
   magazziniere
   ufficio
+  libero
 }
 
 model Profile {
@@ -55,6 +56,7 @@ model Cliente {
   manutenzioni       ManutenzioneProgrammata[]
   proposteIntervento PropostaIntervento[]
   richiesteDiCo      RichiestaDiCo[]
+  interventiLibero   InterventoLibero[]
 
   @@map("clienti")
 }
@@ -1112,4 +1114,54 @@ model RichiestaDiCo {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("richieste_dico")
+}
+
+// ─── Libero Professionista ────────────────────────────────────────────────────
+
+model LiberoProfessionista {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome          String
+  partitaIva    String?  @map("partita_iva")
+  codiceFiscale String?  @map("codice_fiscale")
+  indirizzo     String?
+  email         String?
+  telefono      String?
+  logoUrl       String?  @map("logo_url")
+  logoPath      String?  @map("logo_path")
+  authUserId    String?  @unique @map("auth_user_id") @db.Uuid
+  note          String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  interventi    InterventoLibero[]
+
+  @@map("liberi_professionisti")
+}
+
+enum StatoIntervento {
+  pianificato
+  in_corso
+  completato
+  annullato
+}
+
+model InterventoLibero {
+  id             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  liberoId       String               @map("libero_id") @db.Uuid
+  libero         LiberoProfessionista @relation(fields: [liberoId], references: [id], onDelete: Cascade)
+  clienteId      String?              @map("cliente_id") @db.Uuid
+  cliente        Cliente?             @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  titolo         String
+  descrizione    String?
+  indirizzo      String?
+  dataIntervento DateTime?            @map("data_intervento") @db.Date
+  stato          StatoIntervento      @default(pianificato)
+  oreImpiegate   Float?               @map("ore_impiegate")
+  importo        Int                  @default(0)
+  note           String?
+  preventivoId   String?              @unique @map("preventivo_id") @db.Uuid
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("interventi_libero")
 }
