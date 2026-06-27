@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
@@ -214,29 +214,18 @@ export default function PersonalizzazionePage() {
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       
       {/* Header Banner - MATCHING THEME FORMAT */}
-      <div className="rounded-2xl mesh-bg-impresa border border-slate-800 px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-premium-lg relative overflow-hidden">
-        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-600/10 rounded-full blur-2xl pointer-events-none"></div>
-        <div className="space-y-2 relative z-10">
-          <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Impostazioni &gt; Profilo Impresa</p>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <Sparkles className="text-amber-400" size={24} />
-            Personalizza il Profilo Impresa
+      <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 border border-slate-700 px-8 py-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="space-y-3 relative z-10 w-full">
+          <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest">Impostazioni &gt; Brand Identity</p>
+          <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+            <ShieldCheck className="text-emerald-400" size={28} />
+            Identità Aziendale
           </h1>
-          <p className="text-xs text-slate-300 max-w-xl">
-            Configura l&apos;aspetto, le informazioni e le immagini che vuoi mostrare ai tuoi clienti, partner e dipendenti su QUADRO.
+          <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+            Configura il volto professionale della tua azienda. Questi dettagli saranno visibili a dipendenti, clienti e partner su tutta la piattaforma QUADRO.
           </p>
-        </div>
-        
-        {/* Generated Tech Illustration */}
-        <div className="relative w-28 h-28 shrink-0 hidden md:block z-10">
-          <Image
-            src="/immagini/personalizza_hero.png"
-            alt="Personalizza"
-            fill
-            sizes="112px"
-            className="object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
-            priority
-          />
         </div>
       </div>
 
@@ -247,7 +236,7 @@ export default function PersonalizzazionePage() {
         <div className="lg:col-span-4 space-y-4">
           <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
             <Eye size={14} className="text-emerald-600" />
-            Anteprima Profilo Real-Time
+            Anteprima Brand Real-Time
           </h2>
           
           <div className="bg-white rounded-3xl border border-gray-200 shadow-card overflow-hidden transition-all duration-300">
@@ -373,8 +362,8 @@ export default function PersonalizzazionePage() {
           <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
               <div>
-                <h3 className="text-sm font-extrabold text-slate-800">Immagine Profilo & Mascotte</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Gestisci l&apos;immagine caricando una tua foto o scegliendo una mascotte unica.</p>
+                <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Volto Aziendale (Avatar)</h3>
+                <p className="text-xs text-gray-500 mt-1">Carica un logo reale o seleziona uno dei nostri avatar professionali iper-realistici.</p>
               </div>
             </div>
 
@@ -440,8 +429,8 @@ export default function PersonalizzazionePage() {
 
             {/* MASCOTTE PICKER */}
             {!isCustomAvatar && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Oppure scegli una mascotte</h4>
+              <div className="space-y-4 pt-2">
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">Scegli un Avatar Premium</h4>
                 <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 max-h-[300px] overflow-y-auto p-2 bg-slate-50 border border-slate-100 rounded-2xl">
                   {MASCOTTE.map(m => {
                     const isSelected = m.id === mascotteAvatar
@@ -460,8 +449,8 @@ export default function PersonalizzazionePage() {
                             src={m.file}
                             alt={m.nome}
                             fill
-                            sizes="48px"
-                            className="object-contain"
+                            sizes="64px"
+                            className="object-cover"
                           />
                         </div>
                         {isSelected && (
