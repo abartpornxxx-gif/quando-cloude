@@ -12,7 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const adminPassword = process.env.SUPERADMIN_PASSWORD
 
   if (!adminCookie || !adminEmail || !adminPassword) redirect('/pannello')
-  const expected = createHash('sha256').update(`${adminEmail}:${adminPassword}`).digest('hex')
+  const expected = createHash('sha256').update(`${adminEmail.trim()}:${adminPassword.trim()}`).digest('hex')
   if (adminCookie.value !== expected) redirect('/pannello')
 
   const navItems = [

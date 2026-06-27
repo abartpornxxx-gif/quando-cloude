@@ -22,7 +22,7 @@ export function PannelloForm() {
     })
 
     if (res.ok) {
-      router.push('/admin/dashboard')
+      window.location.href = '/admin/dashboard'
     } else {
       const data = await res.json()
       setError(data.error || 'Credenziali non valide')
