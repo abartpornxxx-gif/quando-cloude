@@ -3,7 +3,10 @@
 -- Eseguire su: Supabase Dashboard → SQL Editor
 -- ============================================================
 
--- 1. Aggiungi valore 'libero' all'enum UserRole
+-- 1. Aggiungi valore 'libero' agli enum di ruolo
+-- user_role (minuscolo) è usato dal trigger handle_new_user e dalla tabella profiles
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'libero';
+-- "UserRole" (PascalCase) è usato da Prisma/chat_messaggi
 ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'libero';
 
 -- 2. Crea tabella liberi_professionisti
