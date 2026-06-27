@@ -94,6 +94,8 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 - Magazziniere → `amber-800` (header) + `amber-600` (CTA)
 - Cliente → `violet-700` (header) + `violet-600` (CTA)
 - Ufficio → `teal-700` (header) + `teal-600` (CTA)
+- Libero Professionista → `orange-800` (header) + `orange-600` (CTA)
+- Super Admin → `purple-900` (header) + `purple-600` (CTA)
 
 **Card standard** — invariabile: `rounded-2xl border border-gray-200 bg-white shadow-sm`
 **KPI numeri** — usare sempre `<StatCard>` da `components/ui/StatCard.tsx`
@@ -153,7 +155,27 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Post-Fase 12: sito live e funzionante. Tutte le migrazioni DB applicate manualmente su Supabase (sessione 2026-06-26): enum parzialmente_incassata, task_libreria, avanzamento_percentuale (commesse), quantita (richieste_materiale), importante (promemoria), visibile_cliente (giornata_foto), updated_at (push_subscriptions), tabelle richieste_dico e sopralluoghi create.**
+- Fase corrente: **Espansione SaaS (2026-06-27): Super Admin Panel (/admin/), Portale Libero Professionista (/libero/), piano multi-tenancy.**
+
+### Nuovi ruoli aggiunti (2026-06-27)
+- **`libero`**: libero professionista. Area `/libero/`. Colori: orange-800 + orange-600. Modelli nuovi: `LiberoProfessionista`, `InterventoLibero`. Migrazione SQL in `libero-schema.sql` (da eseguire su Supabase). Prima login → `/libero/configura` se manca il profilo.
+- **`superadmin`**: NON è un ruolo DB. Protezione via env var `SUPERADMIN_EMAIL` in `proxy.ts` e `requireSuperAdmin()` in `lib/auth.ts`. Area `/admin/`. Colori: purple-900 + purple-600.
+
+### Super Admin Panel (/admin/)
+- Dashboard con KPI piattaforma (utenti, commesse, fatturato aggregato)
+- Lista utenti con stato/ruolo (da Supabase Admin API `admin.auth.admin.listUsers`)
+- Crea account impresa (`/admin/crea-impresa`) e libero (`/admin/crea-libero`)
+- Dettaglio utente: sospendi, riabilita, reimposta password
+- Statistiche aggregate piattaforma (`/admin/statistiche`)
+- Richiede `SUPERADMIN_EMAIL` in `.env.local` e Vercel env vars
+
+### Multi-tenancy (NON ancora implementata)
+- Analisi: 21 tabelle root + 6 child tables da aggiornare con `tenant_id UUID`
+- ~108 file da modificare (actions, pages, lib)
+- Approccio raccomandato: JWT claim custom in Supabase per propagare `tenantId` senza query aggiuntive
+- **Non implementare senza accordo esplicito** — cambierebbe tutte le query esistenti
+
+- Fase precedente: **Post-Fase 12: sito live e funzionante. Tutte le migrazioni DB applicate manualmente su Supabase (sessione 2026-06-26): enum parzialmente_incassata, task_libreria, avanzamento_percentuale (commesse), quantita (richieste_materiale), importante (promemoria), visibile_cliente (giornata_foto), updated_at (push_subscriptions), tabelle richieste_dico e sopralluoghi create.**
 
 ### Decisioni architetturali recenti
 - **Countdown**: visibile SOLO all'impresa (in `/impresa/giornate`). L'operaio vede solo stato generico e pulsante bloccato/attivo.
