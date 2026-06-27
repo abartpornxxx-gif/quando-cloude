@@ -119,6 +119,7 @@ export default async function AdminUtenteDettaglioPage({ params }: { params: Pro
         isBanned={isBanned}
         email={user.email || ''}
         nome={nome}
+        ruolo={ruolo}
       />
     </div>
   )

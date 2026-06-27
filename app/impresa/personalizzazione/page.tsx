@@ -19,6 +19,7 @@ import {
   Trash2,
   Eye,
   Check,
+  MessageCircle,
 } from 'lucide-react'
 import { MASCOTTE } from '@/lib/mascotte'
 import { createClient } from '@/lib/supabase/client'
@@ -63,7 +64,9 @@ export default function PersonalizzazionePage() {
   const [mostraEmail, setMostraEmail] = useState(true)
   const [mostraSitoWeb, setMostraSitoWeb] = useState(true)
   const [mostraServizi, setMostraServizi] = useState(true)
+  const [servizi, setServizi] = useState('Impianti Civili, Manutenzioni, Impianti Industriali')
   const [mostraCertificazioni, setMostraCertificazioni] = useState(true)
+  const [certificazioni, setCertificazioni] = useState('ISO 9001, FGAS, FER')
   const [mostraDescrizione, setMostraDescrizione] = useState(true)
   const [mostraValori, setMostraValori] = useState(true)
   const [mostraMascotte, setMostraMascotte] = useState(true)
@@ -90,10 +93,12 @@ export default function PersonalizzazionePage() {
         setMostraIndirizzo(p.mostraIndirizzo)
         setMostraTelefono(p.mostraTelefono)
         setMostraEmail(p.mostraEmail)
-        setMostraSitoWeb(p.mostraSitoWeb)
-        setMostraServizi(p.mostraServizi)
-        setMostraCertificazioni(p.mostraCertificazioni)
-        setMostraDescrizione(p.mostraDescrizione)
+        setMostraSitoWeb(p.mostraSitoWeb ?? true)
+        setMostraServizi(p.mostraServizi ?? true)
+        setServizi(p.servizi || 'Impianti Civili, Manutenzioni, Impianti Industriali')
+        setMostraCertificazioni(p.mostraCertificazioni ?? true)
+        setCertificazioni(p.certificazioni || 'ISO 9001, FGAS, FER')
+        setMostraDescrizione(p.mostraDescrizione ?? true)
         setMostraValori(p.mostraValori)
         setMostraMascotte(p.mostraMascotte)
       } catch (err) {
@@ -128,16 +133,18 @@ export default function PersonalizzazionePage() {
         mostraEmail,
         mostraSitoWeb,
         mostraServizi,
+        servizi,
         mostraCertificazioni,
+        certificazioni,
         mostraDescrizione,
         mostraValori,
         mostraMascotte,
       })
-      setMessage('âœ… Impostazioni salvate correttamente!')
+      setMessage('✅ Impostazioni salvate correttamente!')
       setTimeout(() => setMessage(''), 3000)
     } catch (err) {
       console.error(err)
-      setMessage('âŒ Errore durante il salvataggio.')
+      setMessage('❌ Errore durante il salvataggio.')
     } finally {
       setSaving(false)
     }
@@ -151,7 +158,7 @@ export default function PersonalizzazionePage() {
       window.location.reload()
     } catch (err) {
       console.error(err)
-      setMessage('âŒ Errore durante il ripristino.')
+      setMessage('❌ Errore durante il ripristino.')
       setSaving(false)
     }
   }
@@ -183,19 +190,19 @@ export default function PersonalizzazionePage() {
         .getPublicUrl(filePath)
 
       setMascotteAvatar(publicUrl)
-      setMessage('âœ… Immagine caricata correttamente!')
+      setMessage('✅ Immagine caricata correttamente!')
       setTimeout(() => setMessage(''), 3000)
     } catch (err: any) {
-      console.error(err)
-      setMessage(`âŒ Errore durante il caricamento: ${err.message || err}`)
+      console.error('Errore dettagliato caricamento:', err)
+      setMessage(`❌ Errore durante il caricamento: ${err.message || err}`)
     } finally {
       setUploading(false)
     }
   }
 
-  function handleRemoveCustomAvatar() {
+  async function handleRemoveCustomAvatar() {
     setMascotteAvatar('leone')
-    setMessage('âœ… Avatar personalizzato rimosso.')
+    setMessage('✅ Avatar personalizzato rimosso.')
     setTimeout(() => setMessage(''), 3000)
   }
 
@@ -245,12 +252,12 @@ export default function PersonalizzazionePage() {
               {/* Mascot & Brand Header */}
               <div className="flex items-center gap-4">
                 {mostraMascotte && (
-                  <div className="relative h-20 w-20 rounded-2xl border-2 overflow-hidden bg-slate-50 shrink-0 shadow-sm" style={{ borderColor: colorePrimario }}>
+                  <div className="relative h-28 w-28 md:h-32 md:w-32 rounded-2xl border-2 overflow-hidden bg-slate-50 shrink-0 shadow-sm" style={{ borderColor: colorePrimario }}>
                     <Image
                       src={isCustomAvatar ? mascotteAvatar : selectedMascotte.file}
                       alt={isCustomAvatar ? "Logo Azienda" : selectedMascotte.nome}
                       fill
-                      sizes="80px"
+                      sizes="128px"
                       className="object-cover"
                     />
                   </div>
@@ -319,8 +326,9 @@ export default function PersonalizzazionePage() {
                     <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                       <p className="font-bold text-gray-800 mb-1">Servizi principali</p>
                       <ul className="space-y-1 text-gray-500 font-medium">
-                        <li className="flex items-center gap-1">âœ” Impianti Civili</li>
-                        <li className="flex items-center gap-1">âœ” Manutenzioni</li>
+                        {servizi.split(',').map((s, i) => (
+                          <li key={i} className="flex items-center gap-1.5"><Check size={14} className="text-emerald-500" /> {s.trim()}</li>
+                        ))}
                       </ul>
                     </div>
                   )}
@@ -328,8 +336,9 @@ export default function PersonalizzazionePage() {
                     <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                       <p className="font-bold text-gray-800 mb-1">Certificazioni</p>
                       <ul className="space-y-1 text-gray-500 font-medium">
-                        <li className="flex items-center gap-1">âœ” ISO 9001</li>
-                        <li className="flex items-center gap-1">âœ” FGAS</li>
+                        {certificazioni.split(',').map((c, i) => (
+                          <li key={i} className="flex items-center gap-1.5"><Check size={14} className="text-emerald-500" /> {c.trim()}</li>
+                        ))}
                       </ul>
                     </div>
                   )}
@@ -339,7 +348,9 @@ export default function PersonalizzazionePage() {
               {/* Mascot Details / Motto */}
               {mostraMascotte && mottoTeam && (
                 <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-start gap-3">
-                  <div className="text-xl shrink-0 mt-0.5">ðŸ’¬</div>
+                  <div className="shrink-0 mt-0.5">
+                    <MessageCircle size={22} className="text-gray-400" />
+                  </div>
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold text-slate-800">{isCustomAvatar ? "Il nostro team" : selectedMascotte.nome}</p>
                     <p className="text-xs italic text-slate-500 mt-1 font-medium leading-relaxed">&quot;{mottoTeam}&quot;</p>
@@ -431,7 +442,7 @@ export default function PersonalizzazionePage() {
             {!isCustomAvatar && (
               <div className="space-y-4 pt-2">
                 <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">Scegli un Avatar Premium</h4>
-                <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 max-h-[300px] overflow-y-auto p-2 bg-slate-50 border border-slate-100 rounded-2xl">
+                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-3 max-h-[400px] overflow-y-auto p-3 bg-slate-50 border border-slate-100 rounded-2xl">
                   {MASCOTTE.map(m => {
                     const isSelected = m.id === mascotteAvatar
                     return (
@@ -449,7 +460,7 @@ export default function PersonalizzazionePage() {
                             src={m.file}
                             alt={m.nome}
                             fill
-                            sizes="64px"
+                            sizes="120px"
                             className="object-cover"
                           />
                         </div>
@@ -576,6 +587,26 @@ export default function PersonalizzazionePage() {
                   </div>
 
                   <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Servizi Principali (separati da virgola)</label>
+                    <input
+                      type="text"
+                      value={servizi}
+                      onChange={e => setServizi(e.target.value)}
+                      placeholder="es. Impianti Civili, Manutenzioni..."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Certificazioni (separate da virgola)</label>
+                    <input
+                      type="text"
+                      value={certificazioni}
+                      onChange={e => setCertificazioni(e.target.value)}
+                      placeholder="es. ISO 9001, FGAS..."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
                     <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Descrizione Aziendale</label>
                     <textarea
                       value={descrizione}
@@ -632,7 +663,7 @@ export default function PersonalizzazionePage() {
                           title={p.name}
                         >
                           {colorePrimario === p.hex && (
-                            <span className="text-white text-xs">âœ”</span>
+                            <Check size={14} className="text-white" />
                           )}
                         </button>
                       ))}

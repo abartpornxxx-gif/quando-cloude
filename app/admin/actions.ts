@@ -102,3 +102,21 @@ export async function reimpostaPasswordAdmin({
   })
   if (error) throw new Error(error.message)
 }
+
+export async function cambiaRuolo({ userId, ruolo }: { userId: string; ruolo: string }): Promise<void> {
+  await requireSuperAdmin()
+  const admin = getAdminClient()
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    user_metadata: { role: ruolo },
+  })
+  if (error) throw new Error(error.message)
+  revalidatePath('/admin/utenti')
+}
+
+export async function eliminaAccount(userId: string): Promise<void> {
+  await requireSuperAdmin()
+  const admin = getAdminClient()
+  const { error } = await admin.auth.admin.deleteUser(userId)
+  if (error) throw new Error(error.message)
+  revalidatePath('/admin/utenti')
+}

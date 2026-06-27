@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { createHash } from 'crypto'
 import { AdminLogoutButton } from './AdminLogoutButton'
 import Link from 'next/link'
-import { Shield, Users, BarChart3, PlusCircle, LayoutDashboard } from 'lucide-react'
+import { Shield, Users, BarChart3, PlusCircle, LayoutDashboard, Mail, Activity } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
@@ -21,6 +21,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/crea-impresa', label: 'Nuova impresa', icon: PlusCircle },
     { href: '/admin/crea-libero', label: 'Nuovo libero', icon: PlusCircle },
     { href: '/admin/statistiche', label: 'Statistiche', icon: BarChart3 },
+    { href: '/admin/comunicazioni', label: 'Comunicazioni', icon: Mail },
+    { href: '/admin/log', label: 'Log attività', icon: Activity },
   ]
 
   return (

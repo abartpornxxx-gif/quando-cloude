@@ -37,7 +37,9 @@ export async function salvaImpresaProfilo(data: {
   mostraEmail: boolean
   mostraSitoWeb: boolean
   mostraServizi: boolean
+  servizi: string
   mostraCertificazioni: boolean
+  certificazioni: string
   mostraDescrizione: boolean
   mostraValori: boolean
   mostraMascotte: boolean
@@ -78,7 +80,9 @@ export async function ripristinaDefaultProfilo() {
     mostraEmail: true,
     mostraSitoWeb: true,
     mostraServizi: true,
+    servizi: 'Impianti Civili, Manutenzioni, Impianti Industriali',
     mostraCertificazioni: true,
+    certificazioni: 'ISO 9001, FGAS, FER',
     mostraDescrizione: true,
     mostraValori: true,
     mostraMascotte: true,
