@@ -8,6 +8,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   cliente: '/cliente/dashboard',
   magazziniere: '/magazziniere/dashboard',
   ufficio: '/ufficio/dashboard',
+  libero: '/libero/dashboard',
 }
 
 export async function GET(request: Request) {

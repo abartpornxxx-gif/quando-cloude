@@ -65,6 +65,14 @@ export async function requireUfficio() {
   return { user, collaboratore }
 }
 
+export async function requireSuperAdmin() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const superEmail = process.env.SUPERADMIN_EMAIL
+  if (!user || !superEmail || user.email !== superEmail) redirect('/login')
+  return user
+}
+
 // Permette sia impresa che ufficio — per Server Actions condivise
 export async function requireImpresaOUfficio() {
   const supabase = await createClient()

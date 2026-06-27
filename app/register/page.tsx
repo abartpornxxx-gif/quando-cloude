@@ -12,6 +12,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   cliente: 'Cliente finale',
   magazziniere: 'Magazziniere',
   ufficio: 'Ufficio (collaboratore amministrativo)',
+  libero: 'Libero professionista',
 }
 
 const ROLE_HOME: Record<UserRole, string> = {
@@ -20,6 +21,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   cliente: '/cliente/dashboard',
   magazziniere: '/magazziniere/dashboard',
   ufficio: '/ufficio/dashboard',
+  libero: '/libero/dashboard',
 }
 
 export default function RegisterPage() {

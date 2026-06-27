@@ -8,6 +8,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   cliente: '/cliente/dashboard',
   magazziniere: '/magazziniere/dashboard',
   ufficio: '/ufficio/dashboard',
+  libero: '/libero/dashboard',
 }
 
 export async function proxy(request: NextRequest) {
@@ -82,13 +83,23 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
+    // Protegge /admin/ — solo SUPERADMIN_EMAIL
+    if (pathname.startsWith('/admin/')) {
+      const superEmail = process.env.SUPERADMIN_EMAIL
+      if (!superEmail || user.email !== superEmail) {
+        return redirectWithSession(role ? ROLE_HOME[role] : '/login')
+      }
+      return supabaseResponse
+    }
+
     // Impedisce di accedere all'area di un altro ruolo
     const inWrongArea =
       (pathname.startsWith('/impresa/') && role !== 'impresa') ||
       (pathname.startsWith('/operaio/') && role !== 'operaio') ||
       (pathname.startsWith('/cliente/') && role !== 'cliente') ||
       (pathname.startsWith('/magazziniere/') && role !== 'magazziniere') ||
-      (pathname.startsWith('/ufficio/') && role !== 'ufficio')
+      (pathname.startsWith('/ufficio/') && role !== 'ufficio') ||
+      (pathname.startsWith('/libero/') && role !== 'libero')
 
     if (inWrongArea) {
       return redirectWithSession(ROLE_HOME[role])

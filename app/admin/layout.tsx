@@ -1,0 +1,63 @@
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { LogoutButton } from '@/components/LogoutButton'
+import Link from 'next/link'
+import { Shield, Users, BarChart3, PlusCircle, LayoutDashboard } from 'lucide-react'
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const superEmail = process.env.SUPERADMIN_EMAIL
+
+  if (!user || !superEmail || user.email !== superEmail) redirect('/login')
+
+  const navItems = [
+    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/admin/utenti', label: 'Utenti', icon: Users },
+    { href: '/admin/crea-impresa', label: 'Nuova impresa', icon: PlusCircle },
+    { href: '/admin/crea-libero', label: 'Nuovo libero', icon: PlusCircle },
+    { href: '/admin/statistiche', label: 'Statistiche', icon: BarChart3 },
+  ]
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="sticky top-0 z-40 bg-purple-900 text-white" style={{ boxShadow: '0 1px 0 rgba(255,255,255,0.06), 0 4px 20px rgba(0,0,0,0.28)' }}>
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 shrink-0">
+                <Shield size={16} />
+              </div>
+              <div>
+                <p className="font-bold text-sm leading-tight">QUADRO Admin</p>
+                <p className="text-purple-300 text-xs leading-tight">Pannello di controllo piattaforma</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-purple-300 text-xs hidden sm:block">{user.email}</span>
+              <LogoutButton className="rounded-lg px-3 py-1.5 text-sm font-medium text-purple-200 hover:bg-purple-800" />
+            </div>
+          </div>
+
+          {/* Nav secondaria */}
+          <div className="flex gap-1 overflow-x-auto pb-2 -mx-1 px-1">
+            {navItems.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium text-purple-200 hover:bg-purple-800 hover:text-white transition-colors"
+              >
+                <Icon size={13} />
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      <main className="mx-auto max-w-7xl px-4 py-8">
+        {children}
+      </main>
+    </div>
+  )
+}
