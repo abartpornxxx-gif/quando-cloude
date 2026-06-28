@@ -29,7 +29,7 @@ export default async function MagazziniereDashboard() {
       <OnboardingGuida
         role="magazziniere"
         title="📦 Benvenuto nell'Area Magazzino di QUADRO"
-        subtitle="Il pannello per gestire materiali, richieste e giacenze per CreCas Impianti S.r.l."
+        subtitle="Il pannello per gestire materiali, richieste e giacenze per la tua impresa."
         features={[
           "Monitorare in tempo reale le richieste di materiali degli operai.",
           "Prendere in carico e preparare i pacchetti di materiali per le squadre.",
@@ -85,13 +85,13 @@ export default async function MagazziniereDashboard() {
         </div>
 
         {recenti.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center shadow-premium">
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-premium">
             <Image src="/immagini/successo.png" width={80} height={80} alt="" className="mx-auto mb-3 opacity-80" />
             <p className="text-sm font-bold text-gray-700">Tutto evaso</p>
             <p className="text-xs text-gray-400 mt-1 font-medium">Nessuna richiesta in attesa</p>
           </div>
         ) : (
-          <div className="rounded-2xl bg-white border border-slate-100 shadow-premium overflow-hidden divide-y divide-slate-100/60">
+          <div className="rounded-2xl bg-white border border-gray-200 shadow-premium overflow-hidden divide-y divide-gray-100">
             {recenti.map(r => (
               <a key={r.id} href={`/magazziniere/richieste/${r.id}`} className="flex items-start justify-between gap-3 px-5 py-4 hover:bg-slate-50/50 hover-lift active-press transition-all duration-300">
                 <div className="flex-1 min-w-0">

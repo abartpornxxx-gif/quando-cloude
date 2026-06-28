@@ -8,7 +8,7 @@ import { OnboardingGuida } from '@/components/onboarding/OnboardingGuida'
 import { MeteoBox } from '@/components/operaio/MeteoBox'
 import { PuntiUtili } from '@/components/operaio/PuntiUtili'
 import { MASCOTTE } from '@/lib/mascotte'
-import { Clock, MapPin, Calendar, Wrench, Truck, Play, Coffee, StopCircle, CheckCircle2, AlertCircle, ArrowRight, ExternalLink } from 'lucide-react'
+import { Clock, MapPin, Calendar, CalendarDays, Wrench, Truck, Play, Coffee, StopCircle, CheckCircle2, AlertCircle, ArrowRight, ExternalLink } from 'lucide-react'
 
 export default async function OperaioDashboardPage() {
   const { operaio } = await requireOperaio()
@@ -116,7 +116,7 @@ export default async function OperaioDashboardPage() {
       <OnboardingGuida
         role="operaio"
         title="🔨 Ciao! Questa è la tua area cantiere in QUADRO"
-        subtitle="La tua guida per la giornata di lavoro in CreCas Impianti S.r.l."
+        subtitle="La tua guida per la giornata di lavoro nella tua impresa."
         features={[
           "Vedere i cantieri assegnati e le relative istruzioni operative.",
           "Registrare gli orari di lavoro (Inizio cantiere, Pause, Fine giornata).",
@@ -363,7 +363,36 @@ export default async function OperaioDashboardPage() {
               )
             })}
           </div>
+          <Link
+            href="/operaio/calendario"
+            className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-xs font-semibold text-gray-500 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <CalendarDays size={14} />
+              Calendario completo
+            </span>
+            <ArrowRight size={13} />
+          </Link>
         </div>
+      )}
+
+      {/* ── Quick link Calendario (mostrato solo quando non ci sono appuntamenti oggi) ── */}
+      {promemoriaOggi.length === 0 && (
+        <Link
+          href="/operaio/calendario"
+          className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-xs hover:bg-emerald-50 hover:border-emerald-200 transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 shrink-0">
+              <CalendarDays size={18} className="text-emerald-700" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900 group-hover:text-emerald-800">Calendario</p>
+              <p className="text-xs text-gray-400">Promemoria e appuntamenti</p>
+            </div>
+          </div>
+          <ArrowRight size={16} className="text-gray-300 group-hover:text-emerald-600" />
+        </Link>
       )}
 
       {/* ── 5. Checklist Mezzo e Attrezzatura (Checklist mezzo) ── */}

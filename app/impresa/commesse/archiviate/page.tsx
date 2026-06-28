@@ -1,4 +1,5 @@
-﻿import { prisma } from '@/lib/prisma'
+﻿import { requireImpresa } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import { formatEuro } from '@/lib/format'
 import Link from 'next/link'
 import { DeleteButton } from '@/components/DeleteButton'
@@ -8,6 +9,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { Badge } from '@/components/ui/Badge'
 
 export default async function CommesseArchiviateePage() {
+  await requireImpresa()
+
   const commesse = await prisma.commessa.findMany({
     where: { archiviata: true },
     orderBy: { updatedAt: 'desc' },

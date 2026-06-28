@@ -132,7 +132,7 @@ export default async function UfficioDashboard() {
       <OnboardingGuida
         role="ufficio"
         title="💶 Benvenuto nell'Area Amministrativa di QUADRO"
-        subtitle="Il tuo assistente per preventivi, fatturazione e flussi finanziari della CreCas Impianti S.r.l."
+        subtitle="Il tuo assistente per preventivi, fatturazione e flussi finanziari della tua impresa."
         features={[
           "Emettere preventivi per nuovi clienti e convertirli direttamente in commesse di cantiere.",
           "Verificare le fatture attive e gestire gli incassi parziali/totali.",

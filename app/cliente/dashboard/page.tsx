@@ -89,7 +89,7 @@ export default async function ClienteDashboardPage() {
       <OnboardingGuida
         role="cliente"
         title="🏗️ Benvenuto nel tuo Portale QUADRO"
-        subtitle="La tua finestra personale sui lavori eseguiti da CreCas Impianti S.r.l."
+        subtitle="La tua finestra personale sui lavori eseguiti dalla tua impresa."
         features={[
           "Consultare l'avanzamento dei lavori dei tuoi cantieri attivi.",
           "Verificare e scaricare le fatture e richiedere la Di.Co.",

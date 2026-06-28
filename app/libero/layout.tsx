@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { NotificheBell } from '@/components/NotificheBell'
 import { AssistenteContestuale } from '@/components/ai/AssistenteContestuale'
 import { LogoutButton } from '@/components/LogoutButton'
+import { LiberoNav } from '@/components/LiberoNav'
 import Image from 'next/image'
 import Link from 'next/link'
-import { LayoutDashboard, Wrench, Users, FileText, Calendar, Settings } from 'lucide-react'
 
 export default async function LiberoLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -23,15 +22,6 @@ export default async function LiberoLayout({ children }: { children: React.React
     })
     if (libero) nomeDisplay = libero.nome
   }
-
-  const navItems = [
-    { href: '/libero/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/libero/interventi', label: 'Interventi', icon: Wrench },
-    { href: '/libero/clienti', label: 'Clienti', icon: Users },
-    { href: '/libero/preventivi', label: 'Preventivi', icon: FileText },
-    { href: '/libero/appuntamenti', label: 'Appuntamenti', icon: Calendar },
-    { href: '/libero/profilo', label: 'Profilo', icon: Settings },
-  ]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -53,24 +43,12 @@ export default async function LiberoLayout({ children }: { children: React.React
             </div>
           </div>
 
-          {/* Nav secondaria */}
-          <div className="flex gap-1 overflow-x-auto pb-2 -mx-1 px-1">
-            {navItems.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium text-orange-200 hover:bg-orange-700 hover:text-white transition-colors"
-              >
-                <Icon size={13} />
-                {label}
-              </Link>
-            ))}
-          </div>
+          <LiberoNav />
         </div>
       </nav>
 
       <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
-      <AssistenteContestuale role="impresa" />
+      <AssistenteContestuale role="libero" />
     </div>
   )
 }
