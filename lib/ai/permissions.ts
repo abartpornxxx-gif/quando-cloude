@@ -1,5 +1,5 @@
 export interface UserContext {
-  role: 'impresa' | 'ufficio' | 'operaio' | 'magazziniere' | 'cliente'
+  role: 'impresa' | 'ufficio' | 'operaio' | 'magazziniere' | 'cliente' | 'libero'
   pathname: string
   commessa?: any
   giornata?: any
@@ -107,6 +107,13 @@ export function sanitizeContext(context: UserContext): any {
           dataScadenza: rp.dataScadenza
         }))
       } : undefined
+    }
+  }
+
+  if (role === 'libero') {
+    return {
+      role,
+      pathname: context.pathname
     }
   }
 
