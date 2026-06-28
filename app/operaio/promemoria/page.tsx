@@ -86,7 +86,7 @@ export default async function OperaioPromemoriaPage() {
   const prossimi = promemoria.filter(p => p.dataOra >= now)
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">I tuoi impegni</p>

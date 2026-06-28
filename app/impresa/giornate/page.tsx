@@ -1,10 +1,11 @@
-﻿﻿import { requireImpresa } from '@/lib/auth'
+﻿import { requireImpresa } from '@/lib/auth'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
 import { startOfTodayItaly } from '@/lib/date'
 import GiornateMonitor from './GiornateMonitor'
 import StoricoCentroOperativo from './StoricoCentroOperativo'
 import { PianificazioneSubNav } from '../pianificazione/PianificazioneSubNav'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 export default async function CentroOperativoPage() {
   await requireImpresa()
@@ -124,21 +125,16 @@ export default async function CentroOperativoPage() {
     .map(([id, nome]) => ({ id, nome }))
     .sort((a, b) => a.nome.localeCompare(b.nome))
 
+  const centroSub = giornateAdesso.length > 0
+    ? `${giornateAdesso.length} operaio${giornateAdesso.length > 1 ? 'i' : ''} in cantiere${giornateNonChiuse.length > 0 ? ` · ${giornateNonChiuse.length} non chiuse` : ''} · ${giornateChiuse.length} archiviate`
+    : giornateNonChiuse.length > 0
+      ? `${giornateNonChiuse.length} non chiuse · ${giornateChiuse.length} archiviate`
+      : `${giornateChiuse.length} giornate archiviate`
+
   return (
     <div className="space-y-6">
       <PianificazioneSubNav />
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Centro Operativo</h1>
-          <p className="mt-1.5 text-sm text-gray-500">
-            {giornateAdesso.length > 0
-              ? `${giornateAdesso.length} operaio${giornateAdesso.length > 1 ? 'i' : ''} in cantiere${giornateNonChiuse.length > 0 ? ` · ${giornateNonChiuse.length} giornata${giornateNonChiuse.length > 1 ? 'e' : ''} non chiusa${giornateNonChiuse.length > 1 ? 'e' : ''}` : ''} · ${giornateChiuse.length} archiviate`
-              : giornateNonChiuse.length > 0
-                ? `${giornateNonChiuse.length} giornata${giornateNonChiuse.length > 1 ? 'e' : ''} non chiusa${giornateNonChiuse.length > 1 ? 'e' : ''} · ${giornateChiuse.length} archiviate`
-                : `${giornateChiuse.length} giornate archiviate`}
-          </p>
-        </div>
-      </div>
+      <PageHeader title="Centro Operativo" subtitle={centroSub} />
 
       {/* ORDINE 4 â€” Alert rapportini mancanti lato impresa */}
       {rapportiniMancanti.length > 0 && (

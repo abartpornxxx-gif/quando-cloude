@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { formatData } from '@/lib/format'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader } from '@/components/ui/PageHeader'
 
 export default async function ClienteLavoriPage() {
   const { cliente } = await requireCliente()
@@ -32,16 +33,15 @@ export default async function ClienteLavoriPage() {
     return Math.min(100, Math.round((costi / c.preventivato) * 100))
   }
 
+  const aperte = commesse.filter(c => c.stato === 'aperta').length
+  const chiuse = commesse.filter(c => c.stato === 'chiusa').length
+
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">I miei lavori</h1>
-        <p className="mt-1.5 text-sm text-gray-500">
-          {commesse.filter(c => c.stato === 'aperta').length > 0
-            ? `${commesse.filter(c => c.stato === 'aperta').length} in corso · ${commesse.filter(c => c.stato === 'chiusa').length} completati`
-            : `${commesse.length} lavori totali`}
-        </p>
-      </div>
+      <PageHeader
+        title="I miei lavori"
+        subtitle={aperte > 0 ? `${aperte} in corso · ${chiuse} completati` : `${commesse.length} lavori totali`}
+      />
 
       {commesse.length === 0 ? (
         <EmptyState
