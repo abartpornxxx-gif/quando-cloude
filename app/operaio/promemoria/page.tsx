@@ -2,7 +2,8 @@ import { requireOperaio } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { formatData } from '@/lib/format'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { Bell, Clock, MapPin } from 'lucide-react'
+import Link from 'next/link'
+import { Bell, Clock, MapPin, CalendarDays } from 'lucide-react'
 
 const TIPO_LABEL: Record<string, string> = {
   intervento: 'Intervento',
@@ -132,6 +133,22 @@ export default async function OperaioPromemoriaPage() {
       <div className="rounded-xl border border-gray-100 bg-white px-4 py-3.5 text-xs text-gray-400 text-center shadow-card">
         I promemoria vengono assegnati dall&apos;impresa. Contattali per aggiungerne di nuovi.
       </div>
+
+      <Link
+        href="/operaio/calendario"
+        className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 hover:bg-emerald-100 transition-colors group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 shrink-0">
+            <CalendarDays size={18} className="text-emerald-700" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-emerald-900">Apri calendario completo</p>
+            <p className="text-xs text-emerald-600">Vista mensile di tutti i tuoi impegni</p>
+          </div>
+        </div>
+        <span className="text-emerald-400 group-hover:text-emerald-700 text-lg font-bold">→</span>
+      </Link>
     </div>
   )
 }
