@@ -116,7 +116,7 @@ export default async function OperaioDashboardPage() {
       <OnboardingGuida
         role="operaio"
         title="🔨 Ciao! Questa è la tua area cantiere in QUADRO"
-        subtitle="La tua guida per la giornata di lavoro in CreCas Impianti S.r.l."
+        subtitle="La tua guida per la giornata di lavoro nella tua impresa."
         features={[
           "Vedere i cantieri assegnati e le relative istruzioni operative.",
           "Registrare gli orari di lavoro (Inizio cantiere, Pause, Fine giornata).",

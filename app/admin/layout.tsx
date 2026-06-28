@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createHash } from 'crypto'
 import { AdminLogoutButton } from './AdminLogoutButton'
-import Link from 'next/link'
-import { Shield, Users, BarChart3, PlusCircle, LayoutDashboard, Mail, Activity } from 'lucide-react'
+import { AdminNav } from '@/components/AdminNav'
+import { Shield } from 'lucide-react'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
@@ -14,16 +14,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!adminCookie || !adminEmail || !adminPassword) redirect('/pannello')
   const expected = createHash('sha256').update(`${adminEmail.trim()}:${adminPassword.trim()}`).digest('hex')
   if (adminCookie.value !== expected) redirect('/pannello')
-
-  const navItems = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/utenti', label: 'Utenti', icon: Users },
-    { href: '/admin/crea-impresa', label: 'Nuova impresa', icon: PlusCircle },
-    { href: '/admin/crea-libero', label: 'Nuovo libero', icon: PlusCircle },
-    { href: '/admin/statistiche', label: 'Statistiche', icon: BarChart3 },
-    { href: '/admin/comunicazioni', label: 'Comunicazioni', icon: Mail },
-    { href: '/admin/log', label: 'Log attività', icon: Activity },
-  ]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,18 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
           </div>
 
-          <div className="flex gap-1 overflow-x-auto pb-2 -mx-1 px-1">
-            {navItems.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium text-purple-200 hover:bg-purple-800 hover:text-white transition-colors"
-              >
-                <Icon size={13} />
-                {label}
-              </Link>
-            ))}
-          </div>
+          <AdminNav />
         </div>
       </nav>
 

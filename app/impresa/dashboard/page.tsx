@@ -191,7 +191,7 @@ export default async function ImpresaDashboardPage() {
       <OnboardingGuida
         role="impresa"
         title="🏗️ Benvenuto nell'Area Direzionale di QUADRO"
-        subtitle="Il centro di controllo operativo della CreCas Impianti S.r.l."
+        subtitle="Il centro di controllo operativo della tua impresa."
         features={[
           "Monitorare in tempo reale lo stato dei cantieri, dei clienti e delle commesse.",
           "Analizzare i costi effettivi di manodopera, materiali e mezzi per ciascun cantiere.",

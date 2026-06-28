@@ -29,7 +29,7 @@ export default async function MagazziniereDashboard() {
       <OnboardingGuida
         role="magazziniere"
         title="📦 Benvenuto nell'Area Magazzino di QUADRO"
-        subtitle="Il pannello per gestire materiali, richieste e giacenze per CreCas Impianti S.r.l."
+        subtitle="Il pannello per gestire materiali, richieste e giacenze per la tua impresa."
         features={[
           "Monitorare in tempo reale le richieste di materiali degli operai.",
           "Prendere in carico e preparare i pacchetti di materiali per le squadre.",

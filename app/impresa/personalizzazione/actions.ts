@@ -10,8 +10,8 @@ export async function getImpresaProfilo() {
   if (!profilo) {
     profilo = await prisma.impresaProfilo.create({
       data: {
-        nomeImpresa: 'CreCas Impianti S.r.l.',
-        settore: 'Termoidraulica ed Elettrica',
+        nomeImpresa: 'La mia impresa',
+        settore: 'Impianti elettrici',
       },
     })
   }
@@ -63,13 +63,13 @@ export async function salvaImpresaProfilo(data: {
 export async function ripristinaDefaultProfilo() {
   await requireImpresa()
   const defaults = {
-    nomeImpresa: 'CreCas Impianti S.r.l.',
-    settore: 'Termoidraulica ed Elettrica',
-    descrizione: 'Da anni leader nel settore dell\'impiantistica civile ed industriale, garantendo qualità, sicurezza ed efficienza energetica.',
-    telefono: '+39 06 1234567',
-    email: 'info@crecasimpianti.it',
-    sitoWeb: 'www.crecasimpianti.it',
-    indirizzo: 'Via Roma, 10 - 00100 Roma (RM)',
+    nomeImpresa: 'La mia impresa',
+    settore: 'Impianti elettrici',
+    descrizione: 'Professionisti nel settore dell\'impiantistica, garantiamo qualità, sicurezza ed efficienza.',
+    telefono: '',
+    email: '',
+    sitoWeb: '',
+    indirizzo: '',
     mascotteAvatar: 'leone',
     colorePrimario: '#0f766e',
     stileCard: 'Classico',

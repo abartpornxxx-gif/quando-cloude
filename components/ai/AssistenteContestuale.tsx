@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Sparkles, X, Send, Bot, ChevronDown } from 'lucide-react'
 
 interface Props {
-  role: 'impresa' | 'ufficio' | 'operaio' | 'magazziniere' | 'cliente'
+  role: 'impresa' | 'ufficio' | 'operaio' | 'magazziniere' | 'cliente' | 'libero'
 }
 
 const SUGGESTIONS: Record<string, string[]> = {
@@ -39,6 +39,12 @@ const SUGGESTIONS: Record<string, string[]> = {
     'Spiega questa variante',
     'Come effettuo un pagamento?',
   ],
+  libero: [
+    'Cosa devo fare oggi?',
+    'Riassumi i miei interventi aperti',
+    'Come creo un preventivo?',
+    'Spiega la situazione clienti',
+  ],
 }
 
 const COLORS = {
@@ -47,6 +53,7 @@ const COLORS = {
   operaio:    { fab: 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200', header: 'bg-emerald-700', user: 'bg-emerald-600', ring: 'ring-emerald-500', dot: 'bg-emerald-500', btn: 'bg-emerald-600 hover:bg-emerald-700', sugg: 'hover:border-emerald-400 hover:text-emerald-700' },
   magazziniere: { fab: 'bg-amber-600 hover:bg-amber-700 shadow-amber-200', header: 'bg-amber-700', user: 'bg-amber-600', ring: 'ring-amber-500', dot: 'bg-amber-500', btn: 'bg-amber-600 hover:bg-amber-700', sugg: 'hover:border-amber-400 hover:text-amber-700' },
   cliente:    { fab: 'bg-violet-600 hover:bg-violet-700 shadow-violet-200', header: 'bg-violet-700', user: 'bg-violet-600', ring: 'ring-violet-500', dot: 'bg-violet-500', btn: 'bg-violet-600 hover:bg-violet-700', sugg: 'hover:border-violet-400 hover:text-violet-700' },
+  libero:     { fab: 'bg-orange-600 hover:bg-orange-700 shadow-orange-200', header: 'bg-orange-700', user: 'bg-orange-600', ring: 'ring-orange-500', dot: 'bg-orange-500', btn: 'bg-orange-600 hover:bg-orange-700', sugg: 'hover:border-orange-400 hover:text-orange-700' },
 }
 
 interface Message {
