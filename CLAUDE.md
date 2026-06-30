@@ -155,7 +155,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Struttura Cantiere Operativa (2026-06-30): CantiereStrutturaNodo, UI /impresa/commesse/[id]/struttura, zone rapportini, AI validator, SQL in struttura-cantiere-schema.sql (da applicare su Supabase).**
+- Fase corrente: **Struttura Cantiere First-Class (2026-06-30): CommessaForm con dropdown tipoStruttura + builder condominio (scale/app/aree comuni/anteprima live), auto-creazione nodi su nuova commessa, tab Struttura first-class in CommessaTabs, lib/cantiere-struttura/genera-struttura.ts (logica condivisa), tipo-struttura-schema.sql (applicato su produzione). 14/14 test OK, build OK, merge su main 2ac52c4.**
 
 ### Nuovi ruoli aggiunti (2026-06-27)
 - **`libero`**: libero professionista. Area `/libero/`. Colori: orange-800 + orange-600. Modelli nuovi: `LiberoProfessionista`, `InterventoLibero`. Migrazione SQL in `libero-schema.sql` (da eseguire su Supabase). Prima login → `/libero/configura` se manca il profilo.
