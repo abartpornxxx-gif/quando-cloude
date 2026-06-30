@@ -112,6 +112,7 @@ model Operaio {
   richiesteMateriale RichiestaMateriale[]
   pushSubscriptions PushSubscription[]
   promemoria        Promemoria[]
+  conteggi          ConteggioCantiere[]
 
   @@map("operai")
 }
@@ -293,6 +294,7 @@ model Commessa {
   richiestePreventiviFornitori RichiestaPreventivoFornitore[]
   richiesteDiCo                RichiestaDiCo[]
   sopralluogo                  Sopralluogo?
+  conteggi                     ConteggioCantiere[]
 
   @@map("commesse")
 }
@@ -1082,6 +1084,70 @@ model ImpresaProfilo {
   updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("impresa_profilo")
+}
+
+// ─── Conteggio Cantiere (Consuntivo lavori) ──────────────────────────────────
+
+enum StatoConteggio {
+  richiesto
+  in_compilazione
+  inviato
+  approvato
+  riaperto
+}
+
+model ConteggioCantiere {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId       String    @map("commessa_id") @db.Uuid
+  commessa         Commessa  @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  operaioId        String?   @map("operaio_id") @db.Uuid
+  operaio          Operaio?  @relation(fields: [operaioId], references: [id], onDelete: SetNull)
+  stato            StatoConteggio @default(richiesto)
+  tipoLavorazione  String?   @map("tipo_lavorazione")
+  serieCivile      String?   @map("serie_civile")
+  placcheMontate   Boolean   @default(false) @map("placche_montate")
+  placcheCalcolate Int       @default(0) @map("placche_calcolate")
+  placcheManuali   Int?      @map("placche_manuali")
+  noteImpresa      String?   @map("note_impresa")
+  noteOperaio      String?   @map("note_operaio")
+  visibileCliente  Boolean   @default(false) @map("visibile_cliente")
+  inviatoAt        DateTime? @map("inviato_at") @db.Timestamptz
+  approvatoAt      DateTime? @map("approvato_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  righe            ConteggioCantiereRiga[]
+  foto             ConteggioCantiereFoto[]
+
+  @@map("conteggi_cantiere")
+}
+
+model ConteggioCantiereRiga {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conteggioId String            @map("conteggio_id") @db.Uuid
+  conteggio   ConteggioCantiere @relation(fields: [conteggioId], references: [id], onDelete: Cascade)
+  categoria   String
+  codice      String?
+  descrizione String
+  quantita    Float             @default(0)
+  unita       String?           @default("pz")
+  note        String?
+  datiExtra   Json?             @map("dati_extra")
+  ordinamento Int               @default(0)
+
+  @@map("conteggio_cantiere_righe")
+}
+
+model ConteggioCantiereFoto {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conteggioId String            @map("conteggio_id") @db.Uuid
+  conteggio   ConteggioCantiere @relation(fields: [conteggioId], references: [id], onDelete: Cascade)
+  url         String
+  path        String
+  descrizione String?
+  categoria   String?
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("conteggio_cantiere_foto")
 }
 
 // ─── Promemoria & Appuntamenti ───────────────────────────────────────────────

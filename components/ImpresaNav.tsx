@@ -33,7 +33,7 @@ const MACRO: MacroEntry[] = [
     iconBg: 'bg-amber-100',
     iconCls: 'text-amber-600',
     dot: 'bg-amber-400',
-    prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/rapportini', '/impresa/pianificazione', '/impresa/tipi-lavoro', '/impresa/giornate', '/impresa/calendario', '/impresa/manutenzioni', '/impresa/promemoria'],
+    prefixes: ['/impresa/commesse', '/impresa/preventivi', '/impresa/rapportini', '/impresa/pianificazione', '/impresa/tipi-lavoro', '/impresa/giornate', '/impresa/calendario', '/impresa/manutenzioni', '/impresa/promemoria', '/impresa/conteggi-cantiere'],
     items: [
       { label: 'Commesse', href: '/impresa/commesse', desc: 'Cantieri aperti' },
       { label: 'Preventivi', href: '/impresa/preventivi', desc: 'Offerte ai clienti' },
@@ -44,6 +44,7 @@ const MACRO: MacroEntry[] = [
       { label: 'Calendario', href: '/impresa/calendario', desc: 'Vista mensile' },
       { label: 'Manutenzioni', href: '/impresa/manutenzioni', desc: 'Controlli periodici' },
       { label: 'Tipi lavoro', href: '/impresa/tipi-lavoro', desc: 'Checklist adempimenti' },
+      { label: 'Conteggi', href: '/impresa/conteggi-cantiere', desc: 'Consuntivo lavori' },
     ],
   },
   {

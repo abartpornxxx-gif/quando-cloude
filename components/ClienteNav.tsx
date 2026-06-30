@@ -9,6 +9,7 @@ const NAV = [
   { label: 'I miei lavori', href: '/cliente/lavori' },
   { label: 'Pagamenti', href: '/cliente/pagamenti' },
   { label: 'Documenti', href: '/cliente/documenti' },
+  { label: 'Conteggi', href: '/cliente/conteggi-cantiere' },
   { label: 'Servizi', href: '/cliente/servizi' },
   { label: 'Manutenzioni', href: '/cliente/manutenzioni' },
   { label: 'Notifiche', href: '/cliente/notifiche' },
