@@ -28,6 +28,11 @@ export async function fetchContextData(role: string, pathname: string, email?: s
             richiestePreventiviFornitori: { include: { fornitore: { select: { nome: true } } } },
             adempimenti: { select: { testo: true, fatto: true, collegamento: true } },
             giornate: { select: { data: true, stato: true }, orderBy: { data: 'desc' }, take: 5 },
+            strutturaNodi: {
+              where: { attivo: true },
+              select: { id: true, tipo: true, nome: true, parentId: true },
+              orderBy: [{ ordinamento: 'asc' }, { nome: 'asc' }],
+            },
           }
         })
         return { commessa }
@@ -46,7 +51,16 @@ export async function fetchContextData(role: string, pathname: string, email?: s
         const giornata = await prisma.giornata.findFirst({
           where: whereClause,
           include: {
-            commessa: { select: { nome: true, indirizzoCantiere: true, istruzioniCantiere: true } },
+            commessa: {
+              select: {
+                nome: true, indirizzoCantiere: true, istruzioniCantiere: true,
+                strutturaNodi: {
+                  where: { attivo: true },
+                  select: { id: true, tipo: true, nome: true, parentId: true },
+                  orderBy: [{ ordinamento: 'asc' }, { nome: 'asc' }],
+                },
+              },
+            },
             rapportino: { select: { lavoroEseguito: true, lavoriExtra: true, noteAttrezzatura: true } },
             materiali: { select: { descrizione: true, quantita: true } },
             ore: { select: { tipo: true, quantita: true } },

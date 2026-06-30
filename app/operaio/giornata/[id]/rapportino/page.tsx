@@ -60,10 +60,17 @@ export default async function RapportinoPage({ params }: Props) {
 
   const attrezzatureUsate = giornata.attrezzatureUsi.map(u => u.attrezzatura)
 
-  const materiali = await prisma.materiale.findMany({
-    orderBy: { descrizione: 'asc' },
-    select: { id: true, descrizione: true, unita: true },
-  })
+  const [materiali, strutturaNodi] = await Promise.all([
+    prisma.materiale.findMany({
+      orderBy: { descrizione: 'asc' },
+      select: { id: true, descrizione: true, unita: true },
+    }),
+    prisma.cantiereStrutturaNodo.findMany({
+      where: { commessaId: giornata.commessaId, attivo: true },
+      orderBy: [{ ordinamento: 'asc' }, { nome: 'asc' }],
+      select: { id: true, tipo: true, nome: true, parentId: true },
+    }),
+  ])
 
   return (
     <div>
@@ -75,6 +82,7 @@ export default async function RapportinoPage({ params }: Props) {
         giornataId={id}
         attrezzatureUsate={attrezzatureUsate}
         materiali={materiali}
+        strutturaNodi={strutturaNodi}
       />
     </div>
   )
