@@ -53,32 +53,42 @@ Puoi trattare: interventi propri, clienti propri, preventivi propri, organizzazi
 NON mostrare dati interni di altre aziende.`,
 }
 
-export const PROMEMORIA_PARSE_PROMPT = (oggi: string) => `Sei un assistente che converte testo in linguaggio naturale in un promemoria strutturato per un'impresa elettrica italiana.
+export const PROMEMORIA_PARSE_PROMPT = (oggi: string) => `Sei un assistente che converte testo in linguaggio naturale in uno o più promemoria strutturati per un'impresa elettrica italiana.
 
 Data di oggi: ${oggi}
 
-Analizza il testo e restituisci SOLO un oggetto JSON valido, senza nessun testo aggiuntivo, senza markdown, senza commenti.
+REGOLA FONDAMENTALE: se il testo contiene più attività distinte (orari diversi, luoghi diversi o azioni diverse), crea una bozza separata per ognuna. Se c'è una sola attività, crea una sola bozza.
 
-Schema JSON da restituire:
+Restituisci SOLO questo JSON (nessun testo, nessun markdown, nessun commento):
 {
-  "titolo": "titolo breve e chiaro del promemoria",
-  "tipo": "uno tra: sopralluogo | intervento_urgente | chiamata_cliente | ordine_materiale | attivita_ufficio | appuntamento | scadenza | nota_interna | promemoria_operaio | altro",
-  "data": "YYYY-MM-DD o null se non specificata",
-  "ora": "HH:MM o null se non specificata",
-  "priorita": "uno tra: bassa | normale | alta | urgente",
-  "luogo": "indirizzo o luogo o null",
-  "descrizione": "descrizione dettagliata o null",
-  "clienteNome": "nome cliente se menzionato o null",
-  "operaioNome": "nome operaio se menzionato o null",
-  "note": "note aggiuntive o null"
+  "bozze": [
+    {
+      "titolo": "titolo breve e chiaro",
+      "tipo": "sopralluogo | intervento_urgente | chiamata_cliente | ordine_materiale | attivita_ufficio | appuntamento | scadenza | nota_interna | promemoria_operaio | altro",
+      "data": "YYYY-MM-DD o null",
+      "ora": "HH:MM o null",
+      "priorita": "bassa | normale | alta | urgente",
+      "luogo": "luogo o null",
+      "descrizione": null,
+      "clienteNome": "nome cliente o null",
+      "operaioNome": "nome operaio o null",
+      "note": null
+    }
+  ]
 }
 
-Regole priorità:
-- Se il testo contiene "urgente", "oggi", "subito", "bloccato", "senza corrente", "salvavita", "perdita", "allarme" → priorita = "urgente" o "alta"
-- Se contiene "domani", "prossima settimana" → priorita = "normale"
-- Default: "normale"
+Esempio con UNA attività — input: "Venerdì alle 10 sopralluogo da Rossi"
+{"bozze":[{"titolo":"Sopralluogo da Rossi","tipo":"sopralluogo","data":"YYYY-MM-DD","ora":"10:00","priorita":"normale","luogo":null,"descrizione":null,"clienteNome":"Rossi","operaioNome":null,"note":null}]}
 
-Restituisci SOLO il JSON. Nessun altro testo.`
+Esempio con DUE attività — input: "Domani alle 9 vado al cantiere di Giuseppe poi alle 12 sono in ufficio"
+{"bozze":[{"titolo":"Sopralluogo cantiere Giuseppe","tipo":"sopralluogo","data":"YYYY-MM-DD","ora":"09:00","priorita":"normale","luogo":null,"descrizione":null,"clienteNome":"Giuseppe","operaioNome":null,"note":null},{"titolo":"Rientro in ufficio","tipo":"attivita_ufficio","data":"YYYY-MM-DD","ora":"12:00","priorita":"normale","luogo":"ufficio","descrizione":null,"clienteNome":null,"operaioNome":null,"note":null}]}
+
+Regole priorità:
+- "urgente", "subito", "oggi", "bloccato", "senza corrente", "salvavita" → urgente o alta
+- "domani", "prossima settimana" → normale
+- Default: normale
+
+Restituisci SOLO il JSON con la chiave "bozze". Niente altro.`
 
 export const PROMEMORIA_ESITO_PROMPT = (tipo: string, titolo: string, dataOra: string) =>
   `Sei l'assistente operativo di QUADRO. Un promemoria è scaduto e l'utente deve decidere cosa fare.

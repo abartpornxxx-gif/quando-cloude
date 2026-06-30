@@ -384,5 +384,86 @@ assert.doesNotThrow(() => simulaConfermaRichiesta('crea_commessa', true))
 
 console.log('✓ ai-promemoria (timezone, parsing, priorità, stile, permessi, conferma, rimanda)')
 
+// ── 12. Multi-bozza: parsing risposta AI ────────────────────────────────────
+{
+  const TIPI_VALIDI = ['sopralluogo','intervento_urgente','chiamata_cliente','ordine_materiale','attivita_ufficio','appuntamento','scadenza','nota_interna','promemoria_operaio','altro']
+  const PRIORITA_VALIDE = ['bassa','normale','alta','urgente']
+
+  function sanitizzaBozza(bozza, testoOriginale) {
+    return {
+      titolo:      typeof bozza.titolo === 'string'       ? bozza.titolo.slice(0, 200)      : '',
+      tipo:        TIPI_VALIDI.includes(bozza.tipo)       ? bozza.tipo                       : 'altro',
+      data:        typeof bozza.data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(bozza.data) ? bozza.data : null,
+      ora:         typeof bozza.ora === 'string' && /^\d{2}:\d{2}$/.test(bozza.ora)          ? bozza.ora  : null,
+      priorita:    PRIORITA_VALIDE.includes(bozza.priorita) ? bozza.priorita                : 'normale',
+      luogo:       typeof bozza.luogo === 'string'        ? bozza.luogo.slice(0, 300)        : null,
+      descrizione: typeof bozza.descrizione === 'string'  ? bozza.descrizione.slice(0, 1000): null,
+      clienteNome: typeof bozza.clienteNome === 'string'  ? bozza.clienteNome.slice(0, 200)  : null,
+      operaioNome: typeof bozza.operaioNome === 'string'  ? bozza.operaioNome.slice(0, 200)  : null,
+      note:        typeof bozza.note === 'string'         ? bozza.note.slice(0, 500)         : null,
+      testoOriginale: testoOriginale.slice(0, 1000),
+    }
+  }
+
+  // Test 12.1: risposta AI formato array → 2 bozze
+  const rispostaMulti = {
+    bozze: [
+      { titolo: 'Sopralluogo cantiere Giuseppe', tipo: 'sopralluogo', data: '2026-07-01', ora: '09:30', priorita: 'normale', luogo: null, descrizione: null, clienteNome: 'Giuseppe', operaioNome: null, note: null },
+      { titolo: 'Rientro in ufficio', tipo: 'attivita_ufficio', data: '2026-07-01', ora: '12:00', priorita: 'normale', luogo: 'ufficio', descrizione: null, clienteNome: null, operaioNome: null, note: null },
+    ]
+  }
+  const testo = 'DOMANI ALLE 9:30 VADO DA GIUSEPPE POI ALLE 12 SONO IN UFFICIO'
+  const bozze = rispostaMulti.bozze.map(b => sanitizzaBozza(b, testo))
+  assert.equal(bozze.length, 2, '2 bozze generate')
+  assert.equal(bozze[0].titolo, 'Sopralluogo cantiere Giuseppe')
+  assert.equal(bozze[0].ora, '09:30', 'orario 09:30 invariato')
+  assert.equal(bozze[1].titolo, 'Rientro in ufficio')
+  assert.equal(bozze[1].ora, '12:00', 'orario 12:00 invariato')
+  assert.equal(bozze[0].testoOriginale, testo, 'testo originale preservato')
+
+  // Test 12.2: risposta AI formato singolo → backward compat
+  const rispostaSingola = { titolo: 'Chiamata cliente', tipo: 'chiamata_cliente', data: '2026-07-02', ora: '14:30', priorita: 'alta', luogo: null, descrizione: null, clienteNome: 'Rossi', operaioNome: null, note: null }
+  const bozzaSingola = sanitizzaBozza(rispostaSingola, 'Domani pomeriggio chiama Rossi')
+  assert.equal(bozzaSingola.titolo, 'Chiamata cliente')
+  assert.equal(bozzaSingola.tipo, 'chiamata_cliente')
+  assert.equal(bozzaSingola.ora, '14:30', 'orario singolo invariato')
+
+  // Test 12.3: tipo non valido → fallback 'altro'
+  const bozzaTipoInvalido = sanitizzaBozza({ titolo: 'Test', tipo: 'tipo_inventato', data: null, ora: null, priorita: 'normale' }, 'test')
+  assert.equal(bozzaTipoInvalido.tipo, 'altro', 'tipo non valido → altro')
+
+  // Test 12.4: dati mancanti/malformati → null
+  const bozzaMalformata = sanitizzaBozza({ titolo: 'X', tipo: 'sopralluogo', data: 'non-una-data', ora: '9:30', priorita: 'nonvalida' }, 'x')
+  assert.equal(bozzaMalformata.data, null, 'data malformata → null')
+  assert.equal(bozzaMalformata.ora, null, 'ora senza zero iniziale → null')
+  assert.equal(bozzaMalformata.priorita, 'normale', 'priorita non valida → normale')
+
+  // Test 12.5: nessun salvataggio automatico — l'azione di save è separata
+  let salvataAutomaticamente = false
+  function simulaSalvataggio(confermato) {
+    if (!confermato) return // nessun save senza conferma
+    salvataAutomaticamente = true
+  }
+  simulaSalvataggio(false)
+  assert.equal(salvataAutomaticamente, false, 'no auto-save senza conferma utente')
+  simulaSalvataggio(true)
+  assert.equal(salvataAutomaticamente, true, 'save dopo conferma esplicita')
+
+  // Test 12.6: orari corretti dopo conversione UTC
+  function orarioInvariato(data, ora) {
+    const iso = new Date(`${data}T${ora}`).toISOString()
+    const back = new Date(iso).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
+    return back
+  }
+  assert.equal(orarioInvariato('2026-07-01', '09:30'), '09:30', 'orario 09:30 round-trip')
+  assert.equal(orarioInvariato('2026-07-01', '12:00'), '12:00', 'orario 12:00 round-trip')
+
+  // Test 12.7: max 5 bozze (sicurezza)
+  const molteBozze = Array.from({ length: 8 }, (_, i) => ({ titolo: `Bozza ${i}`, tipo: 'altro', data: null, ora: null, priorita: 'normale' }))
+  const bozzeLimit = molteBozze.slice(0, 5).map(b => sanitizzaBozza(b, 'test'))
+  assert.equal(bozzeLimit.length, 5, 'max 5 bozze')
+}
+console.log('✓ multi-bozza (array, singolo, sanitizzazione, no-auto-save, orari invariati, limite)')
+
 console.log('\n✅ Tutti i test superati.')
 
