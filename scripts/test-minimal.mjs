@@ -195,5 +195,65 @@ const ITALY_CEST_OFFSET = -120
 
 console.log('✓ promemoria orario timezone (no +2h, no arrotondamento)')
 
+// ── 10. ConteggioCantiere — logica placche e quantità ────────────────────────
+
+function calcolaPlaccheTest(qty) {
+  const SUP_503 = qty['SUP_503'] ?? 0
+  const SUP_504 = qty['SUP_504'] ?? 0
+  const SUP_506 = qty['SUP_506'] ?? 0
+  return SUP_503 + SUP_504 + SUP_506
+}
+
+// Test 10.1: calcolo placche da supporti
+assert.equal(calcolaPlaccheTest({ SUP_503: 20, SUP_504: 3, SUP_506: 2 }), 25, 'placche: 20+3+2=25')
+assert.equal(calcolaPlaccheTest({ SUP_503: 0, SUP_504: 0, SUP_506: 0 }), 0, 'placche: zero')
+assert.equal(calcolaPlaccheTest({ SUP_503: 10 }), 10, 'placche: solo 503')
+assert.equal(calcolaPlaccheTest({}), 0, 'placche: map vuota = 0')
+
+// Test 10.2: incremento/decremento quantità con floor a 0
+function incr(qty, codice) { return { ...qty, [codice]: (qty[codice] ?? 0) + 1 } }
+function decr(qty, codice) { return { ...qty, [codice]: Math.max(0, (qty[codice] ?? 0) - 1) } }
+
+{
+  let q = {}
+  q = incr(q, 'FRU_01')
+  assert.equal(q['FRU_01'], 1, '+1 da zero = 1')
+  q = incr(q, 'FRU_01')
+  assert.equal(q['FRU_01'], 2, '+1 = 2')
+  q = decr(q, 'FRU_01')
+  assert.equal(q['FRU_01'], 1, '-1 = 1')
+  q = decr(q, 'FRU_01')
+  assert.equal(q['FRU_01'], 0, '-1 = 0')
+  q = decr(q, 'FRU_01')
+  assert.equal(q['FRU_01'], 0, '-1 da zero resta 0 (no negativi)')
+}
+
+// Test 10.3: transizioni di stato
+const TRANSIZIONI_VALIDE = {
+  richiesto: ['in_compilazione'],
+  in_compilazione: ['inviato'],
+  inviato: ['approvato', 'riaperto'],
+  approvato: ['riaperto'],
+  riaperto: ['in_compilazione'],
+}
+function puoTransire(statoCorrente, nuovoStato) {
+  return (TRANSIZIONI_VALIDE[statoCorrente] ?? []).includes(nuovoStato)
+}
+
+assert.ok(puoTransire('inviato', 'approvato'), 'inviato → approvato OK')
+assert.ok(puoTransire('approvato', 'riaperto'), 'approvato → riaperto OK')
+assert.ok(!puoTransire('richiesto', 'approvato'), 'richiesto → approvato NON OK')
+assert.ok(!puoTransire('approvato', 'inviato'), 'approvato → inviato NON OK (no regressione)')
+
+// Test 10.4: visibile_cliente solo se approvato
+function puoMostrareAlCliente(stato, visibileCliente) {
+  return stato === 'approvato' && visibileCliente === true
+}
+assert.ok(puoMostrareAlCliente('approvato', true))
+assert.ok(!puoMostrareAlCliente('inviato', true))
+assert.ok(!puoMostrareAlCliente('approvato', false))
+
+console.log('✓ conteggio-cantiere (placche, qty, stati, visibilità cliente)')
+
 console.log('\n✅ Tutti i test superati.')
 
