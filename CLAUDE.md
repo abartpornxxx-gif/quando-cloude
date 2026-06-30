@@ -155,7 +155,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Espansione SaaS (2026-06-27): Super Admin Panel (/admin/), Portale Libero Professionista (/libero/), piano multi-tenancy.**
+- Fase corrente: **Struttura Cantiere Operativa (2026-06-30): CantiereStrutturaNodo, UI /impresa/commesse/[id]/struttura, zone rapportini, AI validator, SQL in struttura-cantiere-schema.sql (da applicare su Supabase).**
 
 ### Nuovi ruoli aggiunti (2026-06-27)
 - **`libero`**: libero professionista. Area `/libero/`. Colori: orange-800 + orange-600. Modelli nuovi: `LiberoProfessionista`, `InterventoLibero`. Migrazione SQL in `libero-schema.sql` (da eseguire su Supabase). Prima login → `/libero/configura` se manca il profilo.
