@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Sparkles, Send, X, ChevronDown, ChevronUp, Calendar, Clock, MapPin, User, Building2, AlertCircle, Check } from 'lucide-react'
+import { Sparkles, X, ChevronDown, ChevronUp, Calendar, Clock, MapPin, User, Building2, AlertCircle, Check } from 'lucide-react'
 import { creaPromemoriaAI } from '@/app/ufficio/promemoria/actions'
 
 type OperaioDD = { id: string; nome: string }
@@ -20,6 +20,21 @@ interface Bozza {
   operaioNome: string | null
   note: string | null
   testoOriginale: string
+}
+
+interface BozzaStato {
+  uid: string
+  raw: Bozza
+  titolo: string
+  data: string
+  ora: string
+  luogo: string
+  descrizione: string
+  priorita: string
+  tipo: string
+  operaioId: string
+  clienteId: string
+  commessaId: string
 }
 
 const ESEMPI = [
@@ -53,51 +68,45 @@ export function AssistentePromemoria({ operai, clienti, commesse, onSalvato, acc
   const [aperto, setAperto] = useState(false)
   const [testo, setTesto] = useState('')
   const [loading, setLoading] = useState(false)
-  const [bozza, setBozza] = useState<Bozza | null>(null)
+  const [bozzeStato, setBozzeStato] = useState<BozzaStato[]>([])
   const [errore, setErrore] = useState('')
   const [pending, startTransition] = useTransition()
   const [salvato, setSalvato] = useState(false)
+  const [salvateCount, setSalvateCount] = useState(0)
 
-  // Campi modificabili della bozza
-  const [bTitolo, setBTitolo] = useState('')
-  const [bData, setBData] = useState('')
-  const [bOra, setBOra] = useState('')
-  const [bLuogo, setBLuogo] = useState('')
-  const [bDescrizione, setBDescrizione] = useState('')
-  const [bPriorita, setBPriorita] = useState('normale')
-  const [bTipo, setBTipo] = useState('altro')
-  const [bOperaioId, setBOperaioId] = useState('')
-  const [bClienteId, setBClienteId] = useState('')
-  const [bCommessaId, setBCommessaId] = useState('')
+  function inizializzaBozza(b: Bozza, uid: string): BozzaStato {
+    const operaioId = b.operaioNome
+      ? (operai.find(o => o.nome.toLowerCase().includes(b.operaioNome!.toLowerCase()))?.id || '')
+      : ''
+    const clienteId = b.clienteNome
+      ? (clienti.find(c => c.nome.toLowerCase().includes(b.clienteNome!.toLowerCase()))?.id || '')
+      : ''
+    return {
+      uid, raw: b,
+      titolo: b.titolo || '',
+      data: b.data || '',
+      ora: b.ora || '',
+      luogo: b.luogo || '',
+      descrizione: b.descrizione || b.note || '',
+      priorita: b.priorita || 'normale',
+      tipo: b.tipo || 'altro',
+      operaioId, clienteId, commessaId: '',
+    }
+  }
 
-  function applicaBozza(b: Bozza) {
-    setBozza(b)
-    setBTitolo(b.titolo || '')
-    setBData(b.data || '')
-    setBOra(b.ora || '')
-    setBLuogo(b.luogo || '')
-    setBDescrizione(b.descrizione || '')
-    setBPriorita(b.priorita || 'normale')
-    setBTipo(b.tipo || 'altro')
-    setBOperaioId('')
-    setBClienteId('')
-    setBCommessaId('')
-    // Prova a trovare il cliente per nome
-    if (b.clienteNome) {
-      const trovato = clienti.find(c => c.nome.toLowerCase().includes(b.clienteNome!.toLowerCase()))
-      if (trovato) setBClienteId(trovato.id)
-    }
-    if (b.operaioNome) {
-      const trovato = operai.find(o => o.nome.toLowerCase().includes(b.operaioNome!.toLowerCase()))
-      if (trovato) setBOperaioId(trovato.id)
-    }
+  function updateBozza(uid: string, patch: Partial<BozzaStato>) {
+    setBozzeStato(prev => prev.map(b => b.uid === uid ? { ...b, ...patch } : b))
+  }
+
+  function removeBozza(uid: string) {
+    setBozzeStato(prev => prev.filter(b => b.uid !== uid))
   }
 
   async function handlePrepara() {
     if (!testo.trim()) return
     setLoading(true)
     setErrore('')
-    setBozza(null)
+    setBozzeStato([])
 
     try {
       const res = await fetch('/api/ai/promemoria/parse', {
@@ -107,8 +116,10 @@ export function AssistentePromemoria({ operai, clienti, commesse, onSalvato, acc
       })
       const data = await res.json()
 
-      if (data.bozza) {
-        applicaBozza(data.bozza)
+      if (data.bozze && Array.isArray(data.bozze) && data.bozze.length > 0) {
+        setBozzeStato(data.bozze.map((b: Bozza, i: number) =>
+          inizializzaBozza(b, `b-${i}-${Date.now()}`)
+        ))
       } else {
         setErrore(data.error || 'Non sono riuscito a interpretare il testo. Prova a essere più specifico.')
       }
@@ -119,41 +130,74 @@ export function AssistentePromemoria({ operai, clienti, commesse, onSalvato, acc
     }
   }
 
-  function handleConferma() {
-    if (!bTitolo.trim() || !bData || !bOra) return
+  async function salvaUnaBozza(b: BozzaStato) {
+    const dataOraLocal = `${b.data}T${b.ora}`
+    const dataOraUTC = new Date(dataOraLocal).toISOString()
+    await creaPromemoriaAI({
+      titolo:              b.titolo.trim(),
+      descrizione:         b.descrizione || undefined,
+      luogo:               b.luogo || undefined,
+      dataOra:             dataOraUTC,
+      assegnatoAOperaioId: b.operaioId || undefined,
+      perImpresa:          !b.operaioId,
+      priorita:            b.priorita,
+      clienteId:           b.clienteId || undefined,
+      commessaId:          b.commessaId || undefined,
+      tipo:                b.tipo,
+      origineAi:           true,
+      testoOriginaleAi:    testo || b.raw.testoOriginale,
+    })
+  }
+
+  function handleConfermaTowards() {
     startTransition(async () => {
-      try {
-        const dataOraLocal = `${bData}T${bOra}`
-        const dataOraUTC = new Date(dataOraLocal).toISOString()
-
-        await creaPromemoriaAI({
-          titolo:              bTitolo.trim(),
-          descrizione:         bDescrizione || undefined,
-          luogo:               bLuogo || undefined,
-          dataOra:             dataOraUTC,
-          assegnatoAOperaioId: bOperaioId || undefined,
-          perImpresa:          !bOperaioId,
-          priorita:            bPriorita,
-          clienteId:           bClienteId || undefined,
-          commessaId:          bCommessaId || undefined,
-          tipo:                bTipo,
-          origineAi:           true,
-          testoOriginaleAi:    bozza?.testoOriginale || testo,
-        })
-
+      const valide = bozzeStato.filter(b => b.titolo.trim() && b.data && b.ora)
+      if (valide.length === 0) {
+        setErrore('Compila almeno titolo, data e ora prima di salvare.')
+        return
+      }
+      let count = 0
+      for (const b of valide) {
+        try { await salvaUnaBozza(b); count++ } catch { /* skip */ }
+      }
+      if (count > 0) {
+        setSalvateCount(count)
         setSalvato(true)
-        setBozza(null)
+        setBozzeStato([])
         setTesto('')
         onSalvato()
-        setTimeout(() => { setSalvato(false); setAperto(false) }, 2000)
-      } catch (err) {
+        setTimeout(() => { setSalvato(false); setAperto(false) }, 2500)
+      } else {
+        setErrore('Errore nel salvataggio. Riprova.')
+      }
+    })
+  }
+
+  function handleConfermaUna(uid: string) {
+    const b = bozzeStato.find(x => x.uid === uid)
+    if (!b || !b.titolo.trim() || !b.data || !b.ora) return
+    startTransition(async () => {
+      try {
+        await salvaUnaBozza(b)
+        onSalvato()
+        const restanti = bozzeStato.filter(x => x.uid !== uid)
+        if (restanti.length === 0) {
+          setSalvateCount(1)
+          setSalvato(true)
+          setTesto('')
+          setBozzeStato([])
+          setTimeout(() => { setSalvato(false); setAperto(false) }, 2000)
+        } else {
+          setBozzeStato(restanti)
+        }
+      } catch {
         setErrore('Errore nel salvataggio. Riprova.')
       }
     })
   }
 
   function handleAnnulla() {
-    setBozza(null)
+    setBozzeStato([])
     setErrore('')
   }
 
@@ -162,7 +206,6 @@ export function AssistentePromemoria({ operai, clienti, commesse, onSalvato, acc
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden mb-5">
-      {/* Header collapsible */}
       <button
         onClick={() => setAperto(v => !v)}
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-gray-50 transition-colors"
@@ -182,13 +225,14 @@ export function AssistentePromemoria({ operai, clienti, commesse, onSalvato, acc
           {salvato && (
             <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
               <Check size={16} className="text-emerald-600 shrink-0" />
-              <p className="text-sm font-semibold text-emerald-800">Promemoria salvato.</p>
+              <p className="text-sm font-semibold text-emerald-800">
+                {salvateCount > 1 ? `${salvateCount} promemoria salvati.` : 'Promemoria salvato.'}
+              </p>
             </div>
           )}
 
-          {!bozza && (
+          {bozzeStato.length === 0 && (
             <>
-              {/* Esempi rapidi */}
               <div>
                 <p className={labelClass}>Esempi rapidi</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -204,14 +248,13 @@ export function AssistentePromemoria({ operai, clienti, commesse, onSalvato, acc
                 </div>
               </div>
 
-              {/* Input testo */}
               <div>
                 <label className={labelClass}>Descrivi cosa vuoi ricordare</label>
                 <textarea
                   value={testo}
                   onChange={e => setTesto(e.target.value)}
                   rows={3}
-                  placeholder="Es: Domani alle 9 sopralluogo da Mario Rossi a Casoria…"
+                  placeholder="Es: Domani alle 9 sopralluogo da Mario Rossi, poi alle 14 chiamare il fornitore…"
                   className={`${inputClass} resize-none`}
                   onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handlePrepara() }}
                 />
@@ -235,86 +278,141 @@ export function AssistentePromemoria({ operai, clienti, commesse, onSalvato, acc
             </>
           )}
 
-          {/* Bozza modificabile */}
-          {bozza && (
+          {bozzeStato.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-100 px-3 py-2">
-                <Sparkles size={13} className="text-blue-500 shrink-0" />
-                <p className="text-xs text-blue-700 flex-1">Bozza generata dall'AI. Controlla e modifica prima di salvare.</p>
-                <button onClick={handleAnnulla} className="text-blue-400 hover:text-blue-600">
-                  <X size={14} />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={13} className="text-blue-500" />
+                  <p className="text-xs font-semibold text-blue-700">
+                    {bozzeStato.length === 1
+                      ? '1 promemoria trovato — controlla e modifica'
+                      : `${bozzeStato.length} promemoria trovati — controlla e modifica`}
+                  </p>
+                </div>
+                <button onClick={handleAnnulla} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                  Annulla
                 </button>
               </div>
 
-              {/* Badge tipo + priorità */}
-              <div className="flex gap-2 flex-wrap">
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-                  {LABEL_TIPO[bTipo] || bTipo}
-                </span>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${COLOR_PRIORITA[bPriorita] || COLOR_PRIORITA.normale}`}>
-                  {bPriorita.charAt(0).toUpperCase() + bPriorita.slice(1)}
-                </span>
-              </div>
+              {bozzeStato.map((b, i) => (
+                <div key={b.uid} className="rounded-xl border border-blue-100 bg-blue-50/30 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    {bozzeStato.length > 1 && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[10px] font-bold shrink-0">
+                        {i + 1}
+                      </span>
+                    )}
+                    <div className="flex gap-2 flex-1 flex-wrap">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                        {LABEL_TIPO[b.tipo] || b.tipo}
+                      </span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${COLOR_PRIORITA[b.priorita] || COLOR_PRIORITA.normale}`}>
+                        {b.priorita.charAt(0).toUpperCase() + b.priorita.slice(1)}
+                      </span>
+                    </div>
+                    <button onClick={() => removeBozza(b.uid)} className="text-gray-400 hover:text-red-500 transition-colors shrink-0">
+                      <X size={14} />
+                    </button>
+                  </div>
 
-              <div>
-                <label className={labelClass}>Titolo *</label>
-                <input value={bTitolo} onChange={e => setBTitolo(e.target.value)} className={inputClass} required />
-              </div>
+                  <div>
+                    <label className={labelClass}>Titolo *</label>
+                    <input
+                      value={b.titolo}
+                      onChange={e => updateBozza(b.uid, { titolo: e.target.value })}
+                      className={inputClass}
+                      required
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={`${labelClass} flex items-center gap-1`}><Calendar size={9} /> Data *</label>
-                  <input type="date" value={bData} onChange={e => setBData(e.target.value)} className={inputClass} required />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={`${labelClass} flex items-center gap-1`}><Calendar size={9} /> Data *</label>
+                      <input
+                        type="date"
+                        value={b.data}
+                        onChange={e => updateBozza(b.uid, { data: e.target.value })}
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={`${labelClass} flex items-center gap-1`}><Clock size={9} /> Ora *</label>
+                      <input
+                        type="time"
+                        value={b.ora}
+                        onChange={e => updateBozza(b.uid, { ora: e.target.value })}
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={`${labelClass} flex items-center gap-1`}><MapPin size={9} /> Luogo</label>
+                    <input
+                      value={b.luogo}
+                      onChange={e => updateBozza(b.uid, { luogo: e.target.value })}
+                      placeholder="Indirizzo o luogo"
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Note</label>
+                    <textarea
+                      value={b.descrizione}
+                      onChange={e => updateBozza(b.uid, { descrizione: e.target.value })}
+                      rows={2}
+                      className={`${inputClass} resize-none`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`${labelClass} flex items-center gap-1`}><User size={9} /> Assegna a operaio</label>
+                    <select value={b.operaioId} onChange={e => updateBozza(b.uid, { operaioId: e.target.value })} className={inputClass}>
+                      <option value="">— Solo impresa/ufficio —</option>
+                      {operai.map(o => <option key={o.id} value={o.id}>{o.nome}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={`${labelClass} flex items-center gap-1`}><User size={9} /> Cliente collegato</label>
+                    <select value={b.clienteId} onChange={e => updateBozza(b.uid, { clienteId: e.target.value })} className={inputClass}>
+                      <option value="">— Nessuno —</option>
+                      {clienti.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={`${labelClass} flex items-center gap-1`}><Building2 size={9} /> Commessa collegata</label>
+                    <select value={b.commessaId} onChange={e => updateBozza(b.uid, { commessaId: e.target.value })} className={inputClass}>
+                      <option value="">— Nessuna —</option>
+                      {commesse.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Priorità</label>
+                    <select value={b.priorita} onChange={e => updateBozza(b.uid, { priorita: e.target.value })} className={inputClass}>
+                      <option value="bassa">Bassa</option>
+                      <option value="normale">Normale</option>
+                      <option value="alta">Alta</option>
+                      <option value="urgente">Urgente</option>
+                    </select>
+                  </div>
+
+                  {bozzeStato.length > 1 && (
+                    <button
+                      onClick={() => handleConfermaUna(b.uid)}
+                      disabled={!b.titolo.trim() || !b.data || !b.ora || pending}
+                      className="w-full text-xs py-1.5 rounded-xl border border-blue-300 text-blue-700 hover:bg-blue-100 font-medium transition-colors disabled:opacity-40"
+                    >
+                      Salva solo questo
+                    </button>
+                  )}
                 </div>
-                <div>
-                  <label className={`${labelClass} flex items-center gap-1`}><Clock size={9} /> Ora *</label>
-                  <input type="time" value={bOra} onChange={e => setBOra(e.target.value)} className={inputClass} required />
-                </div>
-              </div>
-
-              <div>
-                <label className={`${labelClass} flex items-center gap-1`}><MapPin size={9} /> Luogo</label>
-                <input value={bLuogo} onChange={e => setBLuogo(e.target.value)} placeholder="Indirizzo o luogo" className={inputClass} />
-              </div>
-
-              <div>
-                <label className={labelClass}>Note</label>
-                <textarea value={bDescrizione} onChange={e => setBDescrizione(e.target.value)} rows={2} className={`${inputClass} resize-none`} />
-              </div>
-
-              <div>
-                <label className={`${labelClass} flex items-center gap-1`}><User size={9} /> Assegna a operaio</label>
-                <select value={bOperaioId} onChange={e => setBOperaioId(e.target.value)} className={inputClass}>
-                  <option value="">— Solo impresa/ufficio —</option>
-                  {operai.map(o => <option key={o.id} value={o.id}>{o.nome}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className={`${labelClass} flex items-center gap-1`}><User size={9} /> Cliente collegato</label>
-                <select value={bClienteId} onChange={e => setBClienteId(e.target.value)} className={inputClass}>
-                  <option value="">— Nessuno —</option>
-                  {clienti.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className={`${labelClass} flex items-center gap-1`}><Building2 size={9} /> Commessa collegata</label>
-                <select value={bCommessaId} onChange={e => setBCommessaId(e.target.value)} className={inputClass}>
-                  <option value="">— Nessuna —</option>
-                  {commesse.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className={labelClass}>Priorità</label>
-                <select value={bPriorita} onChange={e => setBPriorita(e.target.value)} className={inputClass}>
-                  <option value="bassa">Bassa</option>
-                  <option value="normale">Normale</option>
-                  <option value="alta">Alta</option>
-                  <option value="urgente">Urgente</option>
-                </select>
-              </div>
+              ))}
 
               {errore && (
                 <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-100 px-3 py-2.5">
@@ -331,12 +429,16 @@ export function AssistentePromemoria({ operai, clienti, commesse, onSalvato, acc
                   Annulla
                 </button>
                 <button
-                  onClick={handleConferma}
-                  disabled={!bTitolo.trim() || !bData || !bOra || pending}
+                  onClick={handleConfermaTowards}
+                  disabled={bozzeStato.every(b => !b.titolo.trim() || !b.data || !b.ora) || pending}
                   className={`flex-1 py-2 rounded-xl bg-${accentColor}-600 hover:bg-${accentColor}-700 text-white text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2`}
                 >
                   <Check size={15} />
-                  {pending ? 'Salvataggio…' : 'Conferma e salva'}
+                  {pending
+                    ? 'Salvataggio…'
+                    : bozzeStato.length === 1
+                      ? 'Conferma e salva'
+                      : `Salva tutti (${bozzeStato.length})`}
                 </button>
               </div>
             </div>

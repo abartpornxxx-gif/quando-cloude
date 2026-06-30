@@ -28,8 +28,8 @@ export async function callAI(systemPrompt: string, userMessage: string): Promise
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userMessage },
           ],
-          temperature: 0.7,
-          max_tokens: 1024,
+          temperature: 0.3,
+          max_tokens: 1500,
         }),
       })
 
@@ -37,13 +37,18 @@ export async function callAI(systemPrompt: string, userMessage: string): Promise
         const data = await response.json()
         const text = data?.choices?.[0]?.message?.content
         if (text) return sanitizeMarkdown(text)
+        console.error('[callAI] primary API returned empty content')
+      } else {
+        console.error('[callAI] primary API HTTP error:', response.status)
+        if (response.status === 429) throw new Error('AI_QUOTA_EXCEEDED')
       }
-
-      const status = response.status
-      if (status === 429) throw new Error('AI_QUOTA_EXCEEDED')
-    } catch (err: any) {
-      if (err.message === 'AI_QUOTA_EXCEEDED') throw err
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg === 'AI_QUOTA_EXCEEDED') throw err as Error
+      console.error('[callAI] primary API exception:', msg)
     }
+  } else {
+    console.error('[callAI] no API key configured, falling back to Pollinations')
   }
 
   return callPollinations(systemPrompt, userMessage)
@@ -51,7 +56,7 @@ export async function callAI(systemPrompt: string, userMessage: string): Promise
 
 async function callPollinations(systemPrompt: string, userMessage: string): Promise<string> {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 20000)
+  const timeout = setTimeout(() => controller.abort(), 10000)
 
   try {
     const response = await fetch('https://text.pollinations.ai/', {
@@ -70,12 +75,21 @@ async function callPollinations(systemPrompt: string, userMessage: string): Prom
     })
 
     if (!response.ok) {
+      console.error('[callPollinations] HTTP error:', response.status)
       throw new Error(`POLLINATIONS_ERROR: ${response.status}`)
     }
 
     const text = await response.text()
-    if (!text?.trim()) throw new Error('AI_EMPTY_RESPONSE')
+    if (!text?.trim()) {
+      console.error('[callPollinations] empty response')
+      throw new Error('AI_EMPTY_RESPONSE')
+    }
     return sanitizeMarkdown(text.trim())
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    const name = err instanceof Error ? err.name : ''
+    console.error('[callPollinations] error:', name, msg)
+    throw err
   } finally {
     clearTimeout(timeout)
   }
