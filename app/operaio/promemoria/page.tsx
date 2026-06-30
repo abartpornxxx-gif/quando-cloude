@@ -20,7 +20,7 @@ const TIPO_COLOR: Record<string, string> = {
 }
 
 function formatOra(d: Date) {
-  return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
 }
 
 interface PromemoriaCardProps {

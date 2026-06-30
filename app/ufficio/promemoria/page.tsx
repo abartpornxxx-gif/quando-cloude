@@ -97,7 +97,9 @@ export default function PromemoriaPage() {
           titolo: form.titolo.trim(),
           descrizione: form.descrizione || undefined,
           luogo: form.luogo || undefined,
-          dataOra: form.dataOra,
+          // Interpreta la stringa datetime-local come orario locale del browser (Italy),
+          // converte in UTC ISO prima di inviare al server (che gira in UTC su Vercel).
+          dataOra: new Date(form.dataOra).toISOString(),
           assegnatoAOperaioId: form.assegnatoAOperaioId || undefined,
           perImpresa: !form.assegnatoAOperaioId,
           importante: form.importante,

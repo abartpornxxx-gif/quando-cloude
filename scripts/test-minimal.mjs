@@ -119,5 +119,81 @@ assert.ok(!isMascotteColorUnique(occupied, 'leone', 'giallo')) // Occupata
 assert.ok(!isMascotteColorUnique(occupied, 'volpe', 'verde')) // Occupata
 console.log('✓ unicità mascotte + colore')
 
+// ── 9. Promemoria — orario timezone (bug fix: +2h) ─────────────────────────
+// Simula la stessa logica del browser Italy (UTC+2 estate, CEST)
+// Il browser invia new Date("2024-06-30T12:16").toISOString() prima della server action.
+// Sul server Vercel (UTC), new Date("2024-06-30T12:16:00.000Z") = UTC 10:16.
+// Il client (Italy) mostra toLocaleTimeString('it-IT', {timeZone:'Europe/Rome'}) = 12:16.
+
+function simulaStoragePromemoriaFromBrowser(localDateTimeStr, browserOffsetMinutes) {
+  // Simula: browser interpreta stringa locale, converte in UTC ISO
+  // localDateTimeStr: "2024-06-30T12:16" (orario Italy)
+  // browserOffsetMinutes: JS getTimezoneOffset() — negativo per UTC+ (Italy CEST = -120)
+  // Formula: UTC = local + (offsetMinutes * 60000)
+  // Esempio Italy CEST: UTC = 12:16 + (-120 * 60000) = 12:16 - 7200000ms = 10:16 UTC ✓
+  const [datePart, timePart] = localDateTimeStr.split('T')
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hour, minute] = timePart.split(':').map(Number)
+  const utcMs = Date.UTC(year, month - 1, day, hour, minute) + (browserOffsetMinutes * 60000)
+  return new Date(utcMs)
+}
+
+function visualizzaOraItaly(utcDate) {
+  return utcDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
+}
+
+// Italy estate = CEST = UTC+2 → browserOffset = -120
+const ITALY_CEST_OFFSET = -120
+
+// Test 1: 12:16 Italy → salva UTC → visualizza 12:16
+{
+  const utc = simulaStoragePromemoriaFromBrowser('2024-06-30T12:16', ITALY_CEST_OFFSET)
+  const ora = visualizzaOraItaly(utc)
+  assert.equal(ora, '12:16', `Atteso 12:16, ottenuto ${ora}`)
+}
+
+// Test 2: 08:30 Italy → salva UTC → visualizza 08:30
+{
+  const utc = simulaStoragePromemoriaFromBrowser('2024-06-30T08:30', ITALY_CEST_OFFSET)
+  const ora = visualizzaOraItaly(utc)
+  assert.equal(ora, '08:30', `Atteso 08:30, ottenuto ${ora}`)
+}
+
+// Test 3: 23:45 Italy → salva UTC → visualizza 23:45
+{
+  const utc = simulaStoragePromemoriaFromBrowser('2024-06-30T23:45', ITALY_CEST_OFFSET)
+  const ora = visualizzaOraItaly(utc)
+  assert.equal(ora, '23:45', `Atteso 23:45, ottenuto ${ora}`)
+}
+
+// Test 4: modifica da 12:16 a 13:20 → visualizza 13:20
+{
+  const utc = simulaStoragePromemoriaFromBrowser('2024-06-30T13:20', ITALY_CEST_OFFSET)
+  const ora = visualizzaOraItaly(utc)
+  assert.equal(ora, '13:20', `Atteso 13:20, ottenuto ${ora}`)
+}
+
+// Test 5: Nessun +2 ore — conferma che il vecchio bug (storare UTC diretto) dava +2h
+{
+  // BUG vecchio: server riceveva "12:16" senza TZ, lo interpretava come UTC 12:16
+  const utcOldBug = new Date('2024-06-30T12:16:00.000Z') // UTC 12:16
+  const oraVecchia = visualizzaOraItaly(utcOldBug) // Italy: 14:16 ← BUG
+  assert.equal(oraVecchia, '14:16', 'conferma che il vecchio bug dava +2h')
+  // FIX: browser converte in UTC 10:16
+  const utcFix = new Date('2024-06-30T10:16:00.000Z') // UTC 10:16
+  const oraFix = visualizzaOraItaly(utcFix) // Italy: 12:16 ← CORRETTO
+  assert.equal(oraFix, '12:16', `Fix: atteso 12:16, ottenuto ${oraFix}`)
+}
+
+// Test 6: Nessun arrotondamento a 15 minuti — 12:16 resta 12:16
+{
+  const utc = simulaStoragePromemoriaFromBrowser('2024-06-30T12:16', ITALY_CEST_OFFSET)
+  const ora = visualizzaOraItaly(utc)
+  assert.notEqual(ora, '12:15', '12:16 NON deve essere arrotondato a 12:15')
+  assert.equal(ora, '12:16')
+}
+
+console.log('✓ promemoria orario timezone (no +2h, no arrotondamento)')
+
 console.log('\n✅ Tutti i test superati.')
 

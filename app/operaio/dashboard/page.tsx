@@ -331,7 +331,7 @@ export default async function OperaioDashboardPage() {
           </p>
           <div className="space-y-3 relative before:absolute before:inset-y-0 before:left-4 before:w-0.5 before:bg-slate-100">
             {promemoriaOggi.map((p) => {
-              const ora = new Date(p.dataOra).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+              const ora = new Date(p.dataOra).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
               const cleanTitolo = p.titolo.replace(/^TEST_AI_FULL_QUADRO:\s*/, '')
               return (
                 <div key={p.id} className="relative pl-7 space-y-1">
