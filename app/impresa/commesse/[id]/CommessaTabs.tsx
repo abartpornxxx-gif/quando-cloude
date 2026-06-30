@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { AdempimentiSection } from './AdempimentiSection'
@@ -7,7 +7,7 @@ import { OperaiManager } from './OperaiManager'
 import { SopralluogoTab } from './SopralluogoTab'
 import { formatEuro, formatData } from '@/lib/format'
 
-type Tab = 'timeline' | 'sopralluogo' | 'adempimenti' | 'documenti' | 'piano' | 'note'
+type Tab = 'timeline' | 'sopralluogo' | 'adempimenti' | 'struttura' | 'documenti' | 'piano' | 'note'
 
 type Adempimento = {
   id: string
@@ -73,12 +73,18 @@ type DefaultValues = {
   istruzioniCantiere: string
   attrezzatureNecessarie: string
   tipoLavoroId: string
+  tipoStruttura: string
   preventivato: number
   costiMateriali: number
   costiManodopera: number
   costiMezzi: number
   fatturato: number
   avanzamentoPercentuale: number
+}
+
+type StrutturaRow = {
+  tipo: string
+  nome: string
 }
 
 interface Props {
@@ -97,14 +103,16 @@ interface Props {
   operaiAssegnati: { operaioId: string; nome: string; ruolo: string | null }[]
   operaiDisponibili: { id: string; nome: string; ruolo: string | null }[]
   varianti: VarianteRow[]
+  strutturaNodi: StrutturaRow[]
 }
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'timeline',    label: 'Timeline',       icon: '📅' },
-  { id: 'sopralluogo', label: 'Sopralluogo',    icon: '🔍' },
-  { id: 'adempimenti', label: 'Adempimenti',    icon: '✓' },
-  { id: 'documenti',   label: 'Documenti',      icon: '📄' },
-  { id: 'piano',       label: 'Piano',          icon: '📆' },
+  { id: 'timeline',    label: 'Timeline',        icon: '📅' },
+  { id: 'sopralluogo', label: 'Sopralluogo',     icon: '🔍' },
+  { id: 'adempimenti', label: 'Adempimenti',     icon: '✓' },
+  { id: 'struttura',   label: 'Struttura',       icon: '🏗️' },
+  { id: 'documenti',   label: 'Documenti',       icon: '📄' },
+  { id: 'piano',       label: 'Piano',           icon: '📆' },
   { id: 'note',        label: 'Note & Modifica', icon: '⚙' },
 ]
 
@@ -120,6 +128,20 @@ const STATI_VARIANTE: Record<string, { label: string; cls: string }> = {
   approvata: { label: 'Approvata', cls: 'bg-emerald-100 text-emerald-700' },
   rifiutata: { label: 'Rifiutata', cls: 'bg-red-100 text-red-700' },
   annullata: { label: 'Annullata', cls: 'bg-gray-100 text-gray-500' },
+}
+
+const TIPO_NODO_ICON: Record<string, string> = {
+  SCALA:         '🏢',
+  APPARTAMENTO:  '🏠',
+  BOX:           '📦',
+  ESTERNO:       '🌿',
+  AREA_COMUNE:   '🤝',
+  LOCALE_TECNICO:'⚙️',
+  QUADRO_ELETTRICO:'⚡',
+  GARAGE:        '🚗',
+  CORTILE:       '🌳',
+  COPERTURA:     '🏛️',
+  ALTRO:         '●',
 }
 
 export function CommessaTabs({
@@ -139,6 +161,7 @@ export function CommessaTabs({
   operaiDisponibili,
   varianti,
   sopralluogo,
+  strutturaNodi,
 }: Props & { sopralluogo: any }) {
   const [activeTab, setActiveTab] = useState<Tab>('timeline')
 
@@ -234,24 +257,74 @@ export function CommessaTabs({
           />
         )}
 
+        {/* ── STRUTTURA CANTIERE ── */}
+        {activeTab === 'struttura' && (
+          <div className="space-y-4">
+            {strutturaNodi.length === 0 ? (
+              <div>
+                <EmptyPanel
+                  icon="🏗️"
+                  title="Nessuna zona definita"
+                  description={
+                    defaultValues.tipoStruttura === 'commessa_semplice'
+                      ? 'Questa è una commessa semplice. Per gestire zone e appartamenti, cambia il tipo in Note & Modifica.'
+                      : 'Apri la struttura cantiere per definire scale, appartamenti, box e altre zone.'
+                  }
+                />
+                <div className="mt-3 flex justify-center">
+                  <a
+                    href={`/impresa/commesse/${commessaId}/struttura`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                  >
+                    🏗️ Gestisci struttura →
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-400">{strutturaNodi.length} zona{strutturaNodi.length !== 1 ? 'e' : ''} definita{strutturaNodi.length !== 1 ? 'e' : ''}</p>
+                  <a
+                    href={`/impresa/commesse/${commessaId}/struttura`}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                  >
+                    Gestisci struttura →
+                  </a>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white shadow-sm divide-y divide-gray-100">
+                  {strutturaNodi.slice(0, 10).map((n, i) => (
+                    <div key={i} className="flex items-center gap-3 px-4 py-3">
+                      <span className="text-base">{TIPO_NODO_ICON[n.tipo] ?? '●'}</span>
+                      <span className="text-sm text-gray-800">{n.nome}</span>
+                    </div>
+                  ))}
+                  {strutturaNodi.length > 10 && (
+                    <div className="px-4 py-3 text-xs text-gray-400">
+                      + altri {strutturaNodi.length - 10} nodi — apri la struttura per vederli tutti
+                    </div>
+                  )}
+                </div>
+                <a
+                  href={`/impresa/commesse/${commessaId}/struttura`}
+                  className="flex items-center justify-between rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 hover:bg-blue-100 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">🏗️</span>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900 group-hover:text-blue-700">Struttura completa</p>
+                      <p className="text-xs text-blue-600">Aggiungi, modifica o riordina le zone del cantiere</p>
+                    </div>
+                  </div>
+                  <span className="text-blue-400 group-hover:text-blue-600 text-lg">›</span>
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── DOCUMENTI ── */}
         {activeTab === 'documenti' && (
           <div className="space-y-4">
-            {/* Struttura cantiere */}
-            <a
-              href={`/impresa/commesse/${commessaId}/struttura`}
-              className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">🏗️</span>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">Struttura cantiere</p>
-                  <p className="text-xs text-gray-400">Scale, appartamenti, box, zone</p>
-                </div>
-              </div>
-              <span className="text-gray-300 group-hover:text-blue-400 text-lg">›</span>
-            </a>
-
             {/* Materiali & Movimenti */}
             <a
               href={`/impresa/commesse/${commessaId}/materiali`}

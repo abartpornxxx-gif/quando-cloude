@@ -6,11 +6,13 @@ import { euroToCents } from '@/lib/format'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { StatoCommessa } from '@/app/generated/prisma/client'
+import { creaNodiStrutturaDaTemplate } from '@/lib/cantiere-struttura/genera-struttura'
 
 export async function salvaCommessa(formData: FormData) {
   await requireImpresa()
   const id = formData.get('id') as string | null
   const tipoLavoroId = (formData.get('tipoLavoroId') as string) || null
+  const tipoStruttura = (formData.get('tipoStruttura') as string) || 'commessa_semplice'
 
   const data = {
     nome: formData.get('nome') as string,
@@ -27,6 +29,7 @@ export async function salvaCommessa(formData: FormData) {
     istruzioniCantiere: (formData.get('istruzioniCantiere') as string) || null,
     attrezzatureNecessarie: (formData.get('attrezzatureNecessarie') as string) || null,
     tipoLavoroId,
+    tipoStruttura,
   }
 
   if (id) {
@@ -56,6 +59,7 @@ export async function salvaCommessa(formData: FormData) {
     redirect('/impresa/commesse')
   } else {
     const c = await prisma.commessa.create({ data })
+
     // Auto-applica la checklist se è stato scelto un tipo lavoro
     if (tipoLavoroId) {
       const modelli = await prisma.adempimentoModello.findMany({
@@ -75,6 +79,24 @@ export async function salvaCommessa(formData: FormData) {
         })
       }
     }
+
+    // Auto-crea struttura cantiere se richiesta
+    if (tipoStruttura === 'condominio_parco') {
+      try {
+        const scaleJson = formData.get('struttura_scale') as string | null
+        const scale = scaleJson ? (JSON.parse(scaleJson) as string[]) : []
+        if (scale.length > 0) {
+          const apx = Math.min(20, Math.max(1, parseInt(formData.get('struttura_apx') as string || '4', 10)))
+          const conBox = formData.get('struttura_box') === 'true'
+          const conEsterno = formData.get('struttura_esterno') === 'true'
+          const conAreaComune = formData.get('struttura_area_comune') === 'true'
+          await creaNodiStrutturaDaTemplate(c.id, { scale, appartamentiPerScala: apx, conBox, conEsterno, conAreaComune })
+        }
+      } catch {
+        // struttura non creata — l'utente può crearla manualmente dalla pagina struttura
+      }
+    }
+
     redirect(`/impresa/commesse/${c.id}`)
   }
 }

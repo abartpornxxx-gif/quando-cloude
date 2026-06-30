@@ -18,6 +18,19 @@ export default async function CommessaDettPage({
   const { id } = await params
   const { errore } = await searchParams
 
+  // Struttura cantiere — con try-catch per backward compat se tabella non esiste
+  let strutturaNodi: { tipo: string; nome: string }[] = []
+  try {
+    strutturaNodi = await prisma.cantiereStrutturaNodo.findMany({
+      where: { commessaId: id },
+      select: { tipo: true, nome: true },
+      orderBy: [{ ordinamento: 'asc' }, { nome: 'asc' }],
+      take: 50,
+    })
+  } catch {
+    strutturaNodi = []
+  }
+
   const [c, tuttiOperai, tipiLavoro, clienti, giornate, fatture, dico, piano] = await Promise.all([
     prisma.commessa.findUnique({
       where: { id },
@@ -164,6 +177,7 @@ export default async function CommessaDettPage({
     istruzioniCantiere: c.istruzioniCantiere ?? '',
     attrezzatureNecessarie: c.attrezzatureNecessarie ?? '',
     tipoLavoroId: c.tipoLavoroId ?? '',
+    tipoStruttura: c.tipoStruttura,
     preventivato: c.preventivato,
     costiMateriali: c.costiMateriali,
     costiManodopera: c.costiManodopera,
@@ -294,6 +308,7 @@ export default async function CommessaDettPage({
         operaiDisponibili={operaiDisponibili}
         varianti={c.varianti}
         sopralluogo={c.sopralluogo}
+        strutturaNodi={strutturaNodi}
       />
     </div>
   )

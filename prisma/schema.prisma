@@ -275,6 +275,7 @@ model Commessa {
   attrezzatureNecessarie String?   @map("attrezzature_necessarie")
   tipoLavoroId      String?           @map("tipo_lavoro_id") @db.Uuid
   tipoLavoro        TipoLavoro?       @relation(fields: [tipoLavoroId], references: [id], onDelete: SetNull)
+  tipoStruttura     String            @default("commessa_semplice") @map("tipo_struttura")
   createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
   operai             CommessaOperaio[]

@@ -25,11 +25,43 @@ interface Props {
     id?: string; nome?: string; clienteId?: string; indirizzoCantiere?: string
     stato?: string; note?: string; tipoLavoroId?: string
     istruzioniCantiere?: string; attrezzatureNecessarie?: string
-    avanzamentoPercentuale?: number
+    avanzamentoPercentuale?: number; tipoStruttura?: string
   } & Partial<Importi>
 }
 
+const TIPO_STRUTTURA_ICON: Record<string, string> = {
+  SCALA: '🏢',
+  APPARTAMENTO: '🏠',
+  BOX: '📦',
+  ESTERNO: '🌿',
+  AREA_COMUNE: '🤝',
+}
+
+function generaAnteprima(
+  scale: string[],
+  apx: number,
+  conBox: boolean,
+  conEsterno: boolean,
+  conAreaComune: boolean
+): { tipo: string; nome: string; livello: number }[] {
+  const nodi: { tipo: string; nome: string; livello: number }[] = []
+  for (const scalaNome of scale) {
+    const n = scalaNome.trim() || '?'
+    nodi.push({ tipo: 'SCALA', nome: n, livello: 0 })
+    const pref = n.replace(/^Scala\s*/i, '')
+    for (let a = 1; a <= Math.min(apx, 20); a++) {
+      nodi.push({ tipo: 'APPARTAMENTO', nome: `App. ${pref}${a}`, livello: 1 })
+    }
+  }
+  if (conBox)       nodi.push({ tipo: 'BOX',         nome: 'Box',         livello: 0 })
+  if (conEsterno)   nodi.push({ tipo: 'ESTERNO',     nome: 'Esterno',     livello: 0 })
+  if (conAreaComune) nodi.push({ tipo: 'AREA_COMUNE', nome: 'Area comune', livello: 0 })
+  return nodi
+}
+
 export function CommessaForm({ action, clienti, tipiLavoro = [], defaultValues }: Props) {
+  const isNuova = !defaultValues?.id
+
   const [importi, setImporti] = useState<Importi>({
     preventivato: defaultValues?.preventivato ?? 0,
     costiMateriali: defaultValues?.costiMateriali ?? 0,
@@ -38,12 +70,38 @@ export function CommessaForm({ action, clienti, tipiLavoro = [], defaultValues }
     fatturato: defaultValues?.fatturato ?? 0,
   })
 
+  const [tipoStruttura, setTipoStruttura] = useState(defaultValues?.tipoStruttura ?? 'commessa_semplice')
+
+  // Builder condominio
+  const [scale, setScale] = useState<string[]>(['Scala A'])
+  const [apx, setApx] = useState(4)
+  const [conBox, setConBox] = useState(true)
+  const [conEsterno, setConEsterno] = useState(false)
+  const [conAreaComune, setConAreaComune] = useState(false)
+
   const margine = calcolaMargine(importi)
   const avanzamento = percentualeAvanzamento(importi)
 
   function handleImporto(field: keyof Importi, value: string) {
     setImporti(prev => ({ ...prev, [field]: euroToCents(value) }))
   }
+
+  function addScala() {
+    if (scale.length >= 10) return
+    const nextLetter = String.fromCharCode(65 + scale.length)
+    setScale(prev => [...prev, `Scala ${nextLetter}`])
+  }
+
+  function removeScala(idx: number) {
+    setScale(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  function updateScalaNome(idx: number, nome: string) {
+    setScale(prev => prev.map((s, i) => (i === idx ? nome : s)))
+  }
+
+  const anteprima = generaAnteprima(scale, apx, conBox, conEsterno, conAreaComune)
+  const showBuilder = isNuova && tipoStruttura === 'condominio_parco'
 
   return (
     <form action={action} className="space-y-6">
@@ -91,6 +149,25 @@ export function CommessaForm({ action, clienti, tipiLavoro = [], defaultValues }
             <p className="mt-1 text-xs text-gray-400">Determina la checklist di adempimenti da applicare.</p>
           </div>
         )}
+
+        {/* Tipo struttura cantiere */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Tipo di cantiere</label>
+          <select
+            name="tipoStruttura"
+            value={tipoStruttura}
+            onChange={e => setTipoStruttura(e.target.value)}
+            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          >
+            <option value="commessa_semplice">Commessa semplice</option>
+            <option value="condominio_parco">Condominio / Parco (scale e appartamenti)</option>
+            <option value="cantiere_strutturato">Cantiere strutturato (zone personalizzate)</option>
+          </select>
+          {!isNuova && tipoStruttura !== 'commessa_semplice' && (
+            <p className="mt-1 text-xs text-gray-400">Gestisci le zone dalla tab Struttura.</p>
+          )}
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700">Note interne</label>
           <textarea name="note" rows={2} defaultValue={defaultValues?.note}
@@ -98,6 +175,117 @@ export function CommessaForm({ action, clienti, tipiLavoro = [], defaultValues }
             placeholder="Note riservate all'impresa (non visibili all'operaio)" />
         </div>
       </div>
+
+      {/* ── Builder struttura — solo in nuova commessa di tipo condominio ── */}
+      {showBuilder && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 shadow-sm space-y-5">
+          <div>
+            <h2 className="text-sm font-semibold text-blue-900">Struttura iniziale cantiere</h2>
+            <p className="mt-0.5 text-xs text-blue-700">
+              Configura scale e appartamenti. Potrai modificare o aggiungere zone dopo la creazione.
+            </p>
+          </div>
+
+          {/* Scale */}
+          <div>
+            <label className="block text-xs font-semibold text-blue-800 uppercase tracking-wider mb-2">Scale</label>
+            <div className="space-y-2">
+              {scale.map((nome, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={nome}
+                    onChange={e => updateScalaNome(idx, e.target.value)}
+                    placeholder={`Scala ${String.fromCharCode(65 + idx)}`}
+                    className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                  {scale.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeScala(idx)}
+                      className="rounded-lg border border-gray-200 bg-white px-2 py-2 text-sm text-gray-400 hover:text-red-500 hover:border-red-200"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {scale.length < 10 && (
+              <button
+                type="button"
+                onClick={addScala}
+                className="mt-2 text-xs font-medium text-blue-700 hover:text-blue-900"
+              >
+                + Aggiungi scala
+              </button>
+            )}
+          </div>
+
+          {/* Appartamenti per scala */}
+          <div>
+            <label className="block text-xs font-semibold text-blue-800 uppercase tracking-wider mb-2">
+              Appartamenti per scala: <span className="text-blue-900 font-bold">{apx}</span>
+            </label>
+            <input
+              type="range" min={1} max={20} step={1}
+              value={apx}
+              onChange={e => setApx(parseInt(e.target.value))}
+              className="w-full accent-blue-600"
+            />
+            <div className="flex justify-between text-xs text-blue-600 mt-0.5">
+              <span>1</span><span>20</span>
+            </div>
+          </div>
+
+          {/* Aree comuni */}
+          <div>
+            <label className="block text-xs font-semibold text-blue-800 uppercase tracking-wider mb-2">Aree comuni</label>
+            <div className="flex flex-wrap gap-4">
+              {[
+                { label: '📦 Box', value: conBox, set: setConBox },
+                { label: '🌿 Esterno', value: conEsterno, set: setConEsterno },
+                { label: '🤝 Area comune', value: conAreaComune, set: setConAreaComune },
+              ].map(({ label, value, set }) => (
+                <label key={label} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={value}
+                    onChange={e => set(e.target.checked)}
+                    className="rounded accent-blue-600"
+                  />
+                  <span className="text-sm text-blue-900">{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Anteprima */}
+          <div>
+            <p className="text-xs font-semibold text-blue-800 uppercase tracking-wider mb-2">
+              Anteprima — {anteprima.length} nodi
+            </p>
+            <div className="rounded-lg bg-white border border-blue-100 p-3 space-y-1 max-h-40 overflow-y-auto">
+              {anteprima.map((n, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-1.5 text-xs ${n.livello === 1 ? 'pl-5 text-gray-500' : 'font-medium text-gray-800'}`}
+                >
+                  <span>{TIPO_STRUTTURA_ICON[n.tipo] ?? '●'}</span>
+                  <span>{n.nome}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Hidden inputs per il server action */}
+          <input type="hidden" name="struttura_scale" value={JSON.stringify(scale)} />
+          <input type="hidden" name="struttura_apx" value={apx.toString()} />
+          <input type="hidden" name="struttura_box" value={conBox ? 'true' : 'false'} />
+          <input type="hidden" name="struttura_esterno" value={conEsterno ? 'true' : 'false'} />
+          <input type="hidden" name="struttura_area_comune" value={conAreaComune ? 'true' : 'false'} />
+        </div>
+      )}
 
       {/* Istruzioni operative — visibili all'operaio */}
       <div className="space-y-4 rounded-xl border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
