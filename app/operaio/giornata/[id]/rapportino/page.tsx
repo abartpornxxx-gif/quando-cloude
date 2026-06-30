@@ -60,17 +60,22 @@ export default async function RapportinoPage({ params }: Props) {
 
   const attrezzatureUsate = giornata.attrezzatureUsi.map(u => u.attrezzatura)
 
-  const [materiali, strutturaNodi] = await Promise.all([
-    prisma.materiale.findMany({
-      orderBy: { descrizione: 'asc' },
-      select: { id: true, descrizione: true, unita: true },
-    }),
-    prisma.cantiereStrutturaNodo.findMany({
+  const materiali = await prisma.materiale.findMany({
+    orderBy: { descrizione: 'asc' },
+    select: { id: true, descrizione: true, unita: true },
+  })
+
+  // Protezione: la tabella cantiere_struttura_nodi potrebbe non esistere ancora nel DB
+  let strutturaNodi: { id: string; tipo: string; nome: string; parentId: string | null }[] = []
+  try {
+    strutturaNodi = await prisma.cantiereStrutturaNodo.findMany({
       where: { commessaId: giornata.commessaId, attivo: true },
       orderBy: [{ ordinamento: 'asc' }, { nome: 'asc' }],
       select: { id: true, tipo: true, nome: true, parentId: true },
-    }),
-  ])
+    })
+  } catch {
+    // Tabella non ancora creata — migrazione DB pendente
+  }
 
   return (
     <div>
