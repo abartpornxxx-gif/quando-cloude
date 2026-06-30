@@ -297,6 +297,7 @@ model Commessa {
   sopralluogo                  Sopralluogo?
   conteggi                     ConteggioCantiere[]
   promemoria                   Promemoria[]
+  strutturaNodi                CantiereStrutturaNodo[]
 
   @@map("commesse")
 }
@@ -585,6 +586,9 @@ model Rapportino {
   cosaFareDomani       String?  @map("cosa_fare_domani")
   urgenzaDomani        Int?     @map("urgenza_domani")
   stimaOreDomani       Float?   @map("stima_ore_domani")
+  // Zona cantiere (struttura fisica)
+  strutturaNodoId      String?  @map("struttura_nodo_id") @db.Uuid
+  strutturaNodo        CantiereStrutturaNodo? @relation(fields: [strutturaNodoId], references: [id], onDelete: SetNull)
   // Firma digitale operaio (data URL PNG dal canvas, opzionale)
   firmaDataUrl         String?  @map("firma_data_url")
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -1124,17 +1128,19 @@ model ConteggioCantiere {
 }
 
 model ConteggioCantiereRiga {
-  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  conteggioId String            @map("conteggio_id") @db.Uuid
-  conteggio   ConteggioCantiere @relation(fields: [conteggioId], references: [id], onDelete: Cascade)
-  categoria   String
-  codice      String?
-  descrizione String
-  quantita    Float             @default(0)
-  unita       String?           @default("pz")
-  note        String?
-  datiExtra   Json?             @map("dati_extra")
-  ordinamento Int               @default(0)
+  id               String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conteggioId      String                 @map("conteggio_id") @db.Uuid
+  conteggio        ConteggioCantiere      @relation(fields: [conteggioId], references: [id], onDelete: Cascade)
+  categoria        String
+  codice           String?
+  descrizione      String
+  quantita         Float                  @default(0)
+  unita            String?                @default("pz")
+  note             String?
+  datiExtra        Json?                  @map("dati_extra")
+  ordinamento      Int                    @default(0)
+  strutturaNodoId  String?                @map("struttura_nodo_id") @db.Uuid
+  strutturaNodo    CantiereStrutturaNodo? @relation(fields: [strutturaNodoId], references: [id], onDelete: SetNull)
 
   @@map("conteggio_cantiere_righe")
 }
@@ -1150,6 +1156,46 @@ model ConteggioCantiereFoto {
   createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("conteggio_cantiere_foto")
+}
+
+// ─── Struttura fisica del cantiere ───────────────────────────────────────────
+
+enum TipoNodoStruttura {
+  SCALA
+  APPARTAMENTO
+  BOX
+  ESTERNO
+  AREA_COMUNE
+  LOCALE_TECNICO
+  QUADRO_ELETTRICO
+  GARAGE
+  CORTILE
+  COPERTURA
+  ALTRO
+}
+
+model CantiereStrutturaNodo {
+  id          String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commessaId  String                  @map("commessa_id") @db.Uuid
+  commessa    Commessa                @relation(fields: [commessaId], references: [id], onDelete: Cascade)
+  parentId    String?                 @map("parent_id") @db.Uuid
+  parent      CantiereStrutturaNodo?  @relation("NodoStruttura", fields: [parentId], references: [id], onDelete: Cascade)
+  children    CantiereStrutturaNodo[] @relation("NodoStruttura")
+  tipo        TipoNodoStruttura       @default(ALTRO)
+  nome        String
+  codice      String?
+  descrizione String?
+  piano       String?
+  interno     String?
+  ordinamento Int                     @default(0)
+  attivo      Boolean                 @default(true)
+  rapportini  Rapportino[]
+  righeConteggio ConteggioCantiereRiga[]
+  promemoria  Promemoria[]
+  createdAt   DateTime                @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime                @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("cantiere_struttura_nodi")
 }
 
 // ─── Promemoria & Appuntamenti ───────────────────────────────────────────────
@@ -1168,6 +1214,8 @@ model Promemoria {
   cliente             Cliente?  @relation(fields: [clienteId], references: [id], onDelete: SetNull)
   commessaId          String?   @map("commessa_id") @db.Uuid
   commessa            Commessa? @relation(fields: [commessaId], references: [id], onDelete: SetNull)
+  strutturaNodoId     String?   @map("struttura_nodo_id") @db.Uuid
+  strutturaNodo       CantiereStrutturaNodo? @relation(fields: [strutturaNodoId], references: [id], onDelete: SetNull)
   perImpresa          Boolean   @default(false) @map("per_impresa")
   importante          Boolean   @default(false)
   creatoDa            String?   @map("creato_da")

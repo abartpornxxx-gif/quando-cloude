@@ -18,6 +18,7 @@ export async function inviaRapportino(
     cosaFareDomani?: string
     urgenzaDomani?: number
     stimaOreDomani?: number
+    strutturaNodoId?: string
   }
 ): Promise<string> {
   const { operaio } = await requireOperaio()
@@ -43,6 +44,7 @@ export async function inviaRapportino(
         cosaFareDomani: input.cosaFareDomani?.trim() || null,
         urgenzaDomani: input.urgenzaDomani ?? null,
         stimaOreDomani: input.stimaOreDomani ?? null,
+        strutturaNodoId: input.strutturaNodoId || null,
       },
     })
 

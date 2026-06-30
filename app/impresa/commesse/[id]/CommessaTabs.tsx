@@ -237,6 +237,21 @@ export function CommessaTabs({
         {/* ── DOCUMENTI ── */}
         {activeTab === 'documenti' && (
           <div className="space-y-4">
+            {/* Struttura cantiere */}
+            <a
+              href={`/impresa/commesse/${commessaId}/struttura`}
+              className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🏗️</span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">Struttura cantiere</p>
+                  <p className="text-xs text-gray-400">Scale, appartamenti, box, zone</p>
+                </div>
+              </div>
+              <span className="text-gray-300 group-hover:text-blue-400 text-lg">›</span>
+            </a>
+
             {/* Materiali & Movimenti */}
             <a
               href={`/impresa/commesse/${commessaId}/materiali`}

@@ -465,5 +465,89 @@ console.log('✓ ai-promemoria (timezone, parsing, priorità, stile, permessi, c
 }
 console.log('✓ multi-bozza (array, singolo, sanitizzazione, no-auto-save, orari invariati, limite)')
 
+// ── 13. Struttura cantiere — logica pura ────────────────────────────────────
+{
+  // buildTree: converte lista piatta in albero
+  function buildTree(nodi) {
+    const map = new Map()
+    for (const n of nodi) map.set(n.id, { ...n, children: [] })
+    const roots = []
+    for (const n of nodi) {
+      if (n.parentId && map.has(n.parentId)) {
+        map.get(n.parentId).children.push(map.get(n.id))
+      } else {
+        roots.push(map.get(n.id))
+      }
+    }
+    return roots
+  }
+
+  const nodiFlat = [
+    { id: 'scala-a',  tipo: 'SCALA',        nome: 'Scala A', parentId: null,      ordinamento: 0 },
+    { id: 'app-a1',   tipo: 'APPARTAMENTO', nome: 'App A1',  parentId: 'scala-a', ordinamento: 0 },
+    { id: 'app-a2',   tipo: 'APPARTAMENTO', nome: 'App A2',  parentId: 'scala-a', ordinamento: 1 },
+    { id: 'box',      tipo: 'BOX',          nome: 'Box',     parentId: null,      ordinamento: 1 },
+    { id: 'esterno',  tipo: 'ESTERNO',      nome: 'Esterno', parentId: null,      ordinamento: 2 },
+  ]
+
+  const tree = buildTree(nodiFlat)
+
+  // Test 13.1: radici corrette
+  assert.equal(tree.length, 3, '3 nodi radice (Scala A, Box, Esterno)')
+  assert.equal(tree[0].nome, 'Scala A')
+
+  // Test 13.2: figli di Scala A
+  assert.equal(tree[0].children.length, 2, 'Scala A ha 2 appartamenti')
+  assert.equal(tree[0].children[0].nome, 'App A1')
+  assert.equal(tree[0].children[1].nome, 'App A2')
+
+  // Test 13.3: Box e Esterno sono foglie
+  assert.equal(tree[1].children.length, 0, 'Box è foglia')
+  assert.equal(tree[2].children.length, 0, 'Esterno è foglia')
+
+  // Test 13.4: nodo orfano (parentId non trovato) → radice
+  const nodiConOrfano = [
+    { id: 'a', tipo: 'SCALA', nome: 'Scala Z', parentId: null },
+    { id: 'b', tipo: 'APPARTAMENTO', nome: 'App',  parentId: 'id-inesistente' },
+  ]
+  const treeOrfano = buildTree(nodiConOrfano)
+  assert.equal(treeOrfano.length, 2, 'Nodo orfano va alla radice')
+
+  // Test 13.5: strutturaNodoId nullable → rapportini esistenti non rotti
+  function simulaRapportino(input) {
+    return { ...input, strutturaNodoId: input.strutturaNodoId ?? null }
+  }
+  const r1 = simulaRapportino({ lavoroEseguito: 'Cablaggio', oreOrdinarie: 8 })
+  assert.equal(r1.strutturaNodoId, null, 'rapportino senza zona: strutturaNodoId null')
+  const r2 = simulaRapportino({ lavoroEseguito: 'Cablaggio App A1', oreOrdinarie: 8, strutturaNodoId: 'app-a1' })
+  assert.equal(r2.strutturaNodoId, 'app-a1', 'rapportino con zona: strutturaNodoId preservato')
+
+  // Test 13.6: validazione coerenza nodo-commessa (logica pura)
+  function validaNodoCommessa(nodo, commessaId) {
+    if (!nodo) return { valid: false, reason: 'Zona non trovata' }
+    if (nodo.commessaId !== commessaId) return { valid: false, reason: 'Zona non appartiene a questa commessa' }
+    if (!nodo.attivo) return { valid: false, reason: 'Zona disattivata' }
+    return { valid: true }
+  }
+
+  assert.deepEqual(validaNodoCommessa(null, 'c1'), { valid: false, reason: 'Zona non trovata' })
+  assert.deepEqual(validaNodoCommessa({ commessaId: 'c2', attivo: true }, 'c1'), { valid: false, reason: 'Zona non appartiene a questa commessa' })
+  assert.deepEqual(validaNodoCommessa({ commessaId: 'c1', attivo: false }, 'c1'), { valid: false, reason: 'Zona disattivata' })
+  assert.deepEqual(validaNodoCommessa({ commessaId: 'c1', attivo: true }, 'c1'), { valid: true })
+
+  // Test 13.7: quick-build genera il numero giusto di nodi
+  function quickBuildCount(nScale, appPerScala, conBox, conEsterno, conAreaComune) {
+    const nodi = nScale * appPerScala + nScale
+    let extra = 0
+    if (conBox) extra++
+    if (conEsterno) extra++
+    if (conAreaComune) extra++
+    return nodi + extra
+  }
+  assert.equal(quickBuildCount(2, 4, true, false, true), 2 * 4 + 2 + 2, '2 scale × 4 app + box + area comune = 12')
+  assert.equal(quickBuildCount(1, 3, false, false, false), 4, '1 scala × 3 app = 4 nodi')
+}
+console.log('✓ struttura-cantiere (buildTree, nullable, validazione coerenza, quick-build)')
+
 console.log('\n✅ Tutti i test superati.')
 

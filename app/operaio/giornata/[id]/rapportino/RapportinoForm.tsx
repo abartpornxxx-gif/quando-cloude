@@ -7,6 +7,7 @@ import { inviaRapportino, analizzaRapportinoConIA } from './actions'
 
 type Attrezzatura = { id: string; nome: string }
 type Materiale = { id: string; descrizione: string; unita: string | null }
+type NodoStruttura = { id: string; tipo: string; nome: string; parentId: string | null }
 
 interface RigaReso {
   materialeId: string
@@ -18,9 +19,18 @@ interface Props {
   giornataId: string
   attrezzatureUsate: Attrezzatura[]
   materiali: Materiale[]
+  strutturaNodi?: NodoStruttura[]
 }
 
-export default function RapportinoForm({ giornataId, attrezzatureUsate, materiali }: Props) {
+function nodoLabel(nodo: NodoStruttura, tutti: NodoStruttura[]): string {
+  if (nodo.parentId) {
+    const parent = tutti.find(n => n.id === nodo.parentId)
+    if (parent) return `${parent.nome} › ${nodo.nome}`
+  }
+  return nodo.nome
+}
+
+export default function RapportinoForm({ giornataId, attrezzatureUsate, materiali, strutturaNodi = [] }: Props) {
   const router = useRouter()
   const [lavoroEseguito, setLavoroEseguito] = useState('')
   const [lavoriExtra, setLavoriExtra] = useState('')
@@ -35,6 +45,7 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
   const [attrRiconsegnate, setAttrRiconsegnate] = useState<string[]>(
     attrezzatureUsate.map(a => a.id)
   )
+  const [strutturaNodoId, setStrutturaNodoId] = useState('')
   const [righeReso, setRigheReso] = useState<RigaReso[]>([])
   const [pending, startTransition] = useTransition()
   const [errore, setErrore] = useState('')
@@ -166,6 +177,7 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
           cosaFareDomani: cosaFareDomani.trim() || undefined,
           urgenzaDomani: cosaFareDomani.trim() ? urgenzaDomani : undefined,
           stimaOreDomani: cosaFareDomani.trim() && stimaOreDomani ? parseFloat(stimaOreDomani) : undefined,
+          strutturaNodoId: strutturaNodoId || undefined,
         })
         router.push(url)
       } catch (err: unknown) {
@@ -263,6 +275,23 @@ export default function RapportinoForm({ giornataId, attrezzatureUsate, material
           required
         />
       </div>
+
+      {strutturaNodi.length > 0 && (
+        <div>
+          <label className="block text-sm font-semibold mb-1">Zona cantiere <span className="font-normal text-gray-400">(opzionale)</span></label>
+          <select
+            value={strutturaNodoId}
+            onChange={e => setStrutturaNodoId(e.target.value)}
+            className="w-full border rounded-xl px-3 py-2 text-sm"
+          >
+            <option value="">— Nessuna zona specifica —</option>
+            {strutturaNodi.map(n => (
+              <option key={n.id} value={n.id}>{nodoLabel(n, strutturaNodi)}</option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400 mt-1">Indica in quale zona del cantiere hai lavorato oggi.</p>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-semibold mb-1">Lavori extra / imprevisti</label>
