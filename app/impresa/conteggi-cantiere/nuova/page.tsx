@@ -35,9 +35,13 @@ export default function NuovoConteggio() {
           operaioId: form.operaioId || undefined,
           noteImpresa: form.noteImpresa || undefined,
         })
-        if (res.success) router.push(`/impresa/conteggi-cantiere/${res.id}`)
-      } catch (err) {
-        setError(String(err))
+        if (res.success) {
+          router.push(`/impresa/conteggi-cantiere/${res.id}`)
+        } else {
+          setError(res.error)
+        }
+      } catch {
+        setError('Non è stato possibile creare il conteggio cantiere. Verifica commessa e operaio e riprova.')
       }
     })
   }

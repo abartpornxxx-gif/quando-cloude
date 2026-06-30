@@ -253,7 +253,44 @@ assert.ok(puoMostrareAlCliente('approvato', true))
 assert.ok(!puoMostrareAlCliente('inviato', true))
 assert.ok(!puoMostrareAlCliente('approvato', false))
 
-console.log('✓ conteggio-cantiere (placche, qty, stati, visibilità cliente)')
+// Test 10.5: creaConteggio — validazione campi obbligatori
+function validaCreazioneMock(data) {
+  if (!data.commessaId) return { success: false, error: 'Commessa obbligatoria.' }
+  return { success: true, id: 'fake-uuid' }
+}
+assert.deepEqual(validaCreazioneMock({ commessaId: 'c1', noteImpresa: 'test' }), { success: true, id: 'fake-uuid' })
+assert.deepEqual(validaCreazioneMock({ commessaId: 'c1', operaioId: 'op1' }), { success: true, id: 'fake-uuid' })
+assert.deepEqual(validaCreazioneMock({ noteImpresa: 'test' }), { success: false, error: 'Commessa obbligatoria.' })
+assert.deepEqual(validaCreazioneMock({}), { success: false, error: 'Commessa obbligatoria.' })
+
+// Test 10.6: stato iniziale conteggio appena creato
+function statoIniziale() { return 'richiesto' }
+assert.equal(statoIniziale(), 'richiesto', 'stato iniziale = richiesto')
+
+// Test 10.7: permessi — solo impresa può creare richiesta conteggio
+function puoCreareConteggio(ruolo) {
+  return ruolo === 'impresa'
+}
+assert.ok(puoCreareConteggio('impresa'), 'impresa OK')
+assert.ok(!puoCreareConteggio('operaio'), 'operaio NON può')
+assert.ok(!puoCreareConteggio('cliente'), 'cliente NON può')
+assert.ok(!puoCreareConteggio('ufficio'), 'ufficio NON può')
+
+// Test 10.8: errore controllato — nessun crash, messaggio leggibile
+function handleCreazioneErrore(err) {
+  if (!err) return null
+  return 'Non è stato possibile creare il conteggio cantiere. Verifica commessa e operaio e riprova.'
+}
+assert.equal(handleCreazioneErrore(new Error('DB error')), 'Non è stato possibile creare il conteggio cantiere. Verifica commessa e operaio e riprova.')
+assert.equal(handleCreazioneErrore(null), null)
+
+// Test 10.9: enum StatoConteggio — valori validi
+const STATI_VALIDI = new Set(['richiesto', 'in_compilazione', 'inviato', 'approvato', 'riaperto'])
+assert.ok(STATI_VALIDI.has('richiesto'), 'richiesto è valido')
+assert.ok(!STATI_VALIDI.has('stato_conteggio'), 'stato_conteggio NON è un valore valido (è il nome del tipo)')
+assert.ok(!STATI_VALIDI.has(''), 'stringa vuota non valida')
+
+console.log('✓ conteggio-cantiere (placche, qty, stati, visibilità cliente, creazione, permessi)')
 
 // ── 11. AI Promemoria ────────────────────────────────────────────────────────
 

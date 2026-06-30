@@ -8,18 +8,25 @@ export async function creaConteggio(data: {
   commessaId: string
   operaioId?: string
   noteImpresa?: string
-}) {
+}): Promise<{ success: true; id: string } | { success: false; error: string }> {
   await requireImpresa()
-  const conteggio = await prisma.conteggioCantiere.create({
-    data: {
-      commessaId: data.commessaId,
-      operaioId: data.operaioId || null,
-      noteImpresa: data.noteImpresa || null,
-      stato: 'richiesto',
-    },
-  })
-  revalidatePath('/impresa/conteggi-cantiere')
-  return { success: true, id: conteggio.id }
+  if (!data.commessaId) return { success: false, error: 'Commessa obbligatoria.' }
+  try {
+    const conteggio = await prisma.conteggioCantiere.create({
+      data: {
+        commessaId: data.commessaId,
+        operaioId: data.operaioId || null,
+        noteImpresa: data.noteImpresa || null,
+        stato: 'richiesto',
+      },
+    })
+    revalidatePath('/impresa/conteggi-cantiere')
+    return { success: true, id: conteggio.id }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[creaConteggio] DB error:', msg)
+    return { success: false, error: 'Non è stato possibile creare il conteggio cantiere. Verifica commessa e operaio e riprova.' }
+  }
 }
 
 export async function approvaConteggio(id: string) {

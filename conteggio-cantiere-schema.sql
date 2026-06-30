@@ -1,9 +1,9 @@
 -- Migrazione: Conteggio Cantiere (consuntivo lavori)
 -- Eseguire su Supabase Dashboard → SQL Editor
 
--- 1. Enum stato conteggio
+-- 1. Enum stato conteggio (NOTA: nome PascalCase richiesto da Prisma v7 + adapter-pg)
 DO $$ BEGIN
-  CREATE TYPE stato_conteggio AS ENUM (
+  CREATE TYPE "StatoConteggio" AS ENUM (
     'richiesto', 'in_compilazione', 'inviato', 'approvato', 'riaperto'
   );
 EXCEPTION WHEN duplicate_object THEN null; END $$;
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS conteggi_cantiere (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   commessa_id       UUID NOT NULL REFERENCES commesse(id) ON DELETE CASCADE,
   operaio_id        UUID REFERENCES operai(id) ON DELETE SET NULL,
-  stato             stato_conteggio NOT NULL DEFAULT 'richiesto',
+  stato             "StatoConteggio" NOT NULL DEFAULT 'richiesto',
   tipo_lavorazione  TEXT,
   serie_civile      TEXT,
   placche_montate   BOOLEAN NOT NULL DEFAULT FALSE,
