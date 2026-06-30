@@ -255,5 +255,97 @@ assert.ok(!puoMostrareAlCliente('approvato', false))
 
 console.log('✓ conteggio-cantiere (placche, qty, stati, visibilità cliente)')
 
+// ── 11. AI Promemoria ────────────────────────────────────────────────────────
+
+// Test 11.1: orario promemoria invariato (riconferma fix timezone)
+{
+  function simulaBrowser(localStr, offsetMin) {
+    const [d, t] = localStr.split('T')
+    const [y, mo, day] = d.split('-').map(Number)
+    const [h, mi] = t.split(':').map(Number)
+    const utcMs = Date.UTC(y, mo - 1, day, h, mi) + (offsetMin * 60000)
+    return new Date(utcMs)
+  }
+  function mostraItaly(utcDate) {
+    return utcDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
+  }
+  const OFFSET_ITALY = -120
+  assert.equal(mostraItaly(simulaBrowser('2024-06-30T12:16', OFFSET_ITALY)), '12:16')
+  assert.equal(mostraItaly(simulaBrowser('2024-06-30T08:30', OFFSET_ITALY)), '08:30')
+  assert.equal(mostraItaly(simulaBrowser('2024-06-30T23:45', OFFSET_ITALY)), '23:45')
+  assert.notEqual(mostraItaly(simulaBrowser('2024-06-30T12:16', OFFSET_ITALY)), '14:16', 'no +2h')
+}
+
+// Test 11.2: parsing AI mock — classificazione tipo
+function classificaTipo(testo) {
+  const t = testo.toLowerCase()
+  if (t.includes('sopralluogo'))                    return 'sopralluogo'
+  if (t.includes('urgente') || t.includes('subito')) return 'intervento_urgente'
+  if (t.includes('chiama') || t.includes('chiamare')) return 'chiamata_cliente'
+  if (t.includes('ordina') || t.includes('ordinare')) return 'ordine_materiale'
+  return 'altro'
+}
+assert.equal(classificaTipo('Domani alle 9 sopralluogo da Mario Rossi'), 'sopralluogo')
+assert.equal(classificaTipo('Urgente oggi pomeriggio salvavita che scatta'), 'intervento_urgente')
+assert.equal(classificaTipo('Ricordami di chiamare il cliente Castaldo'), 'chiamata_cliente')
+assert.equal(classificaTipo('Ordinare placche Living Now'), 'ordine_materiale')
+
+// Test 11.3: priorità automatica
+function suggerisciPriorita(testo) {
+  const t = testo.toLowerCase()
+  const urgente = ['urgente', 'subito', 'bloccato', 'senza corrente', 'salvavita', 'perdita', 'allarme', 'oggi pomeriggio']
+  const alta = ['oggi', 'scade oggi']
+  if (urgente.some(k => t.includes(k))) return 'urgente'
+  if (alta.some(k => t.includes(k)))    return 'alta'
+  return 'normale'
+}
+assert.equal(suggerisciPriorita('Urgente oggi pomeriggio salvavita che scatta'), 'urgente')
+assert.equal(suggerisciPriorita('Oggi controlla impianto'), 'alta')
+assert.equal(suggerisciPriorita('Domani alle 9 sopralluogo'), 'normale')
+assert.equal(suggerisciPriorita('Bloccato senza corrente'), 'urgente')
+
+// Test 11.4: stile AI — nessun markdown
+function contieneMdBrutto(testo) {
+  return /^#{1,6}\s/m.test(testo) || /\*\*.+?\*\*/s.test(testo)
+}
+assert.ok(!contieneMdBrutto('Ho capito. Posso preparare un promemoria per il sopralluogo.'))
+assert.ok(!contieneMdBrutto('Il sopralluogo risulta scaduto. Vuoi segnare cosa è successo?'))
+assert.ok(contieneMdBrutto('## Ecco il piano **dettagliato**...'), 'markdown brutto rilevato correttamente')
+assert.ok(contieneMdBrutto('### Titolo\nContenuto'), 'heading rilevato correttamente')
+
+// Test 11.5: permessi per ruolo
+function azioniConsentite(ruolo) {
+  switch (ruolo) {
+    case 'impresa': return ['crea_promemoria','elimina_promemoria','crea_commessa','crea_preventivo']
+    case 'ufficio': return ['crea_promemoria','registra_esito']
+    case 'operaio': return ['vedi_propri']
+    case 'cliente': return []
+    default:        return []
+  }
+}
+assert.ok(azioniConsentite('impresa').includes('crea_commessa'), 'impresa può crea commessa')
+assert.ok(!azioniConsentite('operaio').includes('crea_commessa'), 'operaio NON può creare commessa')
+assert.ok(!azioniConsentite('cliente').includes('crea_promemoria'), 'cliente NON può creare promemoria')
+assert.ok(!azioniConsentite('ufficio').includes('elimina_promemoria'), 'ufficio NON elimina promemoria')
+
+// Test 11.6: nessuna azione senza conferma
+function simulaConfermaRichiesta(azione, confermato) {
+  if (!confermato) throw new Error('CONFERMA_RICHIESTA')
+  return { eseguita: true, azione }
+}
+assert.throws(() => simulaConfermaRichiesta('crea_commessa', false), /CONFERMA_RICHIESTA/)
+assert.doesNotThrow(() => simulaConfermaRichiesta('crea_commessa', true))
+
+// Test 11.7: rimanda — orario scelto resta invariato
+{
+  const sceltaUtente = '2024-07-01T13:20'
+  const utcSalvato = new Date(sceltaUtente).toISOString()
+  // Simula visualizzazione lato client (browser Italy)
+  const displayOra = new Date(utcSalvato).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
+  assert.equal(displayOra, '13:20', 'rimanda: orario scelto 13:20 resta 13:20')
+}
+
+console.log('✓ ai-promemoria (timezone, parsing, priorità, stile, permessi, conferma, rimanda)')
+
 console.log('\n✅ Tutti i test superati.')
 

@@ -57,6 +57,7 @@ model Cliente {
   proposteIntervento PropostaIntervento[]
   richiesteDiCo      RichiestaDiCo[]
   interventiLibero   InterventoLibero[]
+  promemoria         Promemoria[]
 
   @@map("clienti")
 }
@@ -295,6 +296,7 @@ model Commessa {
   richiesteDiCo                RichiestaDiCo[]
   sopralluogo                  Sopralluogo?
   conteggi                     ConteggioCantiere[]
+  promemoria                   Promemoria[]
 
   @@map("commesse")
 }
@@ -1158,12 +1160,23 @@ model Promemoria {
   luogo               String?
   dataOra             DateTime  @map("data_ora") @db.Timestamptz
   tipo                String    @default("intervento")
+  priorita            String    @default("normale")
   stato               String    @default("attivo")
   assegnatoAOperaioId String?   @map("assegnato_a_operaio_id") @db.Uuid
   operaio             Operaio?  @relation(fields: [assegnatoAOperaioId], references: [id], onDelete: Cascade)
+  clienteId           String?   @map("cliente_id") @db.Uuid
+  cliente             Cliente?  @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  commessaId          String?   @map("commessa_id") @db.Uuid
+  commessa            Commessa? @relation(fields: [commessaId], references: [id], onDelete: SetNull)
   perImpresa          Boolean   @default(false) @map("per_impresa")
   importante          Boolean   @default(false)
   creatoDa            String?   @map("creato_da")
+  origineAi           Boolean   @default(false) @map("origine_ai")
+  testoOriginaleAi    String?   @map("testo_originale_ai")
+  esitoTesto          String?   @map("esito_testo")
+  esitoRegistratoAt   DateTime? @map("esito_registrato_at") @db.Timestamptz
+  followUpRichiesto   Boolean   @default(false) @map("follow_up_richiesto")
+  azioneSuggeritaAi   String?   @map("azione_suggerita_ai")
   completatoAt        DateTime? @map("completato_at") @db.Timestamptz
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz

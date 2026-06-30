@@ -163,13 +163,30 @@ export async function fetchContextData(role: string, pathname: string, email?: s
     if (role === 'impresa' || role === 'ufficio') {
       try {
         const oggi = new Date()
-        const prossimi = await prisma.promemoria.findMany({
-          where: { stato: 'attivo', dataOra: { gte: oggi } },
-          include: { operaio: { select: { nome: true } } },
-          orderBy: { dataOra: 'asc' },
-          take: 10,
-        })
-        return { promemoria: prossimi }
+        const inizioOggi = new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDate(), 0, 0, 0)
+        const [prossimi, scaduti, urgenti] = await Promise.all([
+          prisma.promemoria.findMany({
+            where: { stato: 'attivo', dataOra: { gte: oggi } },
+            include: { operaio: { select: { nome: true } }, cliente: { select: { nome: true } }, commessa: { select: { nome: true } } },
+            orderBy: { dataOra: 'asc' },
+            take: 8,
+          }),
+          prisma.promemoria.count({ where: { stato: 'attivo', dataOra: { lt: oggi } } }),
+          prisma.promemoria.count({ where: { stato: 'attivo', priorita: { in: ['urgente', 'alta'] }, dataOra: { gte: inizioOggi } } }),
+        ])
+        return {
+          sezione: 'promemoria',
+          promemoria: prossimi.map(p => ({
+            id: p.id, titolo: p.titolo, tipo: p.tipo, priorita: p.priorita,
+            dataOra: p.dataOra, luogo: p.luogo, stato: p.stato,
+            operaioNome: p.operaio?.nome, clienteNome: p.cliente?.nome, commessaNome: p.commessa?.nome,
+          })),
+          promemoriScaduti: scaduti,
+          promemoriUrgentiOggi: urgenti,
+          azioniConsentite: role === 'impresa'
+            ? ['crea_promemoria', 'modifica_promemoria', 'assegna_operaio', 'collega_cliente', 'collega_commessa', 'elimina_promemoria', 'registra_esito', 'rimanda']
+            : ['crea_promemoria', 'modifica_promemoria', 'assegna_operaio', 'collega_cliente', 'collega_commessa', 'registra_esito', 'rimanda'],
+        }
       } catch (e) { console.error('AI context promemoria:', e) }
     }
   }
