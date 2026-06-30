@@ -293,7 +293,7 @@ export default async function ImpresaDashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {promemoriaOggi.map((p) => {
-              const ora = new Date(p.dataOra).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+              const ora = new Date(p.dataOra).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
               const cleanTitolo = p.titolo.replace(/^TEST_AI_FULL_QUADRO:\s*/, '')
               return (
                 <div key={p.id} className="border border-slate-100 bg-slate-50/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all group">
