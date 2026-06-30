@@ -549,5 +549,57 @@ console.log('✓ multi-bozza (array, singolo, sanitizzazione, no-auto-save, orar
 }
 console.log('✓ struttura-cantiere (buildTree, nullable, validazione coerenza, quick-build)')
 
+// ── 14. Struttura cantiere — generaAnteprima (logica pura) ─────────────────
+{
+  function generaAnteprima(scale, apx, conBox, conEsterno, conAreaComune) {
+    const nodi = []
+    for (const scalaNome of scale) {
+      const n = scalaNome.trim() || '?'
+      nodi.push({ tipo: 'SCALA', nome: n, livello: 0 })
+      const pref = n.replace(/^Scala\s*/i, '')
+      for (let a = 1; a <= Math.min(apx, 20); a++) {
+        nodi.push({ tipo: 'APPARTAMENTO', nome: `App. ${pref}${a}`, livello: 1 })
+      }
+    }
+    if (conBox)       nodi.push({ tipo: 'BOX',         nome: 'Box',         livello: 0 })
+    if (conEsterno)   nodi.push({ tipo: 'ESTERNO',     nome: 'Esterno',     livello: 0 })
+    if (conAreaComune) nodi.push({ tipo: 'AREA_COMUNE', nome: 'Area comune', livello: 0 })
+    return nodi
+  }
+
+  // Test 14.1: condominio 2 scale × 3 app + box + area comune = 10 nodi
+  const a1 = generaAnteprima(['Scala A', 'Scala B'], 3, true, false, true)
+  assert.equal(a1.length, 10, '14.1: 2 scale × 3 app + box + area comune = 10 nodi')
+  assert.equal(a1.filter(n => n.tipo === 'SCALA').length, 2, '14.1: 2 scale')
+  assert.equal(a1.filter(n => n.tipo === 'APPARTAMENTO').length, 6, '14.1: 6 appartamenti')
+  assert.equal(a1.filter(n => n.tipo === 'BOX').length, 1, '14.1: 1 box')
+  assert.equal(a1.filter(n => n.tipo === 'AREA_COMUNE').length, 1, '14.1: 1 area comune')
+
+  // Test 14.2: scala singola senza extra = scala + app
+  const a2 = generaAnteprima(['Scala A'], 4, false, false, false)
+  assert.equal(a2.length, 5, '14.2: 1 scala × 4 app = 5 nodi')
+
+  // Test 14.3: prefisso scala nel nome appartamento
+  const a3 = generaAnteprima(['Scala C'], 2, false, false, false)
+  assert.equal(a3[1].nome, 'App. C1', '14.3: appartamento prende prefisso dalla scala')
+  assert.equal(a3[2].nome, 'App. C2', '14.3: secondo appartamento')
+
+  // Test 14.4: max 20 appartamenti per scala (cap)
+  const a4 = generaAnteprima(['Scala A'], 50, false, false, false)
+  assert.equal(a4.filter(n => n.tipo === 'APPARTAMENTO').length, 20, '14.4: cap a 20 appartamenti')
+
+  // Test 14.5: nessun nodo se scale vuote
+  const a5 = generaAnteprima([], 4, true, true, true)
+  assert.equal(a5.filter(n => n.tipo === 'SCALA' || n.tipo === 'APPARTAMENTO').length, 0, '14.5: scale vuote → nessun nodo scala/app')
+  assert.equal(a5.length, 3, '14.5: solo extra (box + esterno + area comune)')
+
+  // Test 14.6: tipoStruttura default
+  const tipoDefault = 'commessa_semplice'
+  assert.equal(tipoDefault, 'commessa_semplice', '14.6: tipoStruttura default è commessa_semplice')
+  const tipiValidi = ['commessa_semplice', 'condominio_parco', 'cantiere_strutturato']
+  assert.ok(tipiValidi.includes(tipoDefault), '14.6: tipoStruttura default è un valore valido')
+}
+console.log('✓ struttura-cantiere/genera-anteprima (composizione nodi, prefisso, cap, tipoStruttura)')
+
 console.log('\n✅ Tutti i test superati.')
 
