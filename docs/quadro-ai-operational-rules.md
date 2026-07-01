@@ -128,3 +128,53 @@ Risposta del validator:
 - Ogni implementazione AI deve essere coerente con questo file
 - Quando si modifica il validator → aggiornare la tabella al §4
 - Quando si aggiunge un nuovo tipo di azione → aggiungerla al §3
+
+---
+
+## 11. AI Operating Layer (aggiunto 2026-07-01)
+
+### Action Registry
+
+Tutte le azioni AI sono registrate in `lib/ai/actions/registry.ts`.
+Nessuna azione può essere eseguita se non è nel registry.
+
+Azioni registrate (19):
+- PROMEMORIA_CREATE, PROMEMORIA_UPDATE, PROMEMORIA_COMPLETE, PROMEMORIA_RESCHEDULE
+- FOLLOWUP_CREATE
+- COMMESSA_CREATE_DRAFT, COMMESSA_LINK_CLIENTE, COMMESSA_LINK_STRUTTURA_NODO, COMMESSA_SUMMARY
+- RAPPORTINO_CREATE_DRAFT, RAPPORTINO_LINK_ZONA, RAPPORTINO_ADD_NOTA
+- MATERIALE_REQUEST_DRAFT, MATERIALE_MARK_MANCANTE
+- CONTEGGIO_ADD_RIGA_DRAFT, CONTEGGIO_LINK_ZONA
+- CLIENTE_FIND_OR_SUGGEST, CLIENTE_CREATE_DRAFT
+- DOCUMENTO_REQUEST_DRAFT
+
+### Audit Log
+
+Ogni azione AI crea un record in `ai_audit_log` con ciclo di vita:
+```
+DRAFT → (utente modifica) → CONFIRMED → (executor) → EXECUTED
+                         ↓                         ↓
+                    CANCELLED                   FAILED
+```
+
+### Azioni di sola lettura (no DB write, no conferma)
+- COMMESSA_SUMMARY
+- CLIENTE_FIND_OR_SUGGEST
+
+### Flusso API
+- `POST /api/ai/actions/prepare` — Interpreta testo → produce bozze + audit DRAFT
+- `POST /api/ai/actions/confirm` — Conferma bozza → valida → esegue → audit EXECUTED
+- `POST /api/ai/chat` — Chat AI generica (risposta testuale)
+
+### Componenti UI
+- `AiActionDraftCard` — Mostra singola bozza, permette modifica e conferma
+- `AiActionConfirmPanel` — Gestisce array di bozze, "conferma tutte"
+- `AssistenteContestuale` — Assistente floating globale, integra flusso azioni
+
+### Hard limits (non modificabili)
+1. Nessuna scrittura DB senza conferma umana
+2. Nessun segreto esposto (token, chiavi, password)
+3. Validator sempre eseguito prima dell'executor
+4. Audit log sempre aggiornato (anche in caso di errore → FAILED)
+5. Max 5 bozze per singola richiesta
+6. Cliente non ha accesso al flusso azioni

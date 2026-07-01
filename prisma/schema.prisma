@@ -1296,3 +1296,43 @@ model InterventoLibero {
 
   @@map("interventi_libero")
 }
+
+// ─── QUADRO AI Operating Layer ───────────────────────────────────────────────
+
+enum AiActionStatus {
+  DRAFT
+  CONFIRMED
+  EXECUTED
+  FAILED
+  CANCELLED
+}
+
+enum AiRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model AiAuditLog {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String         @map("user_id")
+  role            String
+  actionId        String         @map("action_id")
+  status          AiActionStatus @default(DRAFT)
+  riskLevel       AiRiskLevel    @map("risk_level")
+  inputText       String?        @map("input_text")
+  proposedPayload Json           @map("proposed_payload")
+  finalPayload    Json?          @map("final_payload")
+  result          Json?
+  errorMessage    String?        @map("error_message")
+  commessaId      String?        @map("commessa_id")
+  clienteId       String?        @map("cliente_id")
+  rapportinoId    String?        @map("rapportino_id")
+  promemoriaId    String?        @map("promemoria_id")
+  strutturaNodoId String?        @map("struttura_nodo_id")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  confirmedAt     DateTime?      @map("confirmed_at") @db.Timestamptz
+  executedAt      DateTime?      @map("executed_at") @db.Timestamptz
+
+  @@map("ai_audit_log")
+}
