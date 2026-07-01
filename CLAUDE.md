@@ -155,7 +155,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **Redesign Guidato Nuova Commessa (2026-07-01): CommessaForm completamente riscritto con card selectors per Categoria lavoro (9 opzioni, button grid) e Organizzazione commessa (9 card icon+desc), builder dinamico per tutti e 9 i tipi di struttura, anteprima live in tempo reale, struttura_config JSON serializzato al server action, categoriaLavoro aggiunto a schema.prisma + categoria-lavoro-schema.sql (da applicare su Supabase). actions.ts aggiornato con creaStrutturaOrganizzazione dispatcher + banner avviso=struttura_incompleta. quickBuildStruttura aggiornato a nuova firma (nBox:number, areeComuni:string[]). 14/14 test OK, build OK, merge su main 10e4c3c.**
+- Fase corrente: **QUADRO AI Operating Layer (2026-07-01): Action Registry (19 azioni), AI Validator esteso (validateAction per ruolo+campi+DB), AI Executor (5 azioni reali: PROMEMORIA_CREATE, PROMEMORIA_COMPLETE, PROMEMORIA_RESCHEDULE, RAPPORTINO_ADD_NOTA, MATERIALE_MARK_MANCANTE), AiAuditLog su Prisma (modello + enum AiActionStatus/AiRiskLevel), API prepare/confirm, UI AiActionDraftCard + AiActionConfirmPanel, AssistenteContestuale aggiornato con rilevamento intent e flusso prepare→confirm. 15/15 test OK, build OK, merge su main fb09290. DA FARE: eseguire ai-audit-log-schema.sql su Supabase SQL Editor.**
 
 ### Nuovi ruoli aggiunti (2026-06-27)
 - **`libero`**: libero professionista. Area `/libero/`. Colori: orange-800 + orange-600. Modelli nuovi: `LiberoProfessionista`, `InterventoLibero`. Migrazione SQL in `libero-schema.sql` (da eseguire su Supabase). Prima login → `/libero/configura` se manca il profilo.
