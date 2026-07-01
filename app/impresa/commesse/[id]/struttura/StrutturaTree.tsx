@@ -56,9 +56,9 @@ export function StrutturaTree({ commessaId, nodi }: Props) {
   // Quick build stato
   const [qbScale, setQbScale] = useState(2)
   const [qbApp, setQbApp] = useState(4)
-  const [qbBox, setQbBox] = useState(true)
+  const [qbNBox, setQbNBox] = useState(0)
   const [qbEsterno, setQbEsterno] = useState(false)
-  const [qbAreaComune, setQbAreaComune] = useState(true)
+  const [qbAreeComuni, setQbAreeComuni] = useState<string[]>(['Androne'])
 
   function handleAggiungi(parentId: string | null) {
     if (!nuovoNome.trim()) { setErrore('Il nome è obbligatorio'); return }
@@ -105,9 +105,9 @@ export function StrutturaTree({ commessaId, nodi }: Props) {
         await quickBuildStruttura(commessaId, {
           nScale: qbScale,
           appartamentiPerScala: qbApp,
-          conBox: qbBox,
+          nBox: qbNBox,
           conEsterno: qbEsterno,
-          conAreaComune: qbAreaComune,
+          areeComuni: qbAreeComuni,
         })
         setShowQuickBuild(false)
       } catch (e: unknown) {
@@ -163,19 +163,37 @@ export function StrutturaTree({ commessaId, nodi }: Props) {
               />
             </div>
           </div>
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" checked={qbBox} onChange={e => setQbBox(e.target.checked)} className="rounded" />
-              Box / Cantina
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" checked={qbEsterno} onChange={e => setQbEsterno(e.target.checked)} className="rounded" />
-              Esterno
-            </label>
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-              <input type="checkbox" checked={qbAreaComune} onChange={e => setQbAreaComune(e.target.checked)} className="rounded" />
-              Area comune
-            </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Numero box</label>
+              <input
+                type="number" min={0} max={20} value={qbNBox}
+                onChange={e => setQbNBox(+e.target.value)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input type="checkbox" checked={qbEsterno} onChange={e => setQbEsterno(e.target.checked)} className="rounded" />
+                Esterno
+              </label>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 mb-2">Aree comuni</p>
+            <div className="flex flex-wrap gap-3">
+              {['Androne', 'Vano scala', 'Vano contatori', 'Locale tecnico', 'Garage', 'Cortile', 'Copertura'].map(a => (
+                <label key={a} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={qbAreeComuni.includes(a)}
+                    onChange={() => setQbAreeComuni(p => p.includes(a) ? p.filter(x => x !== a) : [...p, a])}
+                    className="rounded"
+                  />
+                  {a}
+                </label>
+              ))}
+            </div>
           </div>
           <div className="flex gap-2">
             <button

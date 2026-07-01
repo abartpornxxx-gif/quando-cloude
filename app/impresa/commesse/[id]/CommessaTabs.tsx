@@ -74,6 +74,7 @@ type DefaultValues = {
   attrezzatureNecessarie: string
   tipoLavoroId: string
   tipoStruttura: string
+  categoriaLavoro: string
   preventivato: number
   costiMateriali: number
   costiManodopera: number
