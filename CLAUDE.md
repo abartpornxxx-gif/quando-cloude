@@ -155,7 +155,7 @@ QUADRO è un gestionale per un'**impresa di installazione impianti elettrici** i
 
 ## Stato del progetto
 
-- Fase corrente: **QUADRO AI Operating Layer (2026-07-01): Action Registry (19 azioni), AI Validator esteso (validateAction per ruolo+campi+DB), AI Executor (5 azioni reali: PROMEMORIA_CREATE, PROMEMORIA_COMPLETE, PROMEMORIA_RESCHEDULE, RAPPORTINO_ADD_NOTA, MATERIALE_MARK_MANCANTE), AiAuditLog su Prisma (modello + enum AiActionStatus/AiRiskLevel), API prepare/confirm, UI AiActionDraftCard + AiActionConfirmPanel, AssistenteContestuale aggiornato con rilevamento intent e flusso prepare→confirm. 15/15 test OK, build OK, merge su main fb09290. DA FARE: eseguire ai-audit-log-schema.sql su Supabase SQL Editor.**
+- Fase corrente: **QUADRO AI Operating Layer — PRODUZIONE (2026-07-01): Action Registry (19 azioni), AI Executor (5 azioni reali), AiAuditLog su Prisma + DB Supabase. Fix produzione applicati (PR #12, commit ceea9f6): timezone +2h risolto (parseItalianDateTime + offset IT in prompt AI), error hardening UI, session expired handling. Test: 16/16 test-minimal (incl. test 16 timezone-safe), 22/22 E2E logica su DB reale. Deploy Vercel produzione attivo. DA FARE: test browser autenticato utente impresa (UI non verificata da script). STUB ancora da implementare: COMMESSA_SUMMARY (executor legge DB), RAPPORTINO_CREATE_DRAFT (executor crea rapportino).**
 
 ### Nuovi ruoli aggiunti (2026-06-27)
 - **`libero`**: libero professionista. Area `/libero/`. Colori: orange-800 + orange-600. Modelli nuovi: `LiberoProfessionista`, `InterventoLibero`. Migrazione SQL in `libero-schema.sql` (da eseguire su Supabase). Prima login → `/libero/configura` se manca il profilo.
