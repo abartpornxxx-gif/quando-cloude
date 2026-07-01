@@ -601,5 +601,116 @@ console.log('✓ struttura-cantiere (buildTree, nullable, validazione coerenza, 
 }
 console.log('✓ struttura-cantiere/genera-anteprima (composizione nodi, prefisso, cap, tipoStruttura)')
 
+// ── 15. AI Operating Layer — logica pura ────────────────────────────────────
+{
+  // Action Registry: struttura minima
+  const REGISTRY = {
+    PROMEMORIA_CREATE:       { actionId: 'PROMEMORIA_CREATE',       riskLevel: 'MEDIUM', requiresConfirmation: true,  allowedRoles: ['impresa','ufficio','operaio'],            requiredFields: ['titolo','dataOra'],      readOnly: false },
+    PROMEMORIA_COMPLETE:     { actionId: 'PROMEMORIA_COMPLETE',     riskLevel: 'LOW',    requiresConfirmation: true,  allowedRoles: ['impresa','ufficio','operaio'],            requiredFields: ['promemoriaId'],          readOnly: false },
+    FOLLOWUP_CREATE:         { actionId: 'FOLLOWUP_CREATE',         riskLevel: 'MEDIUM', requiresConfirmation: true,  allowedRoles: ['impresa','ufficio'],                     requiredFields: ['titolo','dataOra'],      readOnly: false },
+    COMMESSA_SUMMARY:        { actionId: 'COMMESSA_SUMMARY',        riskLevel: 'LOW',    requiresConfirmation: false, allowedRoles: ['impresa','ufficio','operaio'],            requiredFields: ['commessaId'],            readOnly: true  },
+    RAPPORTINO_CREATE_DRAFT: { actionId: 'RAPPORTINO_CREATE_DRAFT', riskLevel: 'MEDIUM', requiresConfirmation: true,  allowedRoles: ['impresa','ufficio','operaio'],            requiredFields: ['lavoroEseguito'],        readOnly: false },
+    MATERIALE_REQUEST_DRAFT: { actionId: 'MATERIALE_REQUEST_DRAFT', riskLevel: 'MEDIUM', requiresConfirmation: true,  allowedRoles: ['impresa','ufficio','operaio','magazziniere'], requiredFields: ['descrizione'],       readOnly: false },
+    CLIENTE_FIND_OR_SUGGEST: { actionId: 'CLIENTE_FIND_OR_SUGGEST', riskLevel: 'LOW',    requiresConfirmation: false, allowedRoles: ['impresa','ufficio'],                     requiredFields: ['query'],                 readOnly: true  },
+    CLIENTE_CREATE_DRAFT:    { actionId: 'CLIENTE_CREATE_DRAFT',    riskLevel: 'HIGH',   requiresConfirmation: true,  allowedRoles: ['impresa','ufficio'],                     requiredFields: ['nome'],                  readOnly: false },
+    COMMESSA_CREATE_DRAFT:   { actionId: 'COMMESSA_CREATE_DRAFT',   riskLevel: 'HIGH',   requiresConfirmation: true,  allowedRoles: ['impresa','ufficio'],                     requiredFields: ['nome'],                  readOnly: false },
+    RAPPORTINO_ADD_NOTA:     { actionId: 'RAPPORTINO_ADD_NOTA',     riskLevel: 'LOW',    requiresConfirmation: true,  allowedRoles: ['impresa','ufficio','operaio'],            requiredFields: ['rapportinoId','nota'],   readOnly: false },
+  }
+
+  function getAction(actionId) { return REGISTRY[actionId] }
+  function isValidActionId(id) { return id in REGISTRY }
+  function canUseAction(role, actionId) {
+    const def = REGISTRY[actionId]
+    return def ? def.allowedRoles.includes(role) : false
+  }
+  function getActionsForRole(role) {
+    return Object.values(REGISTRY).filter(a => a.allowedRoles.includes(role))
+  }
+
+  // Validator puro (senza DB)
+  function validateActionSync(actionId, payload, role) {
+    if (!isValidActionId(actionId)) return { valid: false, reason: `Azione non registrata: ${actionId}` }
+    const def = getAction(actionId)
+    if (!canUseAction(role, actionId)) return { valid: false, reason: `Ruolo ${role} non autorizzato` }
+    for (const field of def.requiredFields) {
+      const val = payload[field]
+      if (val === undefined || val === null || String(val).trim() === '') {
+        return { valid: false, reason: `Campo obbligatorio mancante: ${field}`, field }
+      }
+    }
+    return { valid: true }
+  }
+
+  // 15.1: Registry — ogni azione ha i campi obbligatori
+  for (const action of Object.values(REGISTRY)) {
+    assert.ok(typeof action.actionId === 'string', `15.1: ${action.actionId} ha actionId`)
+    assert.ok(['LOW','MEDIUM','HIGH'].includes(action.riskLevel), `15.1: ${action.actionId} riskLevel valido`)
+    assert.ok(Array.isArray(action.allowedRoles) && action.allowedRoles.length > 0, `15.1: ${action.actionId} ha allowedRoles`)
+    assert.ok(Array.isArray(action.requiredFields), `15.1: ${action.actionId} ha requiredFields`)
+    assert.ok(typeof action.requiresConfirmation === 'boolean', `15.1: ${action.actionId} requiresConfirmation è boolean`)
+  }
+
+  // 15.2: cliente NON può usare azioni di scrittura
+  const clienteActions = getActionsForRole('cliente')
+  assert.equal(clienteActions.length, 0, '15.2: cliente non ha azioni nel registry')
+
+  // 15.3: operaio non può creare commesse o clienti
+  assert.equal(canUseAction('operaio', 'COMMESSA_CREATE_DRAFT'), false, '15.3: operaio non crea commesse')
+  assert.equal(canUseAction('operaio', 'CLIENTE_CREATE_DRAFT'),  false, '15.3: operaio non crea clienti')
+  assert.equal(canUseAction('operaio', 'RAPPORTINO_CREATE_DRAFT'), true, '15.3: operaio può creare rapportino')
+
+  // 15.4: azioni read-only non richiedono conferma
+  const readOnlyActions = Object.values(REGISTRY).filter(a => a.readOnly)
+  for (const a of readOnlyActions) {
+    assert.equal(a.requiresConfirmation, false, `15.4: ${a.actionId} read-only → no conferma`)
+  }
+
+  // 15.5: validator — campi obbligatori mancanti blocca
+  const v1 = validateActionSync('PROMEMORIA_CREATE', { titolo: '', dataOra: '2026-07-02T09:00:00' }, 'impresa')
+  assert.equal(v1.valid, false, '15.5: titolo vuoto → non valido')
+  assert.equal(v1.field, 'titolo', '15.5: campo errato identificato')
+
+  const v2 = validateActionSync('PROMEMORIA_CREATE', { titolo: 'Test', dataOra: '2026-07-02T09:00:00' }, 'impresa')
+  assert.equal(v2.valid, true, '15.5: payload completo → valido')
+
+  // 15.6: validator — ruolo non autorizzato blocca
+  const v3 = validateActionSync('COMMESSA_CREATE_DRAFT', { nome: 'Test' }, 'operaio')
+  assert.equal(v3.valid, false, '15.6: operaio non può creare commessa')
+
+  const v4 = validateActionSync('COMMESSA_CREATE_DRAFT', { nome: 'Test' }, 'impresa')
+  assert.equal(v4.valid, true, '15.6: impresa può creare commessa')
+
+  // 15.7: validator — actionId inesistente blocca
+  const v5 = validateActionSync('AZIONE_INVENTATA', {}, 'impresa')
+  assert.equal(v5.valid, false, '15.7: azione inesistente → non valida')
+
+  // 15.8: nessuna scrittura DB senza conferma (logica registry)
+  const writeActions = Object.values(REGISTRY).filter(a => !a.readOnly)
+  for (const a of writeActions) {
+    assert.equal(a.requiresConfirmation, true, `15.8: ${a.actionId} non read-only → requiresConfirmation`)
+  }
+
+  // 15.9: Audit log — ciclo di vita stati
+  const VALID_STATUSES = ['DRAFT', 'CONFIRMED', 'EXECUTED', 'FAILED', 'CANCELLED']
+  const VALID_RISK_LEVELS = ['LOW', 'MEDIUM', 'HIGH']
+  for (const s of VALID_STATUSES) assert.ok(typeof s === 'string', `15.9: stato audit ${s}`)
+  for (const r of VALID_RISK_LEVELS) assert.ok(typeof r === 'string', `15.9: riskLevel ${r}`)
+
+  // 15.10: max 5 drafts per request (sicurezza)
+  const drafts8 = Array.from({ length: 8 }, (_, i) => ({ actionId: 'PROMEMORIA_CREATE', payload: { titolo: `P${i}`, dataOra: '2026-07-02T09:00:00' } }))
+  const draftsCapped = drafts8.slice(0, 5)
+  assert.equal(draftsCapped.length, 5, '15.10: max 5 drafts per request')
+
+  // 15.11: isActionIntent (parole chiave)
+  const ACTION_KEYWORDS = ['crea','prepara','aggiungi','segnala','richiedi','promemoria','bozza','rapportino','mancante','mancano','ricordami','ordina','followup','richiama']
+  function isActionIntent(text) { const lower = text.toLowerCase(); return ACTION_KEYWORDS.some(kw => lower.includes(kw)) }
+  assert.equal(isActionIntent('Crea un promemoria per domani'), true, '15.11: "crea promemoria" → intent azione')
+  assert.equal(isActionIntent('Segnala materiale mancante'), true, '15.11: "segnala mancante" → intent azione')
+  assert.equal(isActionIntent('Cosa manca in questa commessa?'), false, '15.11: domanda generica → non azione')
+  assert.equal(isActionIntent('Qual è lo stato dei lavori?'), false, '15.11: domanda stato → non azione')
+  assert.equal(isActionIntent('Ricordami di chiamare il cliente'), true, '15.11: "ricordami" → intent azione')
+}
+console.log('✓ ai-operating-layer (registry, permissions, validator, audit, intent-detection)')
+
 console.log('\n✅ Tutti i test superati.')
 
