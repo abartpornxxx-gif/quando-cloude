@@ -140,6 +140,24 @@ export function AssistenteContestuale({ role }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: userMsg, pathname, commessaId }),
         })
+        // Sessione scaduta: la middleware reindirizza a /login
+        if (prepRes.status === 401 || prepRes.redirected) {
+          setMessages(prev => [...prev, { sender: 'error', text: 'Sessione scaduta. Effettua di nuovo il login.' }])
+          setIsLoading(false)
+          return
+        }
+        // Rate limit: non cadere sulla chat, mostra errore diretto
+        if (prepRes.status === 429) {
+          setMessages(prev => [...prev, { sender: 'error', text: 'Troppe richieste in poco tempo. Aspetta un minuto e riprova.' }])
+          setIsLoading(false)
+          return
+        }
+        // AI non disponibile
+        if (prepRes.status === 503) {
+          setMessages(prev => [...prev, { sender: 'error', text: 'Assistente AI momentaneamente non disponibile. Riprova tra poco.' }])
+          setIsLoading(false)
+          return
+        }
         if (prepRes.ok) {
           const prepData = await prepRes.json()
           if (prepData.intento === 'azione' && Array.isArray(prepData.drafts) && prepData.drafts.length > 0) {
@@ -154,6 +172,7 @@ export function AssistenteContestuale({ role }: Props) {
             setIsLoading(false)
             return
           }
+          // intento === 'domanda': nessuna bozza → fallthrough alla chat
         }
       }
 
@@ -163,10 +182,16 @@ export function AssistenteContestuale({ role }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pathname, message: userMsg }),
       })
+      if (res.status === 401 || res.redirected) {
+        setMessages(prev => [...prev, { sender: 'error', text: 'Sessione scaduta. Effettua di nuovo il login.' }])
+        return
+      }
       const data = await res.json()
 
-      if (data.notConfigured || data.notAvailable) {
-        setMessages(prev => [...prev, { sender: 'error', text: 'Assistente momentaneamente non disponibile. Riprova tra qualche secondo.' }])
+      if (data.notConfigured) {
+        setMessages(prev => [...prev, { sender: 'error', text: 'Assistente AI non configurato. Verifica la chiave AI su Vercel.' }])
+      } else if (data.notAvailable) {
+        setMessages(prev => [...prev, { sender: 'error', text: 'Assistente AI momentaneamente non disponibile. Riprova tra poco.' }])
       } else if (data.rateLimited) {
         setMessages(prev => [...prev, { sender: 'error', text: 'Troppe richieste in poco tempo. Aspetta un minuto e riprova.' }])
       } else if (data.response) {

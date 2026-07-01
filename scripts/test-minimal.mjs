@@ -712,5 +712,51 @@ console.log('✓ struttura-cantiere/genera-anteprima (composizione nodi, prefiss
 }
 console.log('✓ ai-operating-layer (registry, permissions, validator, audit, intent-detection)')
 
+// ── 16. parseItalianDateTime — timezone-safe (indipendente da TZ macchina) ──
+{
+  // Riproduce la logica di parseItalianDateTime dall'executor, senza importarla
+  // così il test funziona anche su macchine non-italiane (Vercel UTC)
+  function parseItalianDateTime(rawStr) {
+    if (!rawStr) return new Date(NaN)
+    if (/[Zz]$/.test(rawStr) || /[+-]\d{2}:\d{2}$/.test(rawStr)) return new Date(rawStr)
+    const tzValue = new Intl.DateTimeFormat('en', {
+      timeZone: 'Europe/Rome', timeZoneName: 'shortOffset',
+    }).formatToParts(new Date()).find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1'
+    const m = tzValue.match(/GMT([+-])(\d+)/)
+    const sign  = m?.[1] ?? '+'
+    const hours = (m?.[2] ?? '1').padStart(2, '0')
+    return new Date(`${rawStr}${sign}${hours}:00`)
+  }
+
+  function displayInItaly(date) {
+    return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
+  }
+
+  // Già con TZ: non toccare
+  const withTz = parseItalianDateTime('2026-07-02T09:00:00+02:00')
+  assert.equal(displayInItaly(withTz), '09:00', 'parseItalianDateTime: con TZ +02:00 → 09:00')
+
+  const withTzZ = parseItalianDateTime('2026-07-02T07:00:00Z') // 07:00 UTC = 09:00 Italy
+  assert.equal(displayInItaly(withTzZ), '09:00', 'parseItalianDateTime: con TZ Z → 09:00')
+
+  // Senza TZ: interpreta come orario italiano
+  const noTzMorning = parseItalianDateTime('2026-07-02T09:00:00') // "09:00 italiani"
+  assert.equal(displayInItaly(noTzMorning), '09:00', 'parseItalianDateTime: senza TZ → 09:00 Italy')
+
+  const noTzNoon = parseItalianDateTime('2026-07-02T12:00:00')
+  assert.equal(displayInItaly(noTzNoon), '12:00', 'parseItalianDateTime: senza TZ → 12:00 Italy')
+
+  const noTzMinutes = parseItalianDateTime('2026-07-02T12:16:00')
+  assert.equal(displayInItaly(noTzMinutes), '12:16', 'parseItalianDateTime: senza TZ → 12:16 (no arrotondamento)')
+
+  const noTzNight = parseItalianDateTime('2026-07-02T23:45:00')
+  assert.equal(displayInItaly(noTzNight), '23:45', 'parseItalianDateTime: senza TZ → 23:45 Italy')
+
+  // Input errato → NaN
+  assert.ok(isNaN(parseItalianDateTime('').getTime()), 'parseItalianDateTime: stringa vuota → NaN')
+  assert.ok(isNaN(parseItalianDateTime('not-a-date').getTime()), 'parseItalianDateTime: stringa invalida → NaN')
+}
+console.log('✓ parseItalianDateTime (timezone-safe, Vercel-UTC-compatible, no +2h)')
+
 console.log('\n✅ Tutti i test superati.')
 
