@@ -1,4 +1,4 @@
-export async function callAI(systemPrompt: string, userMessage: string): Promise<string> {
+export async function callAI(systemPrompt: string, userMessage: string, opts?: { jsonMode?: boolean }): Promise<string> {
   const groqKey = process.env.GROQ_API_KEY
   const openaiKey = process.env.OPENAI_API_KEY
   const customKey = process.env.AI_API_KEY
@@ -30,6 +30,7 @@ export async function callAI(systemPrompt: string, userMessage: string): Promise
           ],
           temperature: 0.3,
           max_tokens: 1500,
+          ...(opts?.jsonMode ? { response_format: { type: 'json_object' } } : {}),
         }),
       })
 

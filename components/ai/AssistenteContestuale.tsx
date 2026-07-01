@@ -59,11 +59,23 @@ const COLORS = {
 }
 
 // Parole chiave che indicano intenzione di eseguire un'azione
+// Includono verbi espliciti, sostantivi di cantiere, e parole temporali con soggetto
 const ACTION_KEYWORDS = [
+  // Verbi espliciti
   'crea', 'prepara', 'aggiungi', 'segnala', 'richiedi', 'pianifica',
   'ricordami', 'promemoria', 'bozza', 'rapportino', 'mancante', 'mancano',
   'ordina', 'follow-up', 'followup', 'richiama', 'chiama',
   'registra', 'completa', 'segna', 'rimanda', 'sposta',
+  // Cantiere / appuntamenti
+  'sopralluogo', 'appuntamento', 'riunione', 'incontro', 'visita',
+  'fattura', 'preventivo', 'documento', 'dichiarazione',
+  // Materiali
+  'materiale', 'materiali', 'comprare', 'acquistare',
+  // Azioni implicite con tempo
+  'domani', 'dopodomani', 'lunedì', 'martedì', 'mercoledì',
+  'giovedì', 'venerdì', 'sabato', 'domenica', 'prossim',
+  // Note / memoria
+  'annota', 'nota che', 'scrivi che', 'ricorda che',
 ]
 
 function isActionIntent(text: string): boolean {

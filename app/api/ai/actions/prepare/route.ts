@@ -105,7 +105,7 @@ export async function POST(req: Request) {
 
     let raw: string
     try {
-      raw = await callAI(systemPrompt, text.trim())
+      raw = await callAI(systemPrompt, text.trim(), { jsonMode: true })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : ''
       if (msg === 'AI_QUOTA_EXCEEDED') {
@@ -157,8 +157,9 @@ export async function POST(req: Request) {
           },
         })
         auditId = audit.id
-      } catch {
-        // audit log non bloccante: se fallisce, si continua senza ID
+      } catch (auditErr) {
+        console.error('[prepare] audit log create failed (non bloccante):', auditErr)
+        // auditId rimane '' → draftId vuoto → la UI mostra errore chiaro al click Conferma
       }
 
       const def = actions.find(a => a.actionId === actionId)

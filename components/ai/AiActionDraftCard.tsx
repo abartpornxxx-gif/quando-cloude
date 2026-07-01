@@ -23,10 +23,20 @@ const RISK_LABEL: Record<string, string> = {
   HIGH:   'Rischio alto — richiede attenzione',
 }
 
+// Classi Tailwind statiche per il tasto conferma (evita template literal non rilevati dal build)
+const ACCENT_BTN: Record<string, string> = {
+  blue:    'bg-blue-600 hover:bg-blue-700',
+  teal:    'bg-teal-600 hover:bg-teal-700',
+  emerald: 'bg-emerald-600 hover:bg-emerald-700',
+  amber:   'bg-amber-600 hover:bg-amber-700',
+  violet:  'bg-violet-600 hover:bg-violet-700',
+  orange:  'bg-orange-600 hover:bg-orange-700',
+}
+
 // Campi editabili a seconda del tipo di azione
 const EDITABLE_FIELDS: Record<string, string[]> = {
-  PROMEMORIA_CREATE:      ['titolo', 'dataOra', 'tipo', 'priorita', 'luogo', 'descrizione', 'note'],
-  FOLLOWUP_CREATE:        ['titolo', 'dataOra', 'priorita', 'luogo', 'note'],
+  PROMEMORIA_CREATE:      ['titolo', 'dataOra', 'tipo', 'priorita', 'luogo', 'descrizione'],
+  FOLLOWUP_CREATE:        ['titolo', 'dataOra', 'priorita', 'luogo', 'descrizione'],
   PROMEMORIA_RESCHEDULE:  ['nuovaDataOra'],
   RAPPORTINO_CREATE_DRAFT:['lavoroEseguito', 'lavoriExtra'],
   RAPPORTINO_ADD_NOTA:    ['nota'],
@@ -72,6 +82,10 @@ export function AiActionDraftCard({ draft, onConfirm, onRemove, isConfirming, ac
 
   async function handleConfirm() {
     setError(null)
+    if (!draft.draftId) {
+      setError('ID bozza mancante — ricarica la pagina e riprova.')
+      return
+    }
     try {
       await onConfirm(draft, localPayload)
       setConfirmed(true)
@@ -190,7 +204,7 @@ export function AiActionDraftCard({ draft, onConfirm, onRemove, isConfirming, ac
               type="button"
               onClick={handleConfirm}
               disabled={isConfirming}
-              className={`rounded-lg bg-${accentColor}-600 hover:bg-${accentColor}-700 text-white px-4 py-1.5 text-sm font-semibold shadow-sm disabled:opacity-50 transition-colors`}
+              className={`rounded-lg ${ACCENT_BTN[accentColor] ?? 'bg-blue-600 hover:bg-blue-700'} text-white px-4 py-1.5 text-sm font-semibold shadow-sm disabled:opacity-50 transition-colors`}
             >
               {isConfirming ? 'Salvataggio…' : 'Conferma'}
             </button>

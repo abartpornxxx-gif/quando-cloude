@@ -4,6 +4,16 @@ import { useState } from 'react'
 import { AiActionDraftCard } from './AiActionDraftCard'
 import type { ActionDraft } from '@/lib/ai/actions/types'
 
+// Classi Tailwind statiche per il banner "Conferma tutte" (evita template literal invisibili al build)
+const ACCENT_PANEL: Record<string, string> = {
+  blue:    'text-blue-700 hover:text-blue-900 border-blue-200 bg-blue-50',
+  teal:    'text-teal-700 hover:text-teal-900 border-teal-200 bg-teal-50',
+  emerald: 'text-emerald-700 hover:text-emerald-900 border-emerald-200 bg-emerald-50',
+  amber:   'text-amber-700 hover:text-amber-900 border-amber-200 bg-amber-50',
+  violet:  'text-violet-700 hover:text-violet-900 border-violet-200 bg-violet-50',
+  orange:  'text-orange-700 hover:text-orange-900 border-orange-200 bg-orange-50',
+}
+
 interface Props {
   drafts: ActionDraft[]
   onAllConfirmed?: () => void
@@ -80,7 +90,7 @@ export function AiActionConfirmPanel({ drafts: initialDrafts, onAllConfirmed, ac
             type="button"
             onClick={confirmAll}
             disabled={confirming !== null}
-            className={`text-xs font-semibold text-${accentColor}-700 hover:text-${accentColor}-900 border border-${accentColor}-200 bg-${accentColor}-50 rounded-lg px-3 py-1 disabled:opacity-50`}
+            className={`text-xs font-semibold border rounded-lg px-3 py-1 disabled:opacity-50 ${ACCENT_PANEL[accentColor] ?? 'text-blue-700 hover:text-blue-900 border-blue-200 bg-blue-50'}`}
           >
             {confirming ? 'Conferma in corso…' : `Conferma tutte (${validCount})`}
           </button>
