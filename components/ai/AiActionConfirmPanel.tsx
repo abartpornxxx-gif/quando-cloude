@@ -35,7 +35,7 @@ export function AiActionConfirmPanel({ drafts: initialDrafts, onAllConfirmed, ac
   }
 
   async function confirmSingle(draft: ActionDraft, editedPayload: Record<string, unknown>) {
-    if (!draft.draftId) throw new Error('Draft ID mancante — riprova.')
+    if (!draft.draftId) throw new Error('ID bozza mancante — ricarica la pagina e riprova.')
     setConfirming(draft.draftId)
     setGlobalError(null)
     try {
@@ -44,8 +44,18 @@ export function AiActionConfirmPanel({ drafts: initialDrafts, onAllConfirmed, ac
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auditId: draft.draftId, confirmedPayload: editedPayload }),
       })
-      const data = await res.json()
-      if (!res.ok || !data.success) throw new Error(data.error || 'Errore durante la conferma')
+      if (res.status === 401 || res.redirected) {
+        throw new Error('Sessione scaduta. Effettua di nuovo il login.')
+      }
+      let data: { success?: boolean; error?: string; message?: string }
+      try {
+        data = await res.json()
+      } catch {
+        throw new Error('Non sono riuscito a salvare l\'azione. Riprova o controlla i dati.')
+      }
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Non sono riuscito a salvare l\'azione. Riprova o controlla i dati.')
+      }
       removeDraft(draft.draftId)
     } finally {
       setConfirming(null)

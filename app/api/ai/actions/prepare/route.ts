@@ -11,10 +11,11 @@ import type { ActionId, ActionDraft } from '@/lib/ai/actions/types'
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
-const ACTION_PARSE_PROMPT = (role: string, actionsJson: string, oggiISO: string) =>
+const ACTION_PARSE_PROMPT = (role: string, actionsJson: string, oggiISO: string, italianOffset: string) =>
   `Sei il motore di azioni AI di QUADRO, gestionale per imprese di installazione impianti elettrici.
 
 Data di oggi: ${oggiISO}
+Timezone Italia: ${italianOffset} (usa SEMPRE questo offset nelle date — mai "Z")
 Ruolo utente: ${role}
 
 Azioni disponibili per questo ruolo:
@@ -27,7 +28,7 @@ COMPITO:
 4. Se non c'è nessuna azione concreta (è solo una domanda), rispondi con { "intento": "domanda", "drafts": [] }
 
 REGOLE PAYLOAD:
-- dataOra: formato ISO 8601, es "2026-07-02T09:00:00", basandoti sulla data di oggi
+- dataOra: ISO 8601 CON timezone italiana. Esempio: "2026-07-02T09:00:00${italianOffset}" — NON usare "Z", NON omettere il timezone
 - NON inventare ID (commessaId, clienteId, promemoriaId) — se non li conosci, omettili
 - Per PROMEMORIA_CREATE: titolo breve + dataOra obbligatori
 - Per MATERIALE_REQUEST_DRAFT: descrizione + quantita (es: "20") + urgente (true/false)
@@ -94,14 +95,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Testo non valido' }, { status: 400 })
     }
 
-    const oggiISO = new Date().toLocaleDateString('sv', { timeZone: 'Europe/Rome' })
+    const reqDate = new Date()
+    const oggiISO = reqDate.toLocaleDateString('sv', { timeZone: 'Europe/Rome' })
+    const italianOffset = (() => {
+      const tzValue = new Intl.DateTimeFormat('en', {
+        timeZone: 'Europe/Rome', timeZoneName: 'shortOffset',
+      }).formatToParts(reqDate).find(p => p.type === 'timeZoneName')?.value ?? 'GMT+1'
+      const m = tzValue.match(/GMT([+-])(\d+)/)
+      const sign  = m?.[1] ?? '+'
+      const hours = (m?.[2] ?? '1').padStart(2, '0')
+      return `${sign}${hours}:00`
+    })()
+
     const actions = getActionsForRole(role)
     const actionsJson = JSON.stringify(actions.map(a => ({
       actionId: a.actionId, label: a.label, description: a.description,
       requiredFields: a.requiredFields, riskLevel: a.riskLevel,
     })), null, 2)
 
-    const systemPrompt = ACTION_PARSE_PROMPT(role, actionsJson, oggiISO)
+    const systemPrompt = ACTION_PARSE_PROMPT(role, actionsJson, oggiISO, italianOffset)
 
     let raw: string
     try {
