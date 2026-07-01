@@ -12,11 +12,11 @@ export default async function CommessaDettPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ errore?: string }>
+  searchParams: Promise<{ errore?: string; avviso?: string }>
 }) {
   await requireImpresa()
   const { id } = await params
-  const { errore } = await searchParams
+  const { errore, avviso } = await searchParams
 
   // Struttura cantiere — con try-catch per backward compat se tabella non esiste
   let strutturaNodi: { tipo: string; nome: string }[] = []
@@ -178,6 +178,7 @@ export default async function CommessaDettPage({
     attrezzatureNecessarie: c.attrezzatureNecessarie ?? '',
     tipoLavoroId: c.tipoLavoroId ?? '',
     tipoStruttura: c.tipoStruttura,
+    categoriaLavoro: c.categoriaLavoro ?? 'altro',
     preventivato: c.preventivato,
     costiMateriali: c.costiMateriali,
     costiManodopera: c.costiManodopera,
@@ -213,6 +214,18 @@ export default async function CommessaDettPage({
           ) : undefined
         }
       />
+
+      {/* Banner struttura incompleta (al primo caricamento dopo creazione con struttura fallita) */}
+      {avviso === 'struttura_incompleta' && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 space-y-1">
+          <p className="text-sm font-semibold text-amber-900">
+            ⚠️ Commessa creata, ma la struttura cantiere non è stata completata.
+          </p>
+          <p className="text-xs text-amber-700">
+            Puoi definire le zone e i nodi del cantiere dalla tab <strong>Struttura</strong>.
+          </p>
+        </div>
+      )}
 
       {/* Banner errore chiusura */}
       {errore === 'non_saldato' && (

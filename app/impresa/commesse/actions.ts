@@ -6,13 +6,14 @@ import { euroToCents } from '@/lib/format'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { StatoCommessa } from '@/app/generated/prisma/client'
-import { creaNodiStrutturaDaTemplate } from '@/lib/cantiere-struttura/genera-struttura'
+import { creaStrutturaOrganizzazione, StrutturaConfig } from '@/lib/cantiere-struttura/genera-struttura'
 
 export async function salvaCommessa(formData: FormData) {
   await requireImpresa()
   const id = formData.get('id') as string | null
   const tipoLavoroId = (formData.get('tipoLavoroId') as string) || null
   const tipoStruttura = (formData.get('tipoStruttura') as string) || 'commessa_semplice'
+  const categoriaLavoro = (formData.get('categoriaLavoro') as string) || 'altro'
 
   const data = {
     nome: formData.get('nome') as string,
@@ -30,6 +31,7 @@ export async function salvaCommessa(formData: FormData) {
     attrezzatureNecessarie: (formData.get('attrezzatureNecessarie') as string) || null,
     tipoLavoroId,
     tipoStruttura,
+    categoriaLavoro,
   }
 
   if (id) {
@@ -81,19 +83,16 @@ export async function salvaCommessa(formData: FormData) {
     }
 
     // Auto-crea struttura cantiere se richiesta
-    if (tipoStruttura === 'condominio_parco') {
-      try {
-        const scaleJson = formData.get('struttura_scale') as string | null
-        const scale = scaleJson ? (JSON.parse(scaleJson) as string[]) : []
-        if (scale.length > 0) {
-          const apx = Math.min(20, Math.max(1, parseInt(formData.get('struttura_apx') as string || '4', 10)))
-          const conBox = formData.get('struttura_box') === 'true'
-          const conEsterno = formData.get('struttura_esterno') === 'true'
-          const conAreaComune = formData.get('struttura_area_comune') === 'true'
-          await creaNodiStrutturaDaTemplate(c.id, { scale, appartamentiPerScala: apx, conBox, conEsterno, conAreaComune })
+    if (tipoStruttura !== 'commessa_semplice') {
+      const strutturConfigRaw = formData.get('struttura_config') as string | null
+      if (strutturConfigRaw) {
+        try {
+          const config = JSON.parse(strutturConfigRaw) as StrutturaConfig
+          await creaStrutturaOrganizzazione(c.id, config)
+        } catch {
+          // struttura non creata — banner mostrato nella pagina di dettaglio
+          redirect(`/impresa/commesse/${c.id}?avviso=struttura_incompleta`)
         }
-      } catch {
-        // struttura non creata — l'utente può crearla manualmente dalla pagina struttura
       }
     }
 

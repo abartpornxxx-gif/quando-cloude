@@ -59,9 +59,9 @@ export async function quickBuildStruttura(
   config: {
     nScale: number
     appartamentiPerScala: number
-    conBox: boolean
+    nBox: number
     conEsterno: boolean
-    conAreaComune: boolean
+    areeComuni: string[]
   }
 ) {
   await requireImpresaOUfficio()
@@ -75,11 +75,12 @@ export async function quickBuildStruttura(
   )
 
   await creaNodiStrutturaDaTemplate(commessaId, {
+    tipo: 'condominio_parco',
     scale,
     appartamentiPerScala: config.appartamentiPerScala,
-    conBox: config.conBox,
+    nBox: config.nBox,
     conEsterno: config.conEsterno,
-    conAreaComune: config.conAreaComune,
+    areeComuni: config.areeComuni,
   })
 
   revalidatePath(`/impresa/commesse/${commessaId}/struttura`)
